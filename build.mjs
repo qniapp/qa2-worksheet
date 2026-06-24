@@ -1,0 +1,519 @@
+// QA2 夏休み自由研究ワークシート生成: データ＋純粋関数で SVG を手続き生成し、A4×8ページの HTML を dist/ に書き出す。
+// 設計の肝: すべての図は「1つの投影 project()」を共有する → 絶対にズレない。
+// 地球スキンとブロッホスキンは同じ globe() の見た目違い。配列を増やせばパターンが増える。
+// ふりがなは furi()（辞書＋BudouX）で本文のみに適用。PDF 化は build.sh（ヘッドレス Chrome）で行う。
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import { loadDefaultJapaneseParser } from 'budoux';
+const OUT = dirname(fileURLToPath(import.meta.url));
+
+/* ===================== 3D ベクトル & 回転 ===================== */
+const rad = d => (d * Math.PI) / 180;
+const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const scl = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const len = a => Math.hypot(a[0], a[1], a[2]);
+const norm = a => { const l = len(a) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+function rotate(v, axis, angle) { // ロドリゲス
+  const n = norm(axis), th = rad(angle), c = Math.cos(th), s = Math.sin(th);
+  return add(add(scl(v, c), scl(cross(n, v), s)), scl(n, dot(n, v) * (1 - c)));
+}
+
+/* ===================== 共有カメラ（正射影） ===================== */
+const AZ = rad(-58), EL = rad(16);
+const F = [Math.cos(EL) * Math.cos(AZ), Math.cos(EL) * Math.sin(AZ), Math.sin(EL)];
+const RIGHT = norm(cross([0, 0, 1], F)), CAMUP = cross(F, RIGHT);
+const project = (p, cx, cy, R) => [cx + R * dot(p, RIGHT), cy - R * dot(p, CAMUP)];
+const depth = p => dot(p, F);
+
+/* ===================== 色（BlockColors.cs の HSV を再現） ===================== */
+function hsv(h, s, v) {
+  s /= 100; v /= 100;
+  const c = v * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = v - c;
+  let r, g, b;
+  if (h < 60) [r, g, b] = [c, x, 0]; else if (h < 120) [r, g, b] = [x, c, 0];
+  else if (h < 180) [r, g, b] = [0, c, x]; else if (h < 240) [r, g, b] = [0, x, c];
+  else if (h < 300) [r, g, b] = [x, 0, c]; else [r, g, b] = [c, 0, x];
+  const h2 = n => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+  return '#' + h2(r) + h2(g) + h2(b);
+}
+const GATES = {
+  H: { label: 'H', color: hsv(199, 62, 98), axis: [1, 0, 1], angle: 180 },
+  X: { label: '+', color: hsv(0, 44, 97),  axis: [1, 0, 0], angle: 180 },
+  Y: { label: 'Y', color: hsv(163, 65, 76), axis: [0, 1, 0], angle: 180 },
+  Z: { label: 'Z', color: hsv(331, 36, 97), axis: [0, 0, 1], angle: 180 },
+  S: { label: 'S', color: hsv(267, 76, 71), axis: [0, 0, 1], angle: 90 },
+  T: { label: 'T', color: hsv(268, 55, 42), axis: [0, 0, 1], angle: 45 },
+};
+function axisStyle(axis) { // 回転の中心軸の強調色
+  const n = norm(axis);
+  if (Math.abs(n[0]) > 0.99) return { name: 'x', color: '#2563eb' };
+  if (Math.abs(n[1]) > 0.99) return { name: 'y', color: '#16a34a' };
+  if (Math.abs(n[2]) > 0.99) return { name: 'z', color: '#9333ea' };
+  return { name: 'ななめ', color: '#0891b2' };
+}
+function turnWords(angle) { // 角度→地球の周回量
+  if (angle === 45) return '8分の1周';
+  if (angle === 90) return '4分の1周';
+  if (angle === 180) return '半周';
+  if (angle === 360) return 'ひとまわり';
+  return `${angle}°`;
+}
+
+/* ===================== ふりがな（本文 prose にのみ適用。SVG には当てない） ===================== */
+const FURI = [
+  ['4分の1周', 'よんぶんのいっしゅう'], ['8分の1周', 'はちぶんのいっしゅう'],
+  ['自由研究', 'じゆうけんきゅう'], ['夏休み', 'なつやすみ'], ['量子', 'りょうし'], ['不思議', 'ふしぎ'],
+  ['観察', 'かんさつ'], ['完成', 'かんせい'], ['命令', 'めいれい'], ['自分', 'じぶん'], ['学年', 'がくねん'],
+  ['真上', 'まうえ'], ['方位', 'ほうい'], ['赤道', 'せきどう'], ['北極', 'ほっきょく'], ['南極', 'なんきょく'],
+  ['地球', 'ちきゅう'], ['半周', 'はんしゅう'], ['一点', 'いってん'], ['主役', 'しゅやく'], ['上下', 'じょうげ'],
+  ['変身', 'へんしん'], ['注目', 'ちゅうもく'], ['位置', 'いち'], ['日づけ', 'ひづけ'], ['同じ', 'おなじ'],
+  ['回転', 'かいてん'], ['記号', 'きごう'], ['名前', 'なまえ'], ['数学者', 'すうがくしゃ'],
+  ['軸', 'じく'], ['量', 'りょう'], ['組', 'くみ'], ['君', 'くん'], ['絵', 'え'], ['外', 'そと'],
+  ['上', 'うえ'], ['右', 'みぎ'], ['中', 'なか'], ['線', 'せん'], ['棒', 'ぼう'], ['動', 'うご'], ['消', 'き'],
+];
+const FURI_MAP = Object.fromEntries(FURI);
+const FURI_RE = new RegExp(FURI.map(e => e[0]).sort((a, b) => b.length - a.length)
+  .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
+const addRuby = s => s.replace(FURI_RE, m => `<ruby>${m}<rt>${FURI_MAP[m]}</rt></ruby>`);
+// BudouX: 日本語を自然な文節で改行。タグはそのまま、テキストノードだけ分割して <wbr> を挿入。
+const bparser = loadDefaultJapaneseParser();
+const wrapJa = html => html.replace(/[^<]+|<[^>]+>/g, m => (m[0] === '<' ? m : bparser.parse(m).join('<wbr>')));
+const furi = s => wrapJa(addRuby(s));
+
+/* ===================== SVG プリミティブ ===================== */
+const fmt = n => (Math.round(n * 100) / 100);
+function arrowhead(tip, dir, size, color) {
+  const d = norm([dir[0], dir[1], 0]), px = -d[1], py = d[0];
+  const a = [tip[0] - d[0] * size + px * size * 0.55, tip[1] - d[1] * size + py * size * 0.55];
+  const b = [tip[0] - d[0] * size - px * size * 0.55, tip[1] - d[1] * size - py * size * 0.55];
+  return `<path d="M${fmt(tip[0])},${fmt(tip[1])} L${fmt(a[0])},${fmt(a[1])} L${fmt(b[0])},${fmt(b[1])} Z" fill="${color}"/>`;
+}
+function arcSegments(fn, cx, cy, R, steps = 64) {
+  const pts = [];
+  for (let i = 0; i <= steps; i++) { const p = fn(i / steps); pts.push({ s: project(p, cx, cy, R), back: depth(p) < 0 }); }
+  const segs = []; let cur = null;
+  for (const pt of pts) { if (!cur || cur.back !== pt.back) { cur = { back: pt.back, pts: [] }; segs.push(cur); } cur.pts.push(pt.s); }
+  return segs;
+}
+const polyline = (pts, attrs) => `<polyline points="${pts.map(p => `${fmt(p[0])},${fmt(p[1])}`).join(' ')}" fill="none" ${attrs}/>`;
+
+/* ===================== globe(): 地球/ブロッホ 共通部品 ===================== */
+let UID = 0;
+function globe(opts) {
+  const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null } = opts;
+  const spinAxisName = spin ? axisStyle(spin.axis).name : null;
+  const W = size, H = size, cx = W / 2, cy = H / 2, R = size * 0.34;
+  const id = `g${UID++}`, ink = '#334155', faint = '#94a3b8';
+  let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif">`;
+  s += `<defs><radialGradient id="${id}sph" cx="38%" cy="32%" r="75%">` +
+       `<stop offset="0%" stop-color="${skin === 'earth' ? '#eaf7ff' : '#f8fafc'}"/>` +
+       `<stop offset="100%" stop-color="${skin === 'earth' ? '#cfeaff' : '#e6ebf2'}"/></radialGradient></defs>`;
+  const meridians = skin === 'earth' ? 6 : 4, parallels = skin === 'earth' ? 4 : 2;
+  for (let m = 0; m < meridians; m++) {
+    const ph = (m / meridians) * Math.PI;
+    for (const seg of arcSegments(t => { const a = (t - 0.5) * Math.PI, r = Math.cos(a); return [r * Math.cos(ph), r * Math.sin(ph), Math.sin(a)]; }, cx, cy, R, 48))
+      s += polyline(seg.pts, `stroke="${faint}" stroke-width="0.7" stroke-opacity="${seg.back ? 0.3 : 0.7}"`);
+  }
+  for (let pa = 1; pa <= parallels; pa++) {
+    const lat = (pa / (parallels + 1) - 0.5) * Math.PI * 0.95;
+    for (const seg of arcSegments(t => { const a = t * 2 * Math.PI, r = Math.cos(lat); return [r * Math.cos(a), r * Math.sin(a), Math.sin(lat)]; }, cx, cy, R, 64))
+      s += polyline(seg.pts, `stroke="${faint}" stroke-width="0.7" stroke-opacity="${seg.back ? 0.3 : 0.7}"`);
+  }
+  s += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#${id}sph)" stroke="${ink}" stroke-width="1.6" fill-opacity="0.55"/>`;
+  for (const seg of arcSegments(t => { const a = t * 2 * Math.PI; return [Math.cos(a), Math.sin(a), 0]; }, cx, cy, R))
+    s += polyline(seg.pts, `stroke="${ink}" stroke-width="1" stroke-opacity="0.5" ${seg.back ? 'stroke-dasharray="3 3"' : ''}`);
+  const axisEnd = (v, lbl, color) => {
+    const p0 = project(scl(v, -1), cx, cy, R), p1 = project(v, cx, cy, R), out = project(scl(v, 1.28), cx, cy, R);
+    return `<line x1="${fmt(p0[0])}" y1="${fmt(p0[1])}" x2="${fmt(p1[0])}" y2="${fmt(p1[1])}" stroke="${color}" stroke-width="1" stroke-opacity="0.6"/>` +
+      `<text x="${fmt(out[0])}" y="${fmt(out[1])}" font-size="10" fill="${color}" text-anchor="middle" dominant-baseline="middle">${lbl}</text>`;
+  };
+  if (skin === 'bloch') { // |0⟩|1⟩ のケット記号は上級者向けなので出さない（地球の方位ばんとして見せる）
+    if (spinAxisName !== 'x') s += axisEnd([1, 0, 0], 'x', faint);
+    if (spinAxisName !== 'y') s += axisEnd([0, 1, 0], 'y', faint);
+    s += `<line x1="${cx}" y1="${fmt(project([0,0,-1],cx,cy,R)[1])}" x2="${cx}" y2="${fmt(project([0,0,1],cx,cy,R)[1])}" stroke="${faint}" stroke-width="1" stroke-opacity="0.6"/>`;
+  } else {
+    const np = project([0, 0, 1.3], cx, cy, R), sp = project([0, 0, -1.34], cx, cy, R);
+    s += `<text x="${fmt(np[0])}" y="${fmt(np[1])}" font-size="9.5" fill="#0369a1" text-anchor="middle">北極</text>`;
+    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1])}" font-size="9.5" fill="#0369a1" text-anchor="middle">南極</text>`;
+  }
+  if (spin) { // 回転の中心軸を強調 → 軌跡＋矢印
+    const st = axisStyle(spin.axis), an = norm(spin.axis);
+    const h0 = project(scl(an, -1.16), cx, cy, R), h1 = project(scl(an, 1.16), cx, cy, R);
+    s += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="6.5" stroke-opacity="0.18" stroke-linecap="round"/>`;
+    s += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="2.8" stroke-linecap="round"/>`;
+    if (st.name !== 'z') { const hl = project(scl(an, 1.34), cx, cy, R);
+      s += `<text x="${fmt(hl[0])}" y="${fmt(hl[1])}" font-size="11" font-weight="700" fill="${st.color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2.6">${st.name}</text>`; }
+    const segs = arcSegments(t => rotate(state, spin.axis, spin.angle * t), cx, cy, R * 1.04, 48);
+    for (const seg of segs) s += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.4" ${seg.back ? 'stroke-opacity="0.45"' : ''}`);
+    const endV = rotate(state, spin.axis, spin.angle), endP = project(endV, cx, cy, R * 1.04);
+    const prevP = project(rotate(state, spin.axis, spin.angle - 6), cx, cy, R * 1.04);
+    s += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 7, '#f59e0b');
+  }
+  const tip = project(state, cx, cy, R);
+  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#dc2626" stroke-width="2.6"/>`;
+  s += arrowhead(tip, [tip[0] - cx, tip[1] - cy, 0], 8, '#dc2626');
+  s += `<circle cx="${cx}" cy="${cy}" r="2.4" fill="#dc2626"/>`;
+  if (face) {
+    const ex = R * 0.34, ey = cy - R * 0.18, eyeR = R * 0.085;
+    s += `<circle cx="${fmt(cx - ex)}" cy="${fmt(ey)}" r="${fmt(eyeR)}" fill="#1f2937"/><circle cx="${fmt(cx + ex)}" cy="${fmt(ey)}" r="${fmt(eyeR)}" fill="#1f2937"/>`;
+    s += `<circle cx="${fmt(cx - ex + eyeR*0.35)}" cy="${fmt(ey - eyeR*0.35)}" r="${fmt(eyeR*0.3)}" fill="#fff"/><circle cx="${fmt(cx + ex + eyeR*0.35)}" cy="${fmt(ey - eyeR*0.35)}" r="${fmt(eyeR*0.3)}" fill="#fff"/>`;
+    s += `<path d="M${fmt(cx - R*0.2)},${fmt(cy + R*0.05)} Q${fmt(cx)},${fmt(cy + R*0.32)} ${fmt(cx + R*0.2)},${fmt(cy + R*0.05)}" stroke="#1f2937" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+    s += `<circle cx="${fmt(cx - R*0.55)}" cy="${fmt(cy + R*0.12)}" r="${fmt(R*0.1)}" fill="#fb7185" fill-opacity="0.55"/><circle cx="${fmt(cx + R*0.55)}" cy="${fmt(cy + R*0.12)}" r="${fmt(R*0.1)}" fill="#fb7185" fill-opacity="0.55"/>`;
+  }
+  return s + `</svg>`;
+}
+
+/* ===================== ブロック & 穴埋め枠 ===================== */
+let BID = 0;
+function mix(a, b, t) {
+  const p = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+  const ca = p(a), cb = p(b), h = n => Math.round(ca[n] + (cb[n] - ca[n]) * t).toString(16).padStart(2, '0');
+  return '#' + h(0) + h(1) + h(2);
+}
+function gateBlock(type, px = 56) { // ガラス質: 斜めグラデ＋上部スペキュラ＋濃い縁＋白文字
+  const g = GATES[type], base = g.color;
+  const light = mix(base, '#ffffff', 0.5), dark = mix(base, '#000000', 0.28), edge = mix(base, '#000000', 0.45), id = `b${BID++}`;
+  const defs = `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${light}"/><stop offset="48%" stop-color="${base}"/><stop offset="100%" stop-color="${dark}"/></linearGradient>` +
+    `<radialGradient id="${id}s" cx="33%" cy="26%" r="55%"><stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/><stop offset="100%" stop-color="#ffffff" stop-opacity="0"/></radialGradient></defs>`;
+  const head = `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}" xmlns="http://www.w3.org/2000/svg" font-family="'Oxanium','Noto Sans CJK JP',sans-serif">` + defs;
+  if (type === 'X') {
+    const c = px / 2, R = px * 0.42, reach = R * 0.5;
+    return head + `<circle cx="${c}" cy="${c}" r="${fmt(R)}" fill="url(#${id})" stroke="${edge}" stroke-width="2"/><circle cx="${c}" cy="${c}" r="${fmt(R)}" fill="url(#${id}s)"/>` +
+      `<line x1="${fmt(c-reach)}" y1="${c}" x2="${fmt(c+reach)}" y2="${c}" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/><line x1="${c}" y1="${fmt(c-reach)}" x2="${c}" y2="${fmt(c+reach)}" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/></svg>`;
+  }
+  const r = px * 0.22;
+  return head + `<rect x="2" y="2" width="${px-4}" height="${px-4}" rx="${r}" fill="url(#${id})" stroke="${edge}" stroke-width="2"/>` +
+    `<rect x="3.5" y="3.5" width="${px-7}" height="${fmt(px*0.5)}" rx="${fmt(r*0.8)}" fill="url(#${id}s)"/>` +
+    `<text x="${px/2}" y="${px/2}" font-size="${px*0.52}" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="central" paint-order="stroke" stroke="${edge}" stroke-width="${fmt(px*0.03)}">${g.label}</text></svg>`;
+}
+const swapIcon = (px = 40) => `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}"><g stroke="${hsv(48,92,98)}" stroke-width="${px*0.13}" stroke-linecap="round"><line x1="${px*0.25}" y1="${px*0.25}" x2="${px*0.75}" y2="${px*0.75}"/><line x1="${px*0.75}" y1="${px*0.25}" x2="${px*0.25}" y2="${px*0.75}"/></g></svg>`;
+const fillBox = (px = 80, answer = null) => {
+  const base = `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif"><rect x="3" y="3" width="${px-6}" height="${px-6}" rx="10" fill="#fffef7" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 5"/>`;
+  if (!answer) return base + `<text x="${px/2}" y="${px/2}" font-size="13" fill="#cbd5e1" text-anchor="middle" dominant-baseline="central">？</text></svg>`;
+  return base + `<text x="${px/2}" y="${px/2}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
+};
+const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
+// 球と球の間の矢印。上にその段で渡すブロックを小さく載せる（最後の段は ＝）。
+const stepArrow = (gType, isResult) =>
+  `<span class="oparr"><span class="opblk">${gateBlock(gType, 24)}</span><span class="op${isResult ? ' eq' : ''}">${isResult ? '＝' : '→'}</span></span>`;
+// 解説ページ用の 2×2 行列 / 2×1 ベクトル（列優先で並べる）
+const mat = (a, b, c, d) => `<span class="mat"><span>${a}</span><span>${c}</span><span>${b}</span><span>${d}</span></span>`;
+const vec = (a, b) => `<span class="mat vec"><span>${a}</span><span>${b}</span></span>`;
+
+/* ===================== 観察ノートの行 ===================== */
+const N = [0, 0, 1], EQ = [1, 0, 0]; // |0>北極 / |+>赤道(東京)
+
+// ペア（2ブロック）
+const PAIRS = [
+  { tag: 'X²', g: 'X', start: N,  result: 'vanish', example: true, hint: 'やじるしが もとどおり だから 消える' },
+  { tag: 'Y²', g: 'Y', start: N,  result: 'vanish' },
+  { tag: 'Z²', g: 'Z', start: EQ, result: 'vanish', note: '赤道からスタート' },
+  { tag: 'H²', g: 'H', start: N,  result: 'vanish' },
+  { tag: 'S²', g: 'S', start: EQ, result: { block: 'Z' }, note: '赤道からスタート' },
+  { tag: 'T²', g: 'T', start: EQ, result: { block: 'S' }, note: '赤道からスタート' },
+];
+function pairRow(p) {
+  // 右側には答え（結論）を書かない。回転の観察だけ見せ、結果は子どもが □ に書く。
+  const g = GATES[p.g], st = axisStyle(g.axis), s0 = p.start, s1 = rotate(s0, g.axis, g.angle), s2 = rotate(s1, g.axis, g.angle), tw = turnWords(g.angle);
+  const cap = `<b style="color:${st.color}">${st.name}軸</b>のまわりを<b>${tw}</b><span class="deg">(${g.angle}°)</span>`;
+  const box = p.example ? fillBox(72, '消える') : fillBox(72);
+  const exlabel = p.example ? `<div class="exlabel">↑ 書き方の例</div>` : '';
+  const note = p.note ? `<div class="note">${furi(p.note)}</div>` : '';
+  const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
+  const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
+  return `<div class="prow"><div class="pleft"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div>
+    <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap">${box}${exlabel}</div></div></div>
+    <div class="pright"><div class="spheres">
+      <figure>${globe({ size: 84, skin: 'bloch', state: s0, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
+      ${stepArrow(p.g, false)}
+      <figure>${globe({ size: 84, skin: 'bloch', state: s1, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
+      ${stepArrow(p.g, true)}
+      <figure>${globe({ size: 84, skin: 'bloch', state: s2 })}<figcaption class="last">さいご</figcaption></figure>
+    </div>${why}${note}</div></div>`;
+}
+
+// トリプル（3ブロック）。外側2つが消え、まん中が変身（または全部消える）
+const TRIPLES_H = [
+  { tag: 'HXH', blocks: ['H', 'X', 'H'], start: EQ, result: { block: 'Z' }, note: '赤道からスタート', example: true, hint: 'z軸のまわりを 半周 ＝ Z と同じ' },
+  { tag: 'HZH', blocks: ['H', 'Z', 'H'], start: N,  result: { block: 'X' } },
+  { tag: 'HYH', blocks: ['H', 'Y', 'H'], start: N,  result: { block: 'Y' } },
+];
+const TRIPLES_ST = [
+  { tag: 'SXS', blocks: ['S', 'X', 'S'], start: [0.7071, 0, 0.7071], result: { block: 'X' } },
+  { tag: 'SYS', blocks: ['S', 'Y', 'S'], start: [0, -0.7071, 0.7071], result: { block: 'Y' } },
+  { tag: 'SZS', blocks: ['S', 'Z', 'S'], start: EQ, result: 'vanish', note: '赤道からスタート', example: true, hint: 'やじるしが もとどおり だから 消える' },
+  { tag: 'TST', blocks: ['T', 'S', 'T'], start: EQ, result: { block: 'Z' }, note: '赤道からスタート' },
+];
+function triRow(p) {
+  const gs = p.blocks.map(t => GATES[t]);
+  const states = [p.start];
+  for (const g of gs) states.push(rotate(states[states.length - 1], g.axis, g.angle));
+  const figs = gs.map((g, i) => {
+    const st = axisStyle(g.axis);
+    return `<figure>${globe({ size: 82, skin: 'bloch', state: states[i], spin: { axis: g.axis, angle: g.angle } })}<figcaption><b style="color:${st.color}">${st.name}</b> ${furi(turnWords(g.angle))}</figcaption></figure>`;
+  });
+  let spheres = '';
+  figs.forEach((f, i) => { spheres += f + stepArrow(p.blocks[i], i === figs.length - 1); });
+  const finalSphere = `<figure>${globe({ size: 82, skin: 'bloch', state: states[states.length - 1] })}<figcaption class="last">さいご</figcaption></figure>`;
+  const box = p.example
+    ? (p.result === 'vanish' ? fillBox(60, '消える') : `<div class="exfill">${gateBlock(p.result.block, 40)}</div>`)
+    : fillBox(60);
+  const exlabel = p.example ? `<div class="exlabel">↑ 書き方の例</div>` : '';
+  const note = p.note ? `<div class="note">${furi(p.note)}</div>` : '';
+  const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
+  const tagBg = mix(gs[0].color, '#ffffff', 0.72), tagTx = mix(gs[0].color, '#000000', 0.38);
+  return `<div class="prow"><div class="pleft tleft"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div>
+    <div class="seq"><div class="col">${p.blocks.map(t => gateBlock(t, 34)).join('')}</div>${arrowR()}<div class="boxwrap">${box}${exlabel}</div></div></div>
+    <div class="pright"><div class="spheres">${spheres}${finalSphere}</div>${why}${note}</div></div>`;
+}
+
+/* ===================== ページ ===================== */
+const headTitle = sub => `<div class="head"><div class="title">QA<sup>2</sup> ${furi('観察')}ノート</div><div class="sub">${furi(sub)}</div></div>`;
+const footer = n => `<div class="foot"><span>QA<sup>2</sup> なつやすみ じゆうけんきゅう ワークシート</span><span>${n} / 8</span></div>`;
+
+// ブロック紹介（名前・回転軸・回転量）
+const INTRO_BLOCKS = [
+  { g: 'X', name: 'X ブロック', start: N, fact: '名前は「X」だけど、記号は <b>＋</b> をかくよ。' },
+  { g: 'Y', name: 'Y ブロック', start: N, fact: 'X ブロックに にているけど、まわる軸がちがうんだ。' },
+  { g: 'Z', name: 'Z ブロック', start: [1, 0, 0], fact: 'たての軸でまわる。北極・南極は動かないよ。' },
+  { g: 'H', name: 'H ブロック', start: N, fact: '名前のもとはフランスの数学者アダマール（Hadamard）さん。だから <b>H</b>！' },
+  { g: 'S', name: 'S ブロック', start: [1, 0, 0], fact: '4分の1周だけ。2つあつまると Z ブロック に変身！' },
+  { g: 'T', name: 'T ブロック', start: [1, 0, 0], fact: 'いちばん小さい8分の1周。2つで S ブロック に変身！' },
+];
+function introRow(b) {
+  const g = GATES[b.g], st = axisStyle(g.axis);
+  const axisName = st.name === 'ななめ' ? 'ななめ' : st.name + '軸';
+  const cap = `<b style="color:${st.color}">${axisName}</b>のまわりを<b>${turnWords(g.angle)}</b>`;
+  return `<div class="brow">
+    <div class="bg">${gateBlock(b.g, 50)}<div class="bname">${furi(b.name)}</div></div>
+    <figure>${globe({ size: 96, skin: 'bloch', state: b.start, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
+    <div class="bfact">${furi(b.fact)}</div>
+  </div>`;
+}
+const introPage = () => `<div class="page">
+  ${headTitle('② ブロックのなかまたち ・ p.3')}
+  <h2><span class="dot"></span>${furi('ブロック（量子ゲート）には、6つのなかま')}</h2>
+  <div class="howto">${furi('ブロックをキュービット君にわたすと、キュービット君の<b>やじるし</b>が<b>くるっと回転</b>するよ。<b>まわる軸（いろつき）</b>と<b>まわる量</b>がブロックごとにちがうんだ。なまえといっしょに、おぼえてね！')}</div>
+  ${INTRO_BLOCKS.map(introRow).join('')}
+  ${footer(3)}
+</div>`;
+
+// SWAP を「あみだくじ」で説明する図
+function amidakujiDemo() {
+  const W = 380, H = 188, ax = 135, bx = 255, blk = 46, yTop = 42, ySwap = 96, yBot = 150, yc = hsv(48, 92, 98);
+  let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif">`;
+  s += `<line x1="${ax}" y1="14" x2="${ax}" y2="${H-12}" stroke="#cbd5e1" stroke-width="3"/><line x1="${bx}" y1="14" x2="${bx}" y2="${H-12}" stroke="#cbd5e1" stroke-width="3"/>`;
+  s += `<line x1="${ax}" y1="${ySwap}" x2="${bx}" y2="${ySwap}" stroke="${yc}" stroke-width="5" stroke-linecap="round"/>`;
+  s += `<polyline points="${ax},${yTop} ${ax},${ySwap} ${bx},${ySwap} ${bx},${yBot}" fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  s += arrowhead([bx, yBot], [0, 1, 0], 8, '#f59e0b');
+  s += `<g transform="translate(${ax-13},${ySwap-13})">${swapIcon(26)}</g><g transform="translate(${bx-13},${ySwap-13})">${swapIcon(26)}</g>`;
+  s += `<text x="${(ax+bx)/2}" y="${ySwap-9}" font-size="10" fill="#b45309" text-anchor="middle">SWAP（いれかえ）</text>`;
+  s += `<g transform="translate(${ax-blk/2},${yTop-blk/2})">${gateBlock('H', blk)}</g><g transform="translate(${bx-blk/2},${yBot-blk/2})">${gateBlock('H', blk)}</g>`;
+  s += `<text x="${bx+20}" y="${(ySwap+yBot)/2-3}" font-size="12" fill="#dc2626" font-weight="700">Hと H が</text><text x="${bx+20}" y="${(ySwap+yBot)/2+14}" font-size="12" fill="#dc2626" font-weight="700">そろう！</text>`;
+  s += `</svg>`;
+  return `<div class="amida">${s}</div>`;
+}
+
+const coverPage = () => `<div class="page cover">
+  <div class="kicker">${furi('夏休み 自由研究')}</div>
+  <h1>${furi('量子')}コンピューターの<br>${furi('不思議')}を しらべよう</h1>
+  <div class="subtitle">パズルゲーム <b>QA²</b> で あそびながら ${furi('完成')}させる ${furi('観察')}ノート</div>
+  <div class="hero">${globe({ size: 220, skin: 'earth', state: N, face: true })}<div class="heroname">キュービット${furi('君')}</div></div>
+  <div class="intro">
+    <h3>📚 ${furi('この自由研究について')}</h3>
+    <p>${furi('QA²（キューエー・ツー）は、あそびながら<b>量子コンピューター</b>のしくみがわかるゲームです。ゲームにでてくるブロックは、量子コンピューターへの<b>命令</b>（＝<b>量子ゲート</b>）をあらわしています。この自由研究では、ゲームであそびながら「<b>量子コンピューターの命令はどうはたらくのか</b>」を観察します。同じ命令を2かいつづけると“もとどおり”になって消える――そんな量子の不思議を、自分のてでうめて完成させましょう。')}</p>
+  </div>
+  <div class="namebox">
+    <div class="nbrow"><span>なまえ</span><div class="line"></div></div>
+    <div class="nbrow"><span>${furi('学年')}・${furi('組')}</span><div class="line"></div></div>
+  </div>
+  <div class="usethings">つかうもの：スマホ／タブレットで QA²・このプリント・えんぴつ／いろえんぴつ</div>
+  ${footer(1)}
+</div>`;
+
+const storyPage = () => `<div class="page">
+  ${headTitle('① キュービット君って？ ・ p.2')}
+  <h2><span class="dot"></span>${furi('キュービット君は、いつも地球の一点をさしている')}</h2>
+  <p class="lead">${furi('キュービット君は QA² の<b>かげの主役</b>。いつも地球の<b>一点</b>をさしているよ。キュービット君に<b>ブロック（量子ゲート）</b>をわたすと、さすむきが <b>くるっ</b> とかわるんだ。たとえば <b>X</b> をわたすと、地球の<b>うらがわ（半周）</b>へ……。')}</p>
+  <div class="strip">
+    <figure>${globe({ size: 180, skin: 'earth', state: N, face: true })}<figcaption>${furi('いま「北極」をさしている')}</figcaption></figure>
+    <div class="opx">${gateBlock('X', 50)}<span>Xをわたす</span></div>
+    <figure>${globe({ size: 180, skin: 'earth', state: [0,0,-1], face: true })}<figcaption>${furi('くるっ→「南極」へ（半周）')}</figcaption></figure>
+    <div class="opx">${gateBlock('X', 50)}<span>もう1かい X</span></div>
+    <figure>${globe({ size: 180, skin: 'earth', state: N, face: true })}<figcaption>${furi('また「北極」に！（もう半周）')}</figcaption></figure>
+  </div>
+  <div class="punch">${furi('半周を2かいまわると<b>ひとまわり</b>＝もとどおり。')}<br>
+  ${furi('だから <b>X・X</b> はキュービット君にとって<b>なにもしないのと同じ</b>。')} ＝ <span class="red">${furi('マッチして消える！')}</span></div>
+  <div class="bridge">${furi('つぎのページからは、いろんな<b>ブロックのくみあわせ</b>で、キュービット君が<b>どうかわるか</b>を観察してみよう。まわす<b>軸（いろつき）</b>と<b>まわる量</b>に注目してね！')}</div>
+  <div class="trythis">${furi('🎮 やってみよう：QA² で <b>X ブロックを2つ たてにそろえて</b>、ほんとうに消えるか たしかめてみよう！')}</div>
+  ${footer(2)}
+</div>`;
+
+const pairsPage = () => `<div class="page">
+  ${headTitle('③ 2つのブロックでマッチ ・ p.4')}
+  <h2><span class="dot"></span>${furi('2つのブロックを「上下にそろえる」とどうなる？')}</h2>
+  <div class="howto">${furi('<b>かきかた：</b> □ には、2つがそろったあとの <b>できあがりブロック</b> をかこう。ぜんぶ消えてなにものこらないときは <span class="red">「消える」</span>とかこう。<br>右の絵は、キュービット君が地球の上を <b>どれだけまわるか</b>。<b>半周</b>＝地球のうらがわ、つぎが <b>4分の1周</b>・<b>8分の1周</b>。まわす<b>軸（いろつき）</b>とまわる量をみてみよう。')}</div>
+  ${PAIRS.map(pairRow).join('')}
+  ${footer(4)}
+</div>`;
+
+const triplesPage = (sub, heading, lead, rows, n) => `<div class="page">
+  ${headTitle(sub)}
+  <h2><span class="dot"></span>${furi(heading)}</h2>
+  <div class="howto">${furi(lead + ' □ には、まん中のブロックが<b>変身したすがた</b>（または<span class="red">消える</span>）をかこう。')}</div>
+  ${rows.map(triRow).join('')}
+  ${footer(n)}
+</div>`;
+
+const swapPage = () => `<div class="page">
+  ${headTitle('⑤ はってん：SWAP（スワップ）・ p.7')}
+  <h2><span class="dot"></span>${furi('はってん：SWAP は「あみだくじ」みたいな命令')}</h2>
+  <p class="lead">${furi('<b>SWAP（スワップ）</b>は、棒でつながった2つのレーンを<b>いれかえる</b>命令。あみだくじみたいに線をたどると…… とおくの2つのブロックが <b>上下にそろう</b> ことがあるよ！')}</p>
+  ${amidakujiDemo()}
+  <div class="howto">${furi('上のように <b>H・SWAP・H</b> をおくと、あみだくじの線で <b>H と H が上下にそろって</b> ペアになり…… <span class="red">消える！</span> いままでおぼえたマッチが、SWAP をはさんでも つかえるんだね。')}</div>
+  <div class="freewrite"><div class="fwh">✏️ ${furi('みつけたマッチ・きづいたこと（じゆうにかこう）')}</div></div>
+  <div class="finish"><div class="stamp">かんせい！</div><div class="namebox2"><span>なまえ</span><div class="line"></div><span>${furi('日づけ')}</span><div class="line short"></div></div></div>
+  ${footer(7)}
+</div>`;
+
+const aboutPage = () => `<div class="page about">
+  ${headTitle('おうちの方・先生へ ・ p.8')}
+  <h2><span class="dot"></span>この教材の背景（おとなの方へ）</h2>
+  <div class="sect">
+    <h3>量子ビット（qubit）とキュービット君</h3>
+    <div class="miniglobe">${globe({ size: 122, skin: 'bloch', state: [0.5, 0, 0.866] })}<figcaption>北極＝|0⟩ ・ 南極＝|1⟩<br>とちゅう＝重ね合わせ</figcaption></div>
+    <p>${wrapJa('ふつうのコンピューターの最小単位「ビット」は 0 か 1 のどちらかしか表せません。量子コンピューターの「量子ビット（qubit）」は、本教材のキュービット君と同じく、球面（ブロッホ球）上の任意の向きを取れます。北極が |0⟩、南極が |1⟩ に対応し、ふつうのビットと同じ 0・1 はもちろん、その「重ね合わせ」＝球面上のあらゆる状態を表せます。これが、古典コンピューターには難しい計算や表現を可能にします。')}</p>
+  </div>
+  <div class="sect">
+    <h3>量子ゲート＝ブロック</h3>
+    <div class="gaterow">${['H', 'X', 'Y', 'Z', 'S', 'T'].map(g => gateBlock(g, 30)).join('')}</div>
+    <p>${wrapJa('量子ビットを操作する命令が「量子ゲート」で、本教材のブロックそのものです。H・X・Y・Z・S・T という記号や見た目は、大学の教科書や研究論文で使われるものとまったく同じです。お子さんはゲームを通じて、本物の量子計算の記法に触れています。')}</p>
+  </div>
+  <div class="sect">
+    <h3>数学的には</h3>
+    <p>${wrapJa('キュービット君の状態は「状態ベクトル」で表されます。')}</p>
+    <div class="eq">|0⟩ = ${vec('1', '0')}　|1⟩ = ${vec('0', '1')}　|+⟩ = <span class="frac">1/√2</span> ${vec('1', '1')}</div>
+    <p>${wrapJa('各ゲートは「ユニタリ行列」＝ある軸を中心とする回転行列です。')}</p>
+    <div class="eq">X = ${mat('0', '1', '1', '0')}<span class="ann">x軸 180°</span> 　Z = ${mat('1', '0', '0', '-1')}<span class="ann">z軸 180°</span> 　S = ${mat('1', '0', '0', 'i')}<span class="ann">z軸 90°</span> 　H = <span class="frac">1/√2</span>${mat('1', '1', '1', '-1')}</div>
+    <p>${wrapJa('状態ベクトルにゲートを適用する＝行列とベクトルの掛け算です。プリントの図は、この計算の結果に対応します。')}</p>
+    <div class="eq">例1：X|0⟩ = ${mat('0', '1', '1', '0')}${vec('1', '0')} = ${vec('0', '1')} = |1⟩</div>
+    <div class="eqnote">${wrapJa('→ キュービット君が 北極→南極 に反転（p.2 の X）。')}</div>
+    <div class="eq">例2：X·X|0⟩ = X|1⟩ = |0⟩</div>
+    <div class="eqnote">${wrapJa('→ 2回で もとどおり＝マッチして消える（p.4 の X²）。')}</div>
+    <div class="eq">例3：S·S = ${mat('1', '0', '0', 'i')}<span class="sup">2</span> = ${mat('1', '0', '0', '-1')} = Z</div>
+    <div class="eqnote">${wrapJa('→ S を2回で Z と同じ（p.4 の S²→Z）。T は z軸 45°（位相 e^{iπ/4}）で、2回で S になります。')}</div>
+  </div>
+  <div class="sect">
+    <h3>この教材のねらい</h3>
+    <p>${wrapJa('遊びと観察を通じて、重ね合わせ・量子ゲート・ユニタリ性といった量子計算の中核概念を、専門記法のまま体験的に理解することを目指します。手を動かして法則（XX＝消える、S²＝Z など）を自分で見つける過程が、後の本格的な学習の土台になります。')}</p>
+  </div>
+  ${footer(8)}
+</div>`;
+
+/* ===================== HTML 全体 ===================== */
+const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<style>
+  @page { size: A4 portrait; margin: 0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Noto Sans CJK JP', sans-serif; color: #1f2937; word-break: keep-all; overflow-wrap: anywhere; }
+  .page { width: 210mm; min-height: 297mm; padding: 12mm 13mm; position: relative; break-after: page; }
+  .page:last-child { break-after: auto; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; border-bottom: 3px solid #1f2937; padding-bottom: 6px; }
+  .head .title { font-size: 27px; font-weight: 800; line-height: 1.7; } .head .title sup { font-size: 14px; }
+  .head .sub { font-size: 12px; color: #64748b; }
+  ruby rt { font-size: 0.5em; font-weight: 400; opacity: 0.85; }
+  h2 { font-size: 16px; margin: 14px 0 6px; display: flex; align-items: center; gap: 8px; line-height: 1.5; }
+  h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block; border-radius: 2px; }
+  .lead { font-size: 13px; line-height: 1.8; }
+  .red { color: #dc2626; font-weight: 700; }
+  /* cover */
+  .cover { text-align: center; }
+  .cover .kicker { margin-top: 10mm; font-size: 15px; letter-spacing: 4px; color: #6366f1; font-weight: 700; }
+  .cover h1 { font-size: 38px; line-height: 1.45; margin: 8px 0; font-weight: 800; }
+  .cover .subtitle { font-size: 14px; color: #475569; }
+  .hero { margin: 6px 0; } .heroname { font-size: 13px; font-weight: 700; color: #0369a1; margin-top: -10px; }
+  .intro { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 18px 12px; margin: 6px 24px; text-align: left; }
+  .intro h3 { font-size: 15px; margin: 0 0 4px; } .intro p { font-size: 12.5px; line-height: 1.85; margin: 0; }
+  .namebox { margin: 16px 24px 0; }
+  .nbrow { display: flex; align-items: flex-end; gap: 12px; font-size: 15px; margin-top: 16px; }
+  .nbrow .line { flex: 1; border-bottom: 2px solid #94a3b8; height: 38px; }
+  .usethings { font-size: 11.5px; color: #64748b; margin-top: 12px; }
+  /* story */
+  .strip { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 8px 0; }
+  .strip figure { margin: 0; text-align: center; } .strip figcaption { font-size: 11px; color: #475569; margin-top: -8px; }
+  .opx { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; } .opx span { font-size: 10px; color: #64748b; }
+  .punch { text-align: center; font-size: 15px; margin: 6px 0; line-height: 1.6; }
+  .bridge { background: #ecfeff; border: 1px solid #a5f3fc; border-radius: 10px; padding: 10px 14px; font-size: 12.5px; line-height: 1.7; margin-top: 10px; }
+  .trythis { background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 10px; padding: 13px 16px; font-size: 14px; line-height: 1.7; margin-top: 14px; text-align: center; }
+  /* worksheet rows */
+  .howto { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 7px 14px; font-size: 12px; line-height: 1.65; margin: 4px 0 8px; }
+  .deg { font-size: 9px; color: #94a3b8; margin-left: 2px; }
+  .prow { display: flex; gap: 12px; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 4px 12px; margin-bottom: 6px; }
+  .pleft { width: 33%; border-right: 2px dashed #e2e8f0; padding-right: 10px; } .tleft { width: 30%; }
+  .tag { display: inline-block; font-weight: 800; font-size: 15px; padding: 1px 11px; border-radius: 6px; }
+  .seq { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+  .col { display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  .boxwrap, .exfill { text-align: center; } .exfill { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 4px; background: #fffef7; display: inline-block; }
+  .exlabel { font-size: 9px; color: #dc2626; margin-top: 1px; }
+  .pright { flex: 1; }
+  .spheres { display: flex; align-items: center; justify-content: center; gap: 6px; } .spheres figure { margin: 0; text-align: center; }
+  .pright { text-align: center; }
+  .spheres figcaption { font-size: 9.5px; color: #475569; margin-top: -5px; line-height: 1.15; }
+  .foot { position: absolute; left: 13mm; right: 13mm; bottom: 8mm; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 9px; color: #94a3b8; display: flex; justify-content: space-between; }
+  .foot sup { font-size: 7px; }
+  .spheres .op { font-size: 16px; color: #94a3b8; line-height: 1; } .spheres .op.eq { color: #475569; font-weight: 700; }
+  .oparr { display: inline-flex; flex-direction: column; align-items: center; align-self: center; }
+  .opblk { line-height: 0; margin-bottom: 2px; }
+  .concl { font-size: 11.5px; line-height: 1.45; } .concl b { font-size: 12.5px; }
+  .note { font-size: 9.5px; color: #0369a1; margin-top: 3px; }
+  .why { font-size: 11px; color: #dc2626; font-weight: 700; text-align: center; margin-top: 4px; }
+  /* swap page */
+  .swapdemo { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 8px 0; }
+  .swapdemo figure { margin: 0; text-align: center; } .swapdemo figcaption { font-size: 11px; color: #475569; margin-top: -6px; }
+  .swapmid { text-align: center; display: flex; flex-direction: column; align-items: center; } .swapmid span { font-size: 10px; color: #b45309; }
+  .freewrite { border: 2px dashed #cbd5e1; border-radius: 12px; height: 300px; margin-top: 10px; padding: 8px 12px; }
+  .freewrite .fwh { font-size: 12px; color: #64748b; }
+  .finish { display: flex; align-items: center; gap: 20px; margin-top: 12px; }
+  .finish .stamp { border: 3px solid #dc2626; color: #dc2626; font-weight: 800; font-size: 20px; padding: 6px 18px; border-radius: 10px; transform: rotate(-6deg); }
+  .namebox2 { display: flex; align-items: flex-end; gap: 10px; font-size: 13px; flex: 1; }
+  .namebox2 .line { flex: 1; border-bottom: 1.5px solid #94a3b8; height: 26px; } .namebox2 .line.short { flex: 0 0 90px; }
+  .spheres figcaption.last { color: #1f2937; font-weight: 700; }
+  /* block intro */
+  .brow { display: flex; align-items: center; gap: 14px; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 6px 14px; margin-bottom: 7px; }
+  .bg { width: 120px; text-align: center; } .bname { font-size: 13px; font-weight: 800; margin-top: 2px; }
+  .brow figure { margin: 0; text-align: center; } .brow figcaption { font-size: 10px; color: #475569; margin-top: -8px; }
+  .bfact { flex: 1; font-size: 12px; line-height: 1.6; }
+  .amida { text-align: center; margin: 8px 0; }
+  /* 解説ページ（おとな向け） */
+  .about h3 { font-size: 14px; margin: 12px 0 4px; color: #1f2937; }
+  .sect { margin-bottom: 6px; }
+  .sect p { font-size: 12.5px; line-height: 1.85; margin: 2px 0; }
+  .mat { display: inline-grid; grid-template-rows: 1fr 1fr; grid-auto-flow: column; column-gap: 9px; padding: 2px 7px; margin: 0 2px; position: relative; vertical-align: middle; font-family: Georgia, 'Times New Roman', serif; font-size: 13px; line-height: 1.35; }
+  .mat.vec { column-gap: 0; }
+  .mat::before, .mat::after { content: ''; position: absolute; top: 1px; bottom: 1px; width: 4px; border: 1.4px solid #334155; }
+  .mat::before { left: 1px; border-right: 0; } .mat::after { right: 1px; border-left: 0; }
+  .mat > span { text-align: center; min-width: 11px; }
+  .eq { font-family: Georgia, 'Times New Roman', serif; font-size: 14px; margin: 8px 0 2px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+  .eqnote { font-size: 12px; color: #475569; margin: 0 0 8px 14px; }
+  .ann { font-size: 10px; color: #64748b; margin-left: 3px; } .frac { font-family: Georgia, serif; } .sup { font-size: 0.7em; vertical-align: super; }
+  .miniglobe { float: right; text-align: center; margin: -4px 0 4px 14px; } .miniglobe figcaption { font-size: 10px; color: #475569; margin-top: -4px; line-height: 1.4; }
+  .gaterow { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; }
+</style></head>
+<body>
+  ${coverPage()}
+  ${storyPage()}
+  ${introPage()}
+  ${pairsPage()}
+  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', 'H ではさむと、まん中が変身する', '外がわの <b>H</b> 2つが消えて、まん中のブロックが<b>べつのブロックに変身</b>するよ。', TRIPLES_H, 5)}
+  ${triplesPage('④ 3つのブロックでマッチ（その2）・ p.6', 'S・T ではさむと？', '同じように、外がわの2つではさんで観察しよう。ぜんぶ消えることもあるよ。', TRIPLES_ST, 6)}
+  ${swapPage()}
+  ${aboutPage()}
+</body></html>`;
+
+const DIST = join(OUT, 'dist');
+mkdirSync(DIST, { recursive: true });
+writeFileSync(join(DIST, 'qa2.html'), html);
+console.log('wrote dist/qa2.html');

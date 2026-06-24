@@ -1,0 +1,14 @@
+{
+  "name": "qa2-natsuyasumi-worksheet",
+  "version": "1.0.0",
+  "description": "QA2 を題材にした小学生向け夏休み自由研究ワークシート（量子ゲートの観察ノート）を手続き的に生成し、印刷用 PDF を書き出す。",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "html": "node build.mjs",
+    "build": "bash build.sh"
+  },
+  "dependencies": {
+    "budoux": "^0.8.4"
+  }
+}

@@ -1,0 +1,5 @@
+node_modules/
+# 中間生成物（HTML）。最終成果物の PDF はコミットする。
+dist/qa2.html
+# セッションのハンドオフ用ローカル状態
+.remember/
