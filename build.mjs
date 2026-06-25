@@ -67,12 +67,18 @@ const FURI = [
   ['4分の1周', 'よんぶんのいっしゅう'], ['8分の1周', 'はちぶんのいっしゅう'],
   ['自由研究', 'じゆうけんきゅう'], ['夏休み', 'なつやすみ'], ['量子', 'りょうし'], ['不思議', 'ふしぎ'],
   ['観察', 'かんさつ'], ['完成', 'かんせい'], ['命令', 'めいれい'], ['自分', 'じぶん'], ['学年', 'がくねん'],
+  ['予想', 'よそう'], ['結果', 'けっか'], ['法則', 'ほうそく'], ['今日', 'きょう'], ['場所', 'ばしょ'],
+  ['点線', 'てんせん'], ['四角', 'しかく'], ['答', 'こた'], ['例', 'れい'], ['前', 'まえ'],
+  ['計算', 'けいさん'], ['大切', 'たいせつ'], ['東京', 'とうきょう'], ['中心', 'ちゅうしん'], ['一回', 'いっかい'],
+  ['意味', 'いみ'], ['移動', 'いどう'], ['書き方', 'かきかた'], ['気', 'き'], ['考', 'かんが'], ['長', 'なが'], ['高', 'たか'], ['使', 'つか'], ['段', 'だん'],
+  ['小', 'ちい'], ['色', 'いろ'], ['回', 'かい'],
   ['真上', 'まうえ'], ['方位', 'ほうい'], ['赤道', 'せきどう'], ['北極', 'ほっきょく'], ['南極', 'なんきょく'],
   ['地球', 'ちきゅう'], ['半周', 'はんしゅう'], ['一点', 'いってん'], ['主役', 'しゅやく'], ['上下', 'じょうげ'],
   ['変身', 'へんしん'], ['注目', 'ちゅうもく'], ['位置', 'いち'], ['日づけ', 'ひづけ'], ['同じ', 'おなじ'],
   ['回転', 'かいてん'], ['記号', 'きごう'], ['名前', 'なまえ'], ['数学者', 'すうがくしゃ'],
   ['軸', 'じく'], ['量', 'りょう'], ['組', 'くみ'], ['君', 'くん'], ['絵', 'え'], ['外', 'そと'],
-  ['上', 'うえ'], ['右', 'みぎ'], ['中', 'なか'], ['線', 'せん'], ['棒', 'ぼう'], ['動', 'うご'], ['消', 'き'],
+  ['上', 'うえ'], ['右', 'みぎ'], ['左', 'ひだり'], ['大', 'おお'], ['中', 'なか'], ['線', 'せん'], ['棒', 'ぼう'], ['後', 'あと'], ['回目', 'かいめ'],
+  ['指', 'さ'], ['向', 'む'], ['元', 'もと'], ['戻', 'もど'], ['動', 'うご'], ['書', 'か'], ['見', 'み'], ['消', 'き'],
 ];
 const FURI_MAP = Object.fromEntries(FURI);
 const FURI_RE = new RegExp(FURI.map(e => e[0]).sort((a, b) => b.length - a.length)
@@ -103,7 +109,7 @@ const polyline = (pts, attrs) => `<polyline points="${pts.map(p => `${fmt(p[0])}
 /* ===================== globe(): 地球/ブロッホ 共通部品 ===================== */
 let UID = 0;
 function globe(opts) {
-  const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null, poleLabels = true } = opts;
+  const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null, poleLabels = true, ghostState = null } = opts;
   const spinAxisName = spin ? axisStyle(spin.axis).name : null;
   const W = size, H = size, cx = W / 2, cy = H / 2, R = size * 0.34;
   const id = `g${UID++}`, ink = '#334155', faint = '#94a3b8';
@@ -136,8 +142,10 @@ function globe(opts) {
     s += `<line x1="${cx}" y1="${fmt(project([0,0,-1],cx,cy,R)[1])}" x2="${cx}" y2="${fmt(project([0,0,1],cx,cy,R)[1])}" stroke="${faint}" stroke-width="1" stroke-opacity="0.6"/>`;
   } else if (poleLabels) {
     const np = project([0, 0, 1.3], cx, cy, R), sp = project([0, 0, -1.34], cx, cy, R);
-    s += `<text x="${fmt(np[0])}" y="${fmt(np[1])}" font-size="9.5" fill="#0369a1" text-anchor="middle">北極</text>`;
-    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1])}" font-size="9.5" fill="#0369a1" text-anchor="middle">南極</text>`;
+    s += `<text x="${fmt(np[0])}" y="${fmt(np[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">北極</text>`;
+    s += `<text x="${fmt(np[0])}" y="${fmt(np[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">ほっきょく</text>`;
+    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">南極</text>`;
+    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">なんきょく</text>`;
   }
   if (spin) { // 回転の中心軸を強調 → 軌跡＋矢印
     const st = axisStyle(spin.axis), an = norm(spin.axis);
@@ -151,6 +159,15 @@ function globe(opts) {
     const endV = rotate(state, spin.axis, spin.angle), endP = project(endV, cx, cy, R * 1.04);
     const prevP = project(rotate(state, spin.axis, spin.angle - 6), cx, cy, R * 1.04);
     s += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 7, '#f59e0b');
+  }
+  if (ghostState && len(add(state, scl(ghostState, -1))) > 0.05) {
+    const gp = project(ghostState, cx, cy, R), tp = project(state, cx, cy, R), ap0 = project(ghostState, cx, cy, R * 1.06), ap1 = project(state, cx, cy, R * 1.06);
+    s += `<g opacity="0.35"><line x1="${cx}" y1="${cy}" x2="${fmt(gp[0])}" y2="${fmt(gp[1])}" stroke="#64748b" stroke-width="2" stroke-dasharray="3 3"/>${arrowhead(gp, [gp[0] - cx, gp[1] - cy, 0], 6, '#64748b')}</g>`;
+    const mid = [(ap0[0] + ap1[0]) / 2, (ap0[1] + ap1[1]) / 2], out = norm([mid[0] - cx, mid[1] - cy, 0]);
+    const off = len(out) < 0.5 ? norm([-(ap1[1] - ap0[1]), ap1[0] - ap0[0], 0]) : out;
+    const c = [mid[0] + off[0] * R * 0.34, mid[1] + off[1] * R * 0.34];
+    s += `<path d="M${fmt(ap0[0])},${fmt(ap0[1])} Q${fmt(c[0])},${fmt(c[1])} ${fmt(ap1[0])},${fmt(ap1[1])}" fill="none" stroke="#f59e0b" stroke-width="2.1" stroke-linecap="round"/>`;
+    s += arrowhead(ap1, [ap1[0] - c[0], ap1[1] - c[1], 0], 6.5, '#f59e0b');
   }
   const tip = project(state, cx, cy, R);
   s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#dc2626" stroke-width="2.6"/>`;
@@ -212,6 +229,7 @@ function sakuraStamp() {
 const fillBox = (px = 80, answer = null) => {
   const base = `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif"><rect x="3" y="3" width="${px-6}" height="${px-6}" rx="10" fill="#fffef7" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 5"/>`;
   if (!answer) return base + `<text x="${px/2}" y="${px/2}" font-size="13" fill="#cbd5e1" text-anchor="middle" dominant-baseline="central">？</text></svg>`;
+  if (answer === '消える') return base + `<text x="${px/2 - 13}" y="${px/2 - 12}" font-size="7" fill="#dc2626" text-anchor="middle">き</text><text x="${px/2}" y="${px/2 + 3}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
   return base + `<text x="${px/2}" y="${px/2}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
 };
 const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
@@ -239,18 +257,19 @@ function pairRow(p) {
   const g = GATES[p.g], st = axisStyle(g.axis), s0 = p.start, s1 = rotate(s0, g.axis, g.angle), s2 = rotate(s1, g.axis, g.angle), tw = turnWords(g.angle);
   const cap = `<b style="color:${st.color}">${st.name}軸</b>のまわりを<b>${tw}</b><span class="deg">(${g.angle}°)</span>`;
   const box = p.example ? fillBox(68, '消える') : fillBox(68);
-  const exlabel = p.example ? `<div class="exlabel">↑ 書き方の例</div>` : '';
+  const exlabel = p.example ? `<div class="exlabel">${furi('↑ 書き方の例')}</div>` : '';
   const note = p.note ? `<div class="note">${furi(p.note)}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
+  const finalCaption = len(add(s2, scl(s0, -1))) > 0.05 ? furi('やじるしの移動') : 'さいご';
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
-    <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">ここに書く</div>${box}${exlabel}</div></div></div>
+    <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres">
       <figure>${globe({ size: 76, skin: 'bloch', state: s0, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
       ${stepArrow(p.g, false)}
       <figure>${globe({ size: 76, skin: 'bloch', state: s1, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
       ${stepArrow(p.g, true)}
-      <figure>${globe({ size: 76, skin: 'bloch', state: s2 })}<figcaption class="last">さいご（ヒント）</figcaption></figure>
+      <figure>${globe({ size: 76, skin: 'bloch', state: s2, ghostState: s0 })}<figcaption class="last">${finalCaption}</figcaption></figure>
     </div>${why}${note}</div></div>`;
 }
 
@@ -276,17 +295,18 @@ function triRow(p) {
   });
   let spheres = '';
   figs.forEach((f, i) => { spheres += f + stepArrow(p.blocks[i], i === figs.length - 1); });
-  const finalSphere = `<figure>${globe({ size: 82, skin: 'bloch', state: states[states.length - 1] })}<figcaption class="last">さいご（ヒント）</figcaption></figure>`;
+  const finalCaption = len(add(states[states.length - 1], scl(states[0], -1))) > 0.05 ? furi('やじるしの移動') : 'さいご';
+  const finalSphere = `<figure>${globe({ size: 82, skin: 'bloch', state: states[states.length - 1], ghostState: states[0] })}<figcaption class="last">${finalCaption}</figcaption></figure>`;
   const box = p.example
     ? (p.result === 'vanish' ? fillBox(64, '消える') : `<div class="exfill">${gateBlock(p.result.block, 42)}</div>`)
     : fillBox(64);
-  const exlabel = p.example ? `<div class="exlabel">↑ 書き方の例</div>` : '';
+  const exlabel = p.example ? `<div class="exlabel">${furi('↑ 書き方の例')}</div>` : '';
   const note = p.note ? `<div class="note">${furi(p.note)}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(gs[0].color, '#ffffff', 0.72), tagTx = mix(gs[0].color, '#000000', 0.38);
   const divider = p.divider ? `<div class="rowdivider">${furi(p.divider)}</div>` : '';
   return `${divider}<div class="prow"><div class="pleft tleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.blocks.join('・')}</div></div>
-    <div class="seq"><div class="col">${p.blocks.map(t => gateBlock(t, 34)).join('')}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">ここに書く</div>${box}${exlabel}</div></div></div>
+    <div class="seq"><div class="col">${p.blocks.map(t => gateBlock(t, 34)).join('')}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres">${spheres}${finalSphere}</div>${why}${note}</div></div>`;
 }
 
@@ -299,7 +319,7 @@ const INTRO_BLOCKS = [
   { group: 'まずは半周のブロック', g: 'X', name: 'X ブロック', start: N, fact: 'Xブロックは <b>＋マーク</b>。x軸で半周するよ。' },
   { g: 'Y', name: 'Y ブロック', start: N, fact: 'Y軸で半周。X ブロックと、まわる向きがちがうんだ。' },
   { g: 'Z', name: 'Z ブロック', start: [1, 0, 0], fact: 'たての z軸で半周。北極・南極は動かないよ。' },
-  { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'ななめ軸で半周。名前はアダマール（Hadamard）さんから。' },
+  { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'ななめ軸で半周。名前はフランスの数学者アダマール（Hadamard）さんから。' },
   { group: '小さい回転', g: 'S', name: 'S ブロック', start: [1, 0, 0], fact: 'z軸を4分の1周。2つあつまると Z ブロック に変身！' },
   { g: 'T', name: 'T ブロック', start: [1, 0, 0], fact: 'z軸を8分の1周。2つで S ブロック に変身！' },
 ];
@@ -317,7 +337,6 @@ const introPage = () => `<div class="page">
   ${headTitle('② ブロックのなかまたち ・ p.3')}
   <h2><span class="dot"></span>${furi('ブロック（量子ゲート）には、6つのなかま')}</h2>
   <div class="howto">${furi('ブロックをキュービット君にわたすと、キュービット君の<b>やじるし</b>が<b>くるっと回転</b>するよ。<b>まわる軸</b>と<b>まわる量</b>を、色だけでなくラベルでも見よう。')}</div>
-  <div class="axislegend"><b>見かた</b><span>x軸＝横</span><span>y軸＝ななめ緑</span><span>z軸＝たて</span><span>ななめ軸＝H</span></div>
   ${INTRO_BLOCKS.map(b => `${b.group ? `<div class="grouphead">${furi(b.group)}</div>` : ''}${introRow(b)}`).join('')}
   ${footer(3)}
 </div>`;
@@ -361,7 +380,7 @@ const coverPage = () => `<div class="page cover">
   <div class="kicker">${furi('夏休み 自由研究')}</div>
   <h1>${furi('量子')}コンピューターの<br>${furi('不思議')}を しらべよう</h1>
   <div class="subtitle">パズルゲーム <b>QA²</b> で あそびながら ${furi('完成')}させる ${furi('観察')}ノート</div>
-  <div class="goal">今日のゴール：ブロックをならべると「消える／変身する」を見つけよう</div>
+  <div class="goal">${furi('今日のゴール：ブロックをならべると「消える／変身する」を見つけよう')}</div>
   <div class="hero">${globe({ size: 220, skin: 'earth', state: N, face: true, poleLabels: false })}<div class="heroname">キュービット${furi('君')}</div></div>
   <div class="intro">
     <h3>📚 ${furi('この自由研究について')}</h3>
@@ -372,7 +391,6 @@ const coverPage = () => `<div class="page cover">
     </ul>
   </div>
   <div class="materials"><b>つかうもの</b><span>□ QA²</span><span>□ このプリント</span><span>□ えんぴつ</span><span>□ いろえんぴつ</span></div>
-  <div class="progressmap"><b>すすみかた</b><span>①キュービット君</span><span>②ブロック</span><span>③2こでマッチ</span><span>④3こでマッチ</span><span>⑤SWAP</span></div>
   <div class="namebox">
     <div class="nbrow"><span>なまえ</span><div class="line"></div></div>
     <div class="nbrow"><span>${furi('学年')}・${furi('組')}</span><div class="line"></div></div>
@@ -383,7 +401,6 @@ const coverPage = () => `<div class="page cover">
 const storyPage = () => `<div class="page">
   ${headTitle('① キュービット君って？ ・ p.2')}
   <h2><span class="dot"></span>${furi('キュービット君と、ブロックのひみつ')}</h2>
-  <div class="rulecards"><div><b>向き</b><span>＝データ</span></div><div><b>X</b><span>＝くるっと半周</span></div><div><b>X→X</b><span>＝元にもどる</span></div></div>
   <div class="step"><div class="num">1</div>
     <div class="stepbody"><p>${furi('キュービット君は、ゲーム <b>QA²</b> には出てこないけれど <b>かげの主役</b>。量子コンピューターの中の「<b>データ</b>」＝計算のたんい として、とても大切なやくわりをしているよ。')}</p></div>
     <figure class="stepfig">${globe({ size: 100, skin: 'earth', state: N, face: true })}<figcaption>${furi('キュービット君')}</figcaption></figure>
@@ -399,11 +416,11 @@ const storyPage = () => `<div class="page">
     <div class="stepbody">
       <p>${furi('北極のキュービット君に <b>X</b> をわたすと…… <b style="color:#2563eb">x軸</b>を中心に くるっと回転！（→ 南極） もう一回 <b>X</b> をわたすと…… また <b style="color:#2563eb">x軸</b>で回って <b>元に戻った！</b>')}</p>
       <div class="strip">
-        <figure><div class="figlabel">① 北極</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('北極を指している')}</figcaption></figure>
+        <figure><div class="figlabel">${furi('① 北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('北極を指している')}</figcaption></figure>
         <div class="opx">${gateBlock('X', 42)}<span>Xブロック</span></div>
-        <figure><div class="figlabel">② X後：南極</div>${globe({ size: 124, skin: 'earth', state: [0,0,-1], face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('南極へ')}</figcaption></figure>
-        <div class="opx">${gateBlock('X', 42)}<span>もう1回 X</span></div>
-        <figure><div class="figlabel">③ 2回目：北極</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('元に戻った！')}</figcaption></figure>
+        <figure><div class="figlabel">${furi('② X後：南極')}</div>${globe({ size: 124, skin: 'earth', state: [0,0,-1], face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('南極へ')}</figcaption></figure>
+        <div class="opx">${gateBlock('X', 42)}<span>${furi('もう1回 X')}</span></div>
+        <figure><div class="figlabel">${furi('③ 2回目：北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('元に戻った！')}</figcaption></figure>
       </div>
     </div>
   </div>
@@ -411,15 +428,15 @@ const storyPage = () => `<div class="page">
     <div class="stepbody"><p>${furi('元に戻った＝ <b>X を2回わたす意味がない</b>。だから <b>X X</b> のならびがあったら <b>消してもいい</b>！ キュービット君には なんの えいきょうもないからね。')} ＝ <span class="red">${furi('マッチして消える！')}</span></p></div>
   </div>
   <div class="trythis">${furi('🎮 やってみよう：QA² で <b>X ブロックを2つ たてにそろえて</b>、ほんとうに消えるか たしかめてみよう！')}</div>
-  <div class="observebox"><b>観察メモ</b><span>予想：□ 消える　□ 消えない</span><span>結果：＿＿＿＿＿＿＿＿</span><span>気づいたこと：＿＿＿＿＿＿＿＿＿＿＿＿</span></div>
+  <div class="observebox"><b>${furi('観察メモ')}</b><div class="obsline">${furi('予想')}：□ ${furi('消える')}　□ ${furi('消えない')}</div><div class="obsline">${furi('結果')}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div><div class="obsline wide">${furi('気づいたこと')}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿<br>＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div></div>
   ${footer(2)}
 </div>`;
 
 const pairsPage = () => `<div class="page pairs">
   ${headTitle('③ 2つのブロックでマッチ ・ p.4')}
   <h2><span class="dot"></span>${furi('2つのブロックを「上下にそろえる」とどうなる？')}</h2>
-  <div class="howto">${furi('<b>かきかた：</b> 答えは<b>左の大きな点線の四角だけ</b>に書く。右の絵はヒント（書かない）。ぜんぶ消えるときは <span class="red">「消える」</span> とかこう。')}</div>
-  <div class="microguide"><span>例：X² = Xが2こ</span><span>書く場所：左の大きな□だけ</span><span>右：見るだけ</span></div>
+  <div class="howto">${furi('<b>かきかた：</b> 答えは<b>左の大きな点線の四角だけ</b>に書く。ぜんぶ消えるときは <span class="red">「消える」</span> とかこう。')}</div>
+  <div class="microguide"><span>${furi('例：X² = Xが2こ')}</span><span>${furi('書く場所：左の大きな□だけ')}</span></div>
   ${PAIRS.map(pairRow).join('')}
   ${footer(4)}
 </div>`;
@@ -427,8 +444,8 @@ const pairsPage = () => `<div class="page pairs">
 const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="page ${n === 6 ? 'tallrows' : ''}">
   ${headTitle(sub)}
   <h2><span class="dot"></span>${furi(heading)}</h2>
-  <div class="howto">${furi(lead + ' 答えは、各行の<b>左側にある大きな点線の四角</b>だけに書こう。右の絵はヒントなので書きこまなくてOK。まん中のブロックが<b>変身したすがた</b>（または<span class="red">消える</span>）をかこう。')} ${n === 6 ? `<span class="sampleanswer">例：${fillBox(42, '消える')}</span>` : ''}</div>
-  ${n === 6 ? `<div class="stlegend"><span><b>S</b> = z軸を4分の1周</span><span><b>T</b> = z軸を8分の1周</span></div>` : ''}
+  <div class="howto">${furi(lead + ' 前のページと同じように考えよう。')}</div>
+  ${n === 6 ? `<div class="stlegend"><span>${furi('<b>S</b> = z軸を4分の1周')}</span><span>${furi('<b>T</b> = z軸を8分の1周')}</span></div>` : ''}
   ${rows.map(triRow).join('')}
   ${memo ? `<div class="freewrite guided" style="height:${memo}px"><div class="fwh">✏️ ${furi('よそう・きづいたこと')}</div><div class="promptlines"><span>Hではさむと X は ＿＿ になる</span><span>Hではさむと Z は ＿＿ になる</span><span>Hではさむと Y は ＿＿ になる</span></div></div>` : ''}
   ${footer(n)}
@@ -443,7 +460,7 @@ const swapPage = () => `<div class="page">
     <div class="amida">${amidakujiDemo2()}<div class="amidacap">${furi('SWAP 2つ＝2段：もっと はなれた H もそろう！')}</div></div>
   </div>
   <div class="trythis">${furi('🎉 長い あみだくじを つくって マッチさせると、QA² では <b>高とくてん</b>！ いろんな つなぎかたを ためして、いままでの 消えるマッチを SWAP ごしに そろえてみよう。')}</div>
-  <div class="freewrite guided" style="height:300px"><div class="fwh">✏️ ${furi('みつけたマッチ・きづいたこと')}</div><div class="promptlines"><span>そろったブロック：＿＿＿＿＿＿</span><span>使ったSWAP：＿＿こ</span><span>気づいたこと：＿＿＿＿＿＿＿＿＿＿＿＿＿＿</span></div></div>
+  <div class="freewrite guided" style="height:300px"><div class="fwh">✏️ ${furi('みつけたマッチ・きづいたこと')}</div><div class="promptlines"><span>${furi('そろったブロック')}：＿＿＿＿＿＿</span><span>${furi('使ったSWAP')}：＿＿こ</span><span>${furi('気づいたこと')}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿</span></div></div>
   <div class="finish">${sakuraStamp()}<div class="namebox2"><span>なまえ</span><div class="line"></div><span>${furi('日づけ')}</span><div class="line short"></div></div></div>
   ${footer(7)}
 </div>`;
@@ -508,17 +525,12 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .hero { margin: 2px 0; } .heroname { font-size: 13px; font-weight: 700; color: #0369a1; margin-top: -10px; }
   .intro { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 18px 12px; margin: 4px 24px; text-align: left; }
   .intro h3 { font-size: 15px; margin: 0 0 4px; } .intro ul { margin: 0; padding-left: 1.2em; display: grid; gap: 2px; } .intro li { font-size: 13px; line-height: 1.7; }
-  .materials, .progressmap { margin: 8px 24px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; align-items: center; font-size: 12px; }
-  .materials { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 8px 10px; }
-  .progressmap { color: #475569; }
-  .materials span, .progressmap span { border: 1px solid #cbd5e1; border-radius: 999px; padding: 3px 8px; background: #fff; }
+  .materials { margin: 8px 24px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; align-items: center; font-size: 12px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 8px 10px; }
+  .materials span { border: 1px solid #cbd5e1; border-radius: 999px; padding: 3px 8px; background: #fff; }
   .namebox { margin: 10px 24px 0; }
   .nbrow { display: flex; align-items: flex-end; gap: 12px; font-size: 15px; margin-top: 10px; }
   .nbrow .line { flex: 1; border-bottom: 2px solid #94a3b8; height: 30px; }
   /* story */
-  .rulecards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 6px 0 10px; }
-  .rulecards div { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 10px; text-align: center; }
-  .rulecards b { display: block; font-size: 16px; } .rulecards span { display: block; font-size: 11px; color: #475569; }
   .strip { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 8px 0; }
   .strip figure { margin: 0; text-align: center; } .strip figcaption { font-size: 11px; color: #475569; margin-top: -8px; }
   .figlabel { display: inline-block; font-size: 12px; font-weight: 800; background: #eef2ff; color: #3730a3; border-radius: 999px; padding: 2px 9px; margin-bottom: -4px; }
@@ -530,12 +542,13 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .punch { text-align: center; font-size: 15px; margin: 6px 0; line-height: 1.6; }
   .bridge { background: #ecfeff; border: 1px solid #a5f3fc; border-radius: 10px; padding: 10px 14px; font-size: 12.5px; line-height: 1.7; margin-top: 10px; }
   .trythis { background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 10px; padding: 13px 16px; font-size: 14px; line-height: 1.7; margin-top: 14px; text-align: center; }
-  .observebox { margin-top: 10px; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 10px 14px; display: grid; grid-template-columns: auto 1fr 1fr; gap: 8px 16px; font-size: 12.5px; align-items: center; }
-  .observebox b { color: #1f2937; }
+  .observebox { margin-top: 10px; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 12px 14px; min-height: 140px; display: grid; grid-template-columns: auto 1fr 1fr; gap: 12px 16px; font-size: 12.5px; line-height: 1.9; align-items: start; }
+  .observebox b { color: #1f2937; font-size: 13px; }
+  .observebox .wide { grid-column: 1 / 4; }
   /* worksheet rows */
   .howto { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 7px 14px; font-size: 12px; line-height: 1.65; margin: 4px 0 8px; }
-  .microguide, .stlegend, .axislegend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; margin: 0 0 7px; font-size: 11px; color: #475569; }
-  .microguide span, .stlegend span, .axislegend span { border: 1px solid #cbd5e1; background: #fff; border-radius: 999px; padding: 3px 9px; }
+  .microguide, .stlegend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; margin: 0 0 7px; font-size: 11px; color: #475569; }
+  .microguide span, .stlegend span { border: 1px solid #cbd5e1; background: #fff; border-radius: 999px; padding: 3px 9px; }
   .deg { font-size: 9px; color: #94a3b8; margin-left: 2px; }
   .prow { display: flex; gap: 12px; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 4px 12px; margin-bottom: 6px; }
   .pairs .prow { padding: 3px 10px; margin-bottom: 4px; gap: 10px; }
@@ -565,7 +578,6 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .concl { font-size: 11.5px; line-height: 1.45; } .concl b { font-size: 12.5px; }
   .note { font-size: 9.5px; color: #0369a1; margin-top: 3px; }
   .why { font-size: 11px; color: #dc2626; font-weight: 700; text-align: center; margin-top: 4px; }
-  .sampleanswer { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; vertical-align: middle; }
   .rowdivider { text-align: center; margin: 4px 0 5px; color: #5b21b6; font-weight: 800; font-size: 12px; }
   /* swap page */
   .swapdemo { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 8px 0; }
