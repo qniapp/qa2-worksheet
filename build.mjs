@@ -103,7 +103,7 @@ const polyline = (pts, attrs) => `<polyline points="${pts.map(p => `${fmt(p[0])}
 /* ===================== globe(): 地球/ブロッホ 共通部品 ===================== */
 let UID = 0;
 function globe(opts) {
-  const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null } = opts;
+  const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null, poleLabels = true } = opts;
   const spinAxisName = spin ? axisStyle(spin.axis).name : null;
   const W = size, H = size, cx = W / 2, cy = H / 2, R = size * 0.34;
   const id = `g${UID++}`, ink = '#334155', faint = '#94a3b8';
@@ -134,7 +134,7 @@ function globe(opts) {
     if (spinAxisName !== 'x') s += axisEnd([1, 0, 0], 'x', faint);
     if (spinAxisName !== 'y') s += axisEnd([0, 1, 0], 'y', faint);
     s += `<line x1="${cx}" y1="${fmt(project([0,0,-1],cx,cy,R)[1])}" x2="${cx}" y2="${fmt(project([0,0,1],cx,cy,R)[1])}" stroke="${faint}" stroke-width="1" stroke-opacity="0.6"/>`;
-  } else {
+  } else if (poleLabels) {
     const np = project([0, 0, 1.3], cx, cy, R), sp = project([0, 0, -1.34], cx, cy, R);
     s += `<text x="${fmt(np[0])}" y="${fmt(np[1])}" font-size="9.5" fill="#0369a1" text-anchor="middle">北極</text>`;
     s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1])}" font-size="9.5" fill="#0369a1" text-anchor="middle">南極</text>`;
@@ -190,6 +190,25 @@ function gateBlock(type, px = 56) { // ガラス質: 斜めグラデ＋上部ス
     `<text x="${px/2}" y="${px/2}" font-size="${px*0.52}" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="central" paint-order="stroke" stroke="${edge}" stroke-width="${fmt(px*0.03)}">${g.label}</text></svg>`;
 }
 const swapIcon = (px = 40) => `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}"><g stroke="${hsv(48,92,98)}" stroke-width="${px*0.13}" stroke-linecap="round"><line x1="${px*0.25}" y1="${px*0.25}" x2="${px*0.75}" y2="${px*0.75}"/><line x1="${px*0.75}" y1="${px*0.25}" x2="${px*0.25}" y2="${px*0.75}"/></g></svg>`;
+// 小学校でおなじみの 桜「よくできました」スタンプ
+function sakuraStamp() {
+  // 5枚の花びらを「1本の外周パス」で描く（重なり線を出さず、輪郭だけにする）
+  const W = 140, col = '#e0386a', Rt = 60, Rv = 19;
+  const P = (deg, r) => { const a = deg * Math.PI / 180; return `${fmt(Math.cos(a) * r)},${fmt(Math.sin(a) * r)}`; };
+  let d = '';
+  for (let i = 0; i < 5; i++) {
+    const c = -90 + i * 72;
+    if (i === 0) d += `M${P(c - 36, Rv)}`;
+    d += `C${P(c - 32, 34)} ${P(c - 19, 58)} ${P(c - 8, Rt)}` +   // 谷 → 左の花びら先
+         `L${P(c, 50)} L${P(c + 8, Rt)}` +                          // 先端の切れこみ
+         `C${P(c + 19, 58)} ${P(c + 32, 34)} ${P(c + 36, Rv)}`;     // 右の花びら先 → 次の谷
+  }
+  d += 'Z';
+  const t = (y, s) => `<text x="0" y="${y}" font-size="12" font-weight="800" fill="${col}" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3.2" stroke-linejoin="round">${s}</text>`;
+  return `<svg width="${W}" height="${W}" viewBox="${-W/2} ${-W/2} ${W} ${W}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif">` +
+    `<path d="${d}" fill="${col}" fill-opacity="0.12" stroke="${col}" stroke-width="2.6" stroke-linejoin="round"/>` +
+    t(-4, 'よく') + t(14, 'できました') + `</svg>`;
+}
 const fillBox = (px = 80, answer = null) => {
   const base = `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif"><rect x="3" y="3" width="${px-6}" height="${px-6}" rx="10" fill="#fffef7" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 5"/>`;
   if (!answer) return base + `<text x="${px/2}" y="${px/2}" font-size="13" fill="#cbd5e1" text-anchor="middle" dominant-baseline="central">？</text></svg>`;
@@ -242,9 +261,9 @@ const TRIPLES_H = [
   { tag: 'HYH', blocks: ['H', 'Y', 'H'], start: N,  result: { block: 'Y' } },
 ];
 const TRIPLES_ST = [
-  { tag: 'SXS', blocks: ['S', 'X', 'S'], start: [0.7071, 0, 0.7071], result: { block: 'X' } },
-  { tag: 'SYS', blocks: ['S', 'Y', 'S'], start: [0, -0.7071, 0.7071], result: { block: 'Y' } },
-  { tag: 'SZS', blocks: ['S', 'Z', 'S'], start: EQ, result: 'vanish', note: '赤道からスタート', example: true, hint: 'やじるしが もとどおり だから 消える' },
+  { tag: 'SXS', blocks: ['S', 'X', 'S'], start: [0, 1, 0], result: { block: 'X' }, note: '赤道からスタート', example: true, hint: 'x軸のまわりを 半周 ＝ X と同じ' },
+  { tag: 'SYS', blocks: ['S', 'Y', 'S'], start: [1, 0, 0], result: { block: 'Y' }, note: '赤道からスタート' },
+  { tag: 'SZS', blocks: ['S', 'Z', 'S'], start: EQ, result: 'vanish', note: '赤道からスタート' },
   { tag: 'TST', blocks: ['T', 'S', 'T'], start: EQ, result: { block: 'Z' }, note: '赤道からスタート' },
 ];
 function triRow(p) {
@@ -303,28 +322,47 @@ const introPage = () => `<div class="page">
 
 // SWAP を「あみだくじ」で説明する図
 function amidakujiDemo() {
-  const W = 380, H = 188, ax = 135, bx = 255, blk = 46, yTop = 42, ySwap = 96, yBot = 150, yc = hsv(48, 92, 98);
+  const W = 300, H = 158, ax = 100, bx = 205, blk = 40, yTop = 32, ySwap = 82, yBot = 128, yc = hsv(48, 92, 98);
   let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif">`;
   s += `<line x1="${ax}" y1="14" x2="${ax}" y2="${H-12}" stroke="#cbd5e1" stroke-width="3"/><line x1="${bx}" y1="14" x2="${bx}" y2="${H-12}" stroke="#cbd5e1" stroke-width="3"/>`;
   s += `<line x1="${ax}" y1="${ySwap}" x2="${bx}" y2="${ySwap}" stroke="${yc}" stroke-width="5" stroke-linecap="round"/>`;
   s += `<polyline points="${ax},${yTop} ${ax},${ySwap} ${bx},${ySwap} ${bx},${yBot}" fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
   s += arrowhead([bx, yBot], [0, 1, 0], 8, '#f59e0b');
   s += `<g transform="translate(${ax-13},${ySwap-13})">${swapIcon(26)}</g><g transform="translate(${bx-13},${ySwap-13})">${swapIcon(26)}</g>`;
-  s += `<text x="${(ax+bx)/2}" y="${ySwap-9}" font-size="10" fill="#b45309" text-anchor="middle">SWAP（いれかえ）</text>`;
+  s += `<text x="${(ax+bx)/2}" y="${ySwap-9}" font-size="9" fill="#b45309" text-anchor="middle">SWAP</text>`;
   s += `<g transform="translate(${ax-blk/2},${yTop-blk/2})">${gateBlock('H', blk)}</g><g transform="translate(${bx-blk/2},${yBot-blk/2})">${gateBlock('H', blk)}</g>`;
-  s += `<text x="${bx+20}" y="${(ySwap+yBot)/2-3}" font-size="12" fill="#dc2626" font-weight="700">Hと H が</text><text x="${bx+20}" y="${(ySwap+yBot)/2+14}" font-size="12" fill="#dc2626" font-weight="700">そろう！</text>`;
+  s += `<text x="${bx+16}" y="${yBot+3}" font-size="11" fill="#dc2626" font-weight="700">そろう！</text>`;
   s += `</svg>`;
-  return `<div class="amida">${s}</div>`;
+  return s;
+}
+// 2段（3レーン・SWAP2つ）のあみだくじ：はなれた H どうしがそろう
+function amidakujiDemo2() {
+  const W = 330, H = 182, a = 78, b = 165, c = 252, blk = 38;
+  const yTop = 30, s1 = 74, s2 = 120, yBot = 158, yc = hsv(48, 92, 98);
+  let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif">`;
+  for (const x of [a, b, c]) s += `<line x1="${x}" y1="12" x2="${x}" y2="${H - 12}" stroke="#cbd5e1" stroke-width="3"/>`;
+  s += `<line x1="${a}" y1="${s1}" x2="${b}" y2="${s1}" stroke="${yc}" stroke-width="5" stroke-linecap="round"/>`;
+  s += `<line x1="${b}" y1="${s2}" x2="${c}" y2="${s2}" stroke="${yc}" stroke-width="5" stroke-linecap="round"/>`;
+  s += `<polyline points="${a},${yTop} ${a},${s1} ${b},${s1} ${b},${s2} ${c},${s2} ${c},${yBot}" fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
+  s += arrowhead([c, yBot], [0, 1, 0], 8, '#f59e0b');
+  for (const [x, y] of [[a, s1], [b, s1], [b, s2], [c, s2]]) s += `<g transform="translate(${x - 13},${y - 13})">${swapIcon(26)}</g>`;
+  s += `<text x="${(a + b) / 2}" y="${s1 - 9}" font-size="9" fill="#b45309" text-anchor="middle">SWAP</text>`;
+  s += `<text x="${(b + c) / 2}" y="${s2 - 9}" font-size="9" fill="#b45309" text-anchor="middle">SWAP</text>`;
+  s += `<g transform="translate(${a - blk / 2},${yTop - blk / 2})">${gateBlock('H', blk)}</g>`;
+  s += `<g transform="translate(${c - blk / 2},${yBot - blk / 2})">${gateBlock('H', blk)}</g>`;
+  s += `<text x="${c + 16}" y="${yBot + 3}" font-size="11.5" fill="#dc2626" font-weight="700">そろう！</text>`;
+  s += `</svg>`;
+  return s;
 }
 
 const coverPage = () => `<div class="page cover">
   <div class="kicker">${furi('夏休み 自由研究')}</div>
   <h1>${furi('量子')}コンピューターの<br>${furi('不思議')}を しらべよう</h1>
   <div class="subtitle">パズルゲーム <b>QA²</b> で あそびながら ${furi('完成')}させる ${furi('観察')}ノート</div>
-  <div class="hero">${globe({ size: 220, skin: 'earth', state: N, face: true })}<div class="heroname">キュービット${furi('君')}</div></div>
+  <div class="hero">${globe({ size: 252, skin: 'earth', state: N, face: true, poleLabels: false })}<div class="heroname">キュービット${furi('君')}</div></div>
   <div class="intro">
     <h3>📚 ${furi('この自由研究について')}</h3>
-    <p>${furi('QA²（キューエー・ツー）は、あそびながら<b>量子コンピューター</b>のしくみがわかるゲームです。ゲームにでてくるブロックは、量子コンピューターへの<b>命令</b>（＝<b>量子ゲート</b>）をあらわしています。この自由研究では、ゲームであそびながら「<b>量子コンピューターの命令はどうはたらくのか</b>」を観察します。同じ命令を2かいつづけると“もとどおり”になって消える――そんな量子の不思議を、自分のてでうめて完成させましょう。')}</p>
+    <p>${furi('QA²（キューエー・ツー）は、あそびながら<b>量子コンピューター</b>のしくみがわかるゲームです。ゲームにでてくるブロックは、量子コンピューターへの<b>命令</b>（＝<b>量子ゲート</b>）をあらわしています。この自由研究では、ゲームであそびながら「<b>量子コンピューターの命令はどうはたらくのか</b>」を観察します。命令の <b>くみあわせ</b> によって、<b>消えたり、べつの命令に変身したり</b>する――そんな量子の不思議を、自分のてでうめて完成させましょう。')}</p>
   </div>
   <div class="namebox">
     <div class="nbrow"><span>なまえ</span><div class="line"></div></div>
@@ -336,18 +374,33 @@ const coverPage = () => `<div class="page cover">
 
 const storyPage = () => `<div class="page">
   ${headTitle('① キュービット君って？ ・ p.2')}
-  <h2><span class="dot"></span>${furi('キュービット君は、いつも地球の一点をさしている')}</h2>
-  <p class="lead">${furi('キュービット君は QA² の<b>かげの主役</b>。いつも地球の<b>一点</b>をさしているよ。キュービット君に<b>ブロック（量子ゲート）</b>をわたすと、さすむきが <b>くるっ</b> とかわるんだ。たとえば <b>X</b> をわたすと、地球の<b>うらがわ（半周）</b>へ……。')}</p>
-  <div class="strip">
-    <figure>${globe({ size: 180, skin: 'earth', state: N, face: true })}<figcaption>${furi('いま「北極」をさしている')}</figcaption></figure>
-    <div class="opx">${gateBlock('X', 50)}<span>Xをわたす</span></div>
-    <figure>${globe({ size: 180, skin: 'earth', state: [0,0,-1], face: true })}<figcaption>${furi('くるっ→「南極」へ（半周）')}</figcaption></figure>
-    <div class="opx">${gateBlock('X', 50)}<span>もう1かい X</span></div>
-    <figure>${globe({ size: 180, skin: 'earth', state: N, face: true })}<figcaption>${furi('また「北極」に！（もう半周）')}</figcaption></figure>
+  <h2><span class="dot"></span>${furi('キュービット君と、ブロックのひみつ')}</h2>
+  <div class="step"><div class="num">1</div>
+    <div class="stepbody"><p>${furi('キュービット君は、ゲーム <b>QA²</b> には出てこないけれど <b>かげの主役</b>。量子コンピューターの中の「<b>データ</b>」＝計算のたんい として、とても大切なやくわりをしているよ。')}</p></div>
+    <figure class="stepfig">${globe({ size: 100, skin: 'earth', state: N, face: true })}<figcaption>${furi('キュービット君')}</figcaption></figure>
   </div>
-  <div class="punch">${furi('半周を2かいまわると<b>ひとまわり</b>＝もとどおり。')}<br>
-  ${furi('だから <b>X・X</b> はキュービット君にとって<b>なにもしないのと同じ</b>。')} ＝ <span class="red">${furi('マッチして消える！')}</span></div>
-  <div class="bridge">${furi('つぎのページからは、いろんな<b>ブロックのくみあわせ</b>で、キュービット君が<b>どうかわるか</b>を観察してみよう。まわす<b>軸（いろつき）</b>と<b>まわる量</b>に注目してね！')}</div>
+  <div class="step"><div class="num">2</div>
+    <div class="stepbody"><p>${furi('キュービット君は、いつも <b>地球の一点</b> を指しているよ。東京を指したり、北極を指したり、南極を指したり……いろいろ！')}</p></div>
+  </div>
+  <div class="step"><div class="num">3</div>
+    <div class="stepbody"><p>${furi('ここで <b>ブロック</b> のとうじょう！ ブロックをキュービット君にわたすと、指す <b>向きが変わる</b> よ。ブロックは量子コンピューターの「<b>命令</b>」。キュービット君といっしょに計算をすすめていくんだ。')}</p></div>
+    <figure class="stepfig">${gateBlock('X', 48)}</figure>
+  </div>
+  <div class="step"><div class="num">4</div>
+    <div class="stepbody">
+      <p>${furi('北極のキュービット君に <b>X</b> をわたすと…… <b style="color:#2563eb">x軸</b>を中心に くるっと回転！（→ 南極） もう一回 <b>X</b> をわたすと…… また <b style="color:#2563eb">x軸</b>で回って <b>元に戻った！</b>')}</p>
+      <div class="strip">
+        <figure>${globe({ size: 128, skin: 'earth', state: N, face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('北極を指している')}</figcaption></figure>
+        <div class="opx">${gateBlock('X', 42)}<span>X</span></div>
+        <figure>${globe({ size: 128, skin: 'earth', state: [0,0,-1], face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('南極へ')}</figcaption></figure>
+        <div class="opx">${gateBlock('X', 42)}<span>X</span></div>
+        <figure>${globe({ size: 128, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('元に戻った！')}</figcaption></figure>
+      </div>
+    </div>
+  </div>
+  <div class="step"><div class="num">5</div>
+    <div class="stepbody"><p>${furi('元に戻った＝ <b>X を2回わたす意味がない</b>。だから <b>X X</b> のならびがあったら <b>消してもいい</b>！ キュービット君には なんの えいきょうもないからね。')} ＝ <span class="red">${furi('マッチして消える！')}</span></p></div>
+  </div>
   <div class="trythis">${furi('🎮 やってみよう：QA² で <b>X ブロックを2つ たてにそろえて</b>、ほんとうに消えるか たしかめてみよう！')}</div>
   ${footer(2)}
 </div>`;
@@ -360,22 +413,26 @@ const pairsPage = () => `<div class="page">
   ${footer(4)}
 </div>`;
 
-const triplesPage = (sub, heading, lead, rows, n) => `<div class="page">
+const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="page">
   ${headTitle(sub)}
   <h2><span class="dot"></span>${furi(heading)}</h2>
   <div class="howto">${furi(lead + ' □ には、まん中のブロックが<b>変身したすがた</b>（または<span class="red">消える</span>）をかこう。')}</div>
   ${rows.map(triRow).join('')}
+  ${memo ? `<div class="freewrite" style="height:${memo}px"><div class="fwh">✏️ ${furi('よそう・きづいたこと（じゆうにかこう）')}</div></div>` : ''}
   ${footer(n)}
 </div>`;
 
 const swapPage = () => `<div class="page">
   ${headTitle('⑤ はってん：SWAP（スワップ）・ p.7')}
   <h2><span class="dot"></span>${furi('はってん：SWAP は「あみだくじ」みたいな命令')}</h2>
-  <p class="lead">${furi('<b>SWAP（スワップ）</b>は、棒でつながった2つのレーンを<b>いれかえる</b>命令。あみだくじみたいに線をたどると…… とおくの2つのブロックが <b>上下にそろう</b> ことがあるよ！')}</p>
-  ${amidakujiDemo()}
-  <div class="howto">${furi('上のように <b>H・SWAP・H</b> をおくと、あみだくじの線で <b>H と H が上下にそろって</b> ペアになり…… <span class="red">消える！</span> いままでおぼえたマッチが、SWAP をはさんでも つかえるんだね。')}</div>
-  <div class="freewrite"><div class="fwh">✏️ ${furi('みつけたマッチ・きづいたこと（じゆうにかこう）')}</div></div>
-  <div class="finish"><div class="stamp">かんせい！</div><div class="namebox2"><span>なまえ</span><div class="line"></div><span>${furi('日づけ')}</span><div class="line short"></div></div></div>
+  <p class="lead">${furi('<b>SWAP（スワップ）</b>は、棒でつながった2つのレーンを<b>いれかえる</b>命令。あみだくじみたいに線をたどると、はなれた2つのブロックが <b>上下にそろう</b> ことがあるよ！')}</p>
+  <div class="amidarow">
+    <div class="amida">${amidakujiDemo()}<div class="amidacap">${furi('SWAP 1つ：H と H がそろって <span class="red">消える</span>')}</div></div>
+    <div class="amida">${amidakujiDemo2()}<div class="amidacap">${furi('SWAP 2つ＝2段：もっと はなれた H もそろう！')}</div></div>
+  </div>
+  <div class="trythis">${furi('🎉 長い あみだくじを つくって マッチさせると、QA² では <b>高とくてん</b>！ いろんな つなぎかたを ためして、いままでの 消えるマッチを SWAP ごしに そろえてみよう。')}</div>
+  <div class="freewrite" style="height:300px"><div class="fwh">✏️ ${furi('みつけたマッチ・きづいたこと（じゆうにかこう）')}</div></div>
+  <div class="finish">${sakuraStamp()}<div class="namebox2"><span>なまえ</span><div class="line"></div><span>${furi('日づけ')}</span><div class="line short"></div></div></div>
   ${footer(7)}
 </div>`;
 
@@ -445,6 +502,10 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .strip { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 8px 0; }
   .strip figure { margin: 0; text-align: center; } .strip figcaption { font-size: 11px; color: #475569; margin-top: -8px; }
   .opx { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; } .opx span { font-size: 10px; color: #64748b; }
+  .step { display: flex; gap: 12px; align-items: flex-start; margin: 9px 0; }
+  .num { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: #1f2937; color: #fff; font-weight: 800; text-align: center; line-height: 26px; font-size: 15px; }
+  .stepbody { flex: 1; } .stepbody p { font-size: 13px; line-height: 1.85; margin: 0; }
+  .stepfig { margin: 0; text-align: center; flex: 0 0 auto; } .stepfig figcaption { font-size: 10px; color: #475569; margin-top: -6px; }
   .punch { text-align: center; font-size: 15px; margin: 6px 0; line-height: 1.6; }
   .bridge { background: #ecfeff; border: 1px solid #a5f3fc; border-radius: 10px; padding: 10px 14px; font-size: 12.5px; line-height: 1.7; margin-top: 10px; }
   .trythis { background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 10px; padding: 13px 16px; font-size: 14px; line-height: 1.7; margin-top: 14px; text-align: center; }
@@ -474,10 +535,12 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .swapdemo { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 8px 0; }
   .swapdemo figure { margin: 0; text-align: center; } .swapdemo figcaption { font-size: 11px; color: #475569; margin-top: -6px; }
   .swapmid { text-align: center; display: flex; flex-direction: column; align-items: center; } .swapmid span { font-size: 10px; color: #b45309; }
-  .freewrite { border: 2px dashed #cbd5e1; border-radius: 12px; height: 300px; margin-top: 10px; padding: 8px 12px; }
+  .freewrite { border: 2px dashed #cbd5e1; border-radius: 12px; height: 120px; margin-top: 8px; padding: 8px 12px; }
   .freewrite .fwh { font-size: 12px; color: #64748b; }
+  .amida { text-align: center; } .amidacap { font-size: 11px; color: #475569; margin-top: -2px; line-height: 1.4; }
+  .amidarow { display: flex; justify-content: center; align-items: flex-start; gap: 18px; margin: 6px 0; }
   .finish { display: flex; align-items: center; gap: 20px; margin-top: 12px; }
-  .finish .stamp { border: 3px solid #dc2626; color: #dc2626; font-weight: 800; font-size: 20px; padding: 6px 18px; border-radius: 10px; transform: rotate(-6deg); }
+  .finish svg { transform: rotate(-7deg); }
   .namebox2 { display: flex; align-items: flex-end; gap: 10px; font-size: 13px; flex: 1; }
   .namebox2 .line { flex: 1; border-bottom: 1.5px solid #94a3b8; height: 26px; } .namebox2 .line.short { flex: 0 0 90px; }
   .spheres figcaption.last { color: #1f2937; font-weight: 700; }
@@ -507,7 +570,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   ${storyPage()}
   ${introPage()}
   ${pairsPage()}
-  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', 'H ではさむと、まん中が変身する', '外がわの <b>H</b> 2つが消えて、まん中のブロックが<b>べつのブロックに変身</b>するよ。', TRIPLES_H, 5)}
+  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', 'H ではさむと、まん中が変身する', '外がわの <b>H</b> 2つが消えて、まん中のブロックが<b>べつのブロックに変身</b>するよ。', TRIPLES_H, 5, 300)}
   ${triplesPage('④ 3つのブロックでマッチ（その2）・ p.6', 'S・T ではさむと？', '同じように、外がわの2つではさんで観察しよう。ぜんぶ消えることもあるよ。', TRIPLES_ST, 6)}
   ${swapPage()}
   ${aboutPage()}
