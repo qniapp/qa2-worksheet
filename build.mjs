@@ -406,7 +406,7 @@ const storyPage = () => `<div class="page">
   <h2><span class="dot"></span>${furi('キュービット君と、ブロックのひみつ')}</h2>
   <div class="step"><div class="num">1</div>
     <div class="stepbody"><p>${furi('キュービット君は、ゲーム <b>QA²</b> には出てこないけれど <b>かげの主役</b>。量子コンピューターの中の「<b>データ</b>」＝計算のたんい として、とても大切なやくわりをしているよ。')}</p></div>
-    <figure class="stepfig">${globe({ size: 100, skin: 'earth', state: N, face: true })}<figcaption>${furi('キュービット君')}</figcaption></figure>
+    <figure class="stepfig">${globe({ size: 100, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('キュービット君')}</figcaption></figure>
   </div>
   <div class="step"><div class="num">2</div>
     <div class="stepbody"><p>${furi('キュービット君は、いつも <b>地球の一点</b> を指しているよ。東京を指したり、北極を指したり、南極を指したり……いろいろ！')}</p></div>
@@ -420,7 +420,7 @@ const storyPage = () => `<div class="page">
       <p>${furi('北極のキュービット君に <b>X</b> をわたすと…… <b style="color:#2563eb">x軸</b>を中心に くるっと回転！（→ 南極） もう一回 <b>X</b> をわたすと…… また <b style="color:#2563eb">x軸</b>で回って <b>元に戻った！</b>')}</p>
       <div class="strip">
         <figure><div class="figlabel">${furi('① 北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('北極を指している')}</figcaption></figure>
-        <div class="opx">${gateBlock('X', 42)}<span>Xブロック</span></div>
+        <div class="opx">${gateBlock('X', 42)}<span>${furi('Xブロック')}</span></div>
         <figure><div class="figlabel">${furi('② X後：南極')}</div>${globe({ size: 124, skin: 'earth', state: [0,0,-1], face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('南極へ')}</figcaption></figure>
         <div class="opx">${gateBlock('X', 42)}<span>${furi('もう1回 X')}</span></div>
         <figure><div class="figlabel">${furi('③ 2回目：北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('元に戻った！')}</figcaption></figure>
@@ -523,7 +523,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .cover h1 { font-size: 38px; line-height: 1.45; margin: 8px 0; font-weight: 800; }
   .cover .subtitle { font-size: 14px; color: #475569; }
   .goal { display: inline-block; margin-top: 10px; padding: 9px 18px; border-radius: 999px; background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; font-size: 15px; font-weight: 800; }
-  .hero { margin: 2px 0; } .heroname { font-size: 13px; font-weight: 700; color: #0369a1; margin-top: -10px; }
+  .hero { margin: 2px 0 16px; } .heroname { font-size: 13px; font-weight: 700; color: #0369a1; margin-top: -24px; }
   .intro { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 18px 12px; margin: 4px 24px; text-align: left; }
   .intro h3 { font-size: 15px; margin: 0 0 4px; } .intro ul { margin: 0; padding-left: 1.2em; display: grid; gap: 2px; } .intro li { font-size: 13px; line-height: 1.7; }
   .materials { margin: 8px 24px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; align-items: center; font-size: 12px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 8px 10px; }
@@ -535,7 +535,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .strip { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 8px 0; }
   .strip figure { margin: 0; text-align: center; } .strip figcaption { font-size: 11px; color: #475569; margin-top: -8px; }
   .figlabel { display: inline-block; font-size: 12px; font-weight: 800; background: #eef2ff; color: #3730a3; border-radius: 999px; padding: 2px 9px; margin-bottom: -4px; }
-  .opx { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; } .opx span { font-size: 10px; color: #475569; font-weight: 700; }
+  .opx { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; } .opx span { font-size: 10px; color: #475569; font-weight: 700; white-space: nowrap; width: max-content; line-height: 1.25; }
   .step { display: flex; gap: 12px; align-items: flex-start; margin: 8px 0; }
   .num { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: #1f2937; color: #fff; font-weight: 800; text-align: center; line-height: 26px; font-size: 15px; }
   .stepbody { flex: 1; } .stepbody p { font-size: 13px; line-height: 1.85; margin: 0; }
