@@ -244,13 +244,13 @@ function pairRow(p) {
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
-    <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">□に答え</div>${box}${exlabel}</div></div></div>
+    <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">ここに書く</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres">
       <figure>${globe({ size: 76, skin: 'bloch', state: s0, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
       ${stepArrow(p.g, false)}
       <figure>${globe({ size: 76, skin: 'bloch', state: s1, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
       ${stepArrow(p.g, true)}
-      <figure>${globe({ size: 76, skin: 'bloch', state: s2 })}<figcaption class="last">さいご → □へ</figcaption></figure>
+      <figure>${globe({ size: 76, skin: 'bloch', state: s2 })}<figcaption class="last">さいご（ヒント）</figcaption></figure>
     </div>${why}${note}</div></div>`;
 }
 
@@ -276,7 +276,7 @@ function triRow(p) {
   });
   let spheres = '';
   figs.forEach((f, i) => { spheres += f + stepArrow(p.blocks[i], i === figs.length - 1); });
-  const finalSphere = `<figure>${globe({ size: 82, skin: 'bloch', state: states[states.length - 1] })}<figcaption class="last">さいご → □へ</figcaption></figure>`;
+  const finalSphere = `<figure>${globe({ size: 82, skin: 'bloch', state: states[states.length - 1] })}<figcaption class="last">さいご（ヒント）</figcaption></figure>`;
   const box = p.example
     ? (p.result === 'vanish' ? fillBox(64, '消える') : `<div class="exfill">${gateBlock(p.result.block, 42)}</div>`)
     : fillBox(64);
@@ -286,7 +286,7 @@ function triRow(p) {
   const tagBg = mix(gs[0].color, '#ffffff', 0.72), tagTx = mix(gs[0].color, '#000000', 0.38);
   const divider = p.divider ? `<div class="rowdivider">${furi(p.divider)}</div>` : '';
   return `${divider}<div class="prow"><div class="pleft tleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.blocks.join('・')}</div></div>
-    <div class="seq"><div class="col">${p.blocks.map(t => gateBlock(t, 34)).join('')}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">□に答え</div>${box}${exlabel}</div></div></div>
+    <div class="seq"><div class="col">${p.blocks.map(t => gateBlock(t, 34)).join('')}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">ここに書く</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres">${spheres}${finalSphere}</div>${why}${note}</div></div>`;
 }
 
@@ -418,8 +418,8 @@ const storyPage = () => `<div class="page">
 const pairsPage = () => `<div class="page pairs">
   ${headTitle('③ 2つのブロックでマッチ ・ p.4')}
   <h2><span class="dot"></span>${furi('2つのブロックを「上下にそろえる」とどうなる？')}</h2>
-  <div class="howto">${furi('<b>かきかた：</b> 左の □ に、2つがそろったあとの <b>できあがりブロック</b> をかこう。ぜんぶ消えてなにものこらないときは <span class="red">「消える」</span>とかこう。<br>右の絵は、考えるためのヒント。最後の「さいご → □へ」と左の □ を見くらべよう。')}</div>
-  <div class="microguide"><span>例：X² = Xが2こ</span><span>答えは左の□へ</span><span>右は回転の証拠</span></div>
+  <div class="howto">${furi('<b>かきかた：</b> 答えは<b>左の大きな点線の四角だけ</b>に書く。右の絵はヒント（書かない）。ぜんぶ消えるときは <span class="red">「消える」</span> とかこう。')}</div>
+  <div class="microguide"><span>例：X² = Xが2こ</span><span>書く場所：左の大きな□だけ</span><span>右：見るだけ</span></div>
   ${PAIRS.map(pairRow).join('')}
   ${footer(4)}
 </div>`;
@@ -427,7 +427,7 @@ const pairsPage = () => `<div class="page pairs">
 const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="page ${n === 6 ? 'tallrows' : ''}">
   ${headTitle(sub)}
   <h2><span class="dot"></span>${furi(heading)}</h2>
-  <div class="howto">${furi(lead + ' □ には、まん中のブロックが<b>変身したすがた</b>（または<span class="red">消える</span>）をかこう。')} ${n === 6 ? `<span class="sampleanswer">例：${fillBox(42, '消える')}</span>` : ''}</div>
+  <div class="howto">${furi(lead + ' 答えは、各行の<b>左側にある大きな点線の四角</b>だけに書こう。右の絵はヒントなので書きこまなくてOK。まん中のブロックが<b>変身したすがた</b>（または<span class="red">消える</span>）をかこう。')} ${n === 6 ? `<span class="sampleanswer">例：${fillBox(42, '消える')}</span>` : ''}</div>
   ${n === 6 ? `<div class="stlegend"><span><b>S</b> = z軸を4分の1周</span><span><b>T</b> = z軸を8分の1周</span></div>` : ''}
   ${rows.map(triRow).join('')}
   ${memo ? `<div class="freewrite guided" style="height:${memo}px"><div class="fwh">✏️ ${furi('よそう・きづいたこと')}</div><div class="promptlines"><span>Hではさむと X は ＿＿ になる</span><span>Hではさむと Z は ＿＿ になる</span><span>Hではさむと Y は ＿＿ になる</span></div></div>` : ''}
@@ -544,10 +544,12 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .tagline { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
   .tag { display: inline-block; font-weight: 800; font-size: 15px; padding: 1px 11px; border-radius: 6px; }
   .taghint { color: #64748b; font-size: 10px; font-weight: 700; }
-  .answerhint { color: #dc2626; font-size: 10px; font-weight: 800; margin-bottom: 2px; }
+  .answerhint { color: #b91c1c; font-size: 10px; font-weight: 900; margin-bottom: 2px; }
   .seq { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .col { display: flex; flex-direction: column; gap: 3px; align-items: center; }
-  .boxwrap, .exfill { text-align: center; } .exfill { border: 2px dashed #cbd5e1; border-radius: 10px; padding: 4px; background: #fffef7; display: inline-block; }
+  .boxwrap { text-align: center; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 3px 5px 4px; }
+  .pairs .boxwrap { background: transparent; border: 0; padding: 0; }
+  .exfill { text-align: center; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 4px; background: #fffef7; display: inline-block; }
   .exlabel { font-size: 9px; color: #dc2626; margin-top: 1px; }
   .pright { flex: 1; }
   .spheres { display: flex; align-items: center; justify-content: center; gap: 6px; } .spheres figure { margin: 0; text-align: center; }
