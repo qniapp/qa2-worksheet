@@ -161,13 +161,16 @@ function globe(opts) {
     s += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 7, '#f59e0b');
   }
   if (ghostState && len(add(state, scl(ghostState, -1))) > 0.05) {
-    const gp = project(ghostState, cx, cy, R), tp = project(state, cx, cy, R), ap0 = project(ghostState, cx, cy, R * 1.06), ap1 = project(state, cx, cy, R * 1.06);
+    const gs = norm(ghostState), en = norm(state), gp = project(gs, cx, cy, R);
     s += `<g opacity="0.35"><line x1="${cx}" y1="${cy}" x2="${fmt(gp[0])}" y2="${fmt(gp[1])}" stroke="#64748b" stroke-width="2" stroke-dasharray="3 3"/>${arrowhead(gp, [gp[0] - cx, gp[1] - cy, 0], 6, '#64748b')}</g>`;
-    const mid = [(ap0[0] + ap1[0]) / 2, (ap0[1] + ap1[1]) / 2], out = norm([mid[0] - cx, mid[1] - cy, 0]);
-    const off = len(out) < 0.5 ? norm([-(ap1[1] - ap0[1]), ap1[0] - ap0[0], 0]) : out;
-    const c = [mid[0] + off[0] * R * 0.34, mid[1] + off[1] * R * 0.34];
-    s += `<path d="M${fmt(ap0[0])},${fmt(ap0[1])} Q${fmt(c[0])},${fmt(c[1])} ${fmt(ap1[0])},${fmt(ap1[1])}" fill="none" stroke="#f59e0b" stroke-width="2.1" stroke-linecap="round"/>`;
-    s += arrowhead(ap1, [ap1[0] - c[0], ap1[1] - c[1], 0], 6.5, '#f59e0b');
+    let axis = cross(gs, en), angleDeg = Math.acos(Math.max(-1, Math.min(1, dot(gs, en)))) * 180 / Math.PI;
+    if (len(axis) < 0.01) axis = cross(gs, Math.abs(gs[2]) < 0.9 ? [0, 0, 1] : [0, 1, 0]);
+    axis = norm(axis);
+    const move = t => rotate(gs, axis, angleDeg * t);
+    for (const seg of arcSegments(move, cx, cy, R * 1.08, 40))
+      s += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.1" stroke-linecap="round" ${seg.back ? 'stroke-opacity="0.35" stroke-dasharray="3 3"' : ''}`);
+    const endP = project(en, cx, cy, R * 1.08), prevP = project(move(0.92), cx, cy, R * 1.08);
+    s += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 6.5, '#f59e0b');
   }
   const tip = project(state, cx, cy, R);
   s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#dc2626" stroke-width="2.6"/>`;
@@ -428,7 +431,7 @@ const storyPage = () => `<div class="page">
     <div class="stepbody"><p>${furi('元に戻った＝ <b>X を2回わたす意味がない</b>。だから <b>X X</b> のならびがあったら <b>消してもいい</b>！ キュービット君には なんの えいきょうもないからね。')} ＝ <span class="red">${furi('マッチして消える！')}</span></p></div>
   </div>
   <div class="trythis">${furi('🎮 やってみよう：QA² で <b>X ブロックを2つ たてにそろえて</b>、ほんとうに消えるか たしかめてみよう！')}</div>
-  <div class="observebox"><b>${furi('観察メモ')}</b><div class="obsline">${furi('予想')}：□ ${furi('消える')}　□ ${furi('消えない')}</div><div class="obsline">${furi('結果')}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div><div class="obsline wide">${furi('気づいたこと')}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿<br>＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div></div>
+  <div class="observebox"><b>${furi('観察メモ')}</b><div class="obsline">${furi('予想')}：□ ${furi('消える')}　□ ${furi('消えない')}</div><div class="obsline">${furi('結果')}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div><div class="obsfree"><span class="freelabel">${furi('気づいたこと')}：</span></div></div>
   ${footer(2)}
 </div>`;
 
@@ -436,7 +439,6 @@ const pairsPage = () => `<div class="page pairs">
   ${headTitle('③ 2つのブロックでマッチ ・ p.4')}
   <h2><span class="dot"></span>${furi('2つのブロックを「上下にそろえる」とどうなる？')}</h2>
   <div class="howto">${furi('<b>かきかた：</b> 答えは<b>左の大きな点線の四角だけ</b>に書く。ぜんぶ消えるときは <span class="red">「消える」</span> とかこう。')}</div>
-  <div class="microguide"><span>${furi('例：X² = Xが2こ')}</span><span>${furi('書く場所：左の大きな□だけ')}</span></div>
   ${PAIRS.map(pairRow).join('')}
   ${footer(4)}
 </div>`;
@@ -445,9 +447,8 @@ const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="page ${n
   ${headTitle(sub)}
   <h2><span class="dot"></span>${furi(heading)}</h2>
   <div class="howto">${furi(lead + ' 前のページと同じように考えよう。')}</div>
-  ${n === 6 ? `<div class="stlegend"><span>${furi('<b>S</b> = z軸を4分の1周')}</span><span>${furi('<b>T</b> = z軸を8分の1周')}</span></div>` : ''}
   ${rows.map(triRow).join('')}
-  ${memo ? `<div class="freewrite guided" style="height:${memo}px"><div class="fwh">✏️ ${furi('よそう・きづいたこと')}</div><div class="promptlines"><span>Hではさむと X は ＿＿ になる</span><span>Hではさむと Z は ＿＿ になる</span><span>Hではさむと Y は ＿＿ になる</span></div></div>` : ''}
+  ${memo ? `<div class="freewrite guided triplememo" style="height:${memo}px"><div class="fwh">✏️ ${furi('よそう・きづいたこと')}</div><div class="promptlines"><span>Hではさむと X は ＿＿ になる</span><span>Hではさむと Z は ＿＿ になる</span><span>Hではさむと Y は ＿＿ になる</span><span class="freeprompt">そのほか きづいたこと：</span></div></div>` : ''}
   ${footer(n)}
 </div>`;
 
@@ -460,7 +461,7 @@ const swapPage = () => `<div class="page">
     <div class="amida">${amidakujiDemo2()}<div class="amidacap">${furi('SWAP 2つ＝2段：もっと はなれた H もそろう！')}</div></div>
   </div>
   <div class="trythis">${furi('🎉 長い あみだくじを つくって マッチさせると、QA² では <b>高とくてん</b>！ いろんな つなぎかたを ためして、いままでの 消えるマッチを SWAP ごしに そろえてみよう。')}</div>
-  <div class="freewrite guided" style="height:300px"><div class="fwh">✏️ ${furi('みつけたマッチ・きづいたこと')}</div><div class="promptlines"><span>${furi('そろったブロック')}：＿＿＿＿＿＿</span><span>${furi('使ったSWAP')}：＿＿こ</span><span>${furi('気づいたこと')}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿</span></div></div>
+  <div class="freewrite guided" style="height:300px"><div class="fwh">✏️ ${furi('みつけたマッチ・きづいたこと')}</div><div class="promptlines"><span>${furi('そろったブロック')}：＿＿＿＿＿＿</span><span>${furi('使ったSWAP')}：＿＿こ</span><span class="freeprompt">${furi('気づいたこと')}：</span></div></div>
   <div class="finish">${sakuraStamp()}<div class="namebox2"><span>なまえ</span><div class="line"></div><span>${furi('日づけ')}</span><div class="line short"></div></div></div>
   ${footer(7)}
 </div>`;
@@ -542,13 +543,14 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .punch { text-align: center; font-size: 15px; margin: 6px 0; line-height: 1.6; }
   .bridge { background: #ecfeff; border: 1px solid #a5f3fc; border-radius: 10px; padding: 10px 14px; font-size: 12.5px; line-height: 1.7; margin-top: 10px; }
   .trythis { background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 10px; padding: 13px 16px; font-size: 14px; line-height: 1.7; margin-top: 14px; text-align: center; }
-  .observebox { margin-top: 10px; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 12px 14px; min-height: 140px; display: grid; grid-template-columns: auto 1fr 1fr; gap: 12px 16px; font-size: 12.5px; line-height: 1.9; align-items: start; }
+  .observebox { margin-top: 10px; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 12px 14px; min-height: 280px; display: grid; grid-template-columns: auto 1fr 1fr; grid-template-rows: auto 1fr; gap: 12px 16px; font-size: 12.5px; line-height: 1.9; align-items: start; }
   .observebox b { color: #1f2937; font-size: 13px; }
-  .observebox .wide { grid-column: 1 / 4; }
+  .observebox .obsfree { grid-column: 1 / 4; align-self: stretch; }
+  .observebox .freelabel { display: block; }
   /* worksheet rows */
   .howto { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 7px 14px; font-size: 12px; line-height: 1.65; margin: 4px 0 8px; }
-  .microguide, .stlegend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; margin: 0 0 7px; font-size: 11px; color: #475569; }
-  .microguide span, .stlegend span { border: 1px solid #cbd5e1; background: #fff; border-radius: 999px; padding: 3px 9px; }
+  .stlegend { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; margin: 0 0 7px; font-size: 11px; color: #475569; }
+  .stlegend span { border: 1px solid #cbd5e1; background: #fff; border-radius: 999px; padding: 3px 9px; }
   .deg { font-size: 9px; color: #94a3b8; margin-left: 2px; }
   .prow { display: flex; gap: 12px; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 4px 12px; margin-bottom: 6px; }
   .pairs .prow { padding: 3px 10px; margin-bottom: 4px; gap: 10px; }
@@ -583,10 +585,12 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .swapdemo { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 8px 0; }
   .swapdemo figure { margin: 0; text-align: center; } .swapdemo figcaption { font-size: 11px; color: #475569; margin-top: -6px; }
   .swapmid { text-align: center; display: flex; flex-direction: column; align-items: center; } .swapmid span { font-size: 10px; color: #b45309; }
-  .freewrite { border: 2px dashed #cbd5e1; border-radius: 12px; height: 120px; margin-top: 8px; padding: 8px 12px; }
+  .freewrite { border: 2px dashed #cbd5e1; border-radius: 12px; height: 120px; margin-top: 8px; padding: 8px 12px; display: flex; flex-direction: column; }
   .freewrite .fwh { font-size: 12px; color: #64748b; }
-  .promptlines { display: grid; gap: 12px; margin-top: 18px; color: #475569; font-size: 13px; }
-  .guided .promptlines span { border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; }
+  .promptlines { display: grid; gap: 12px; margin-top: 18px; color: #475569; font-size: 13px; flex: 1; grid-template-rows: auto auto 1fr; }
+  .triplememo .promptlines { grid-template-rows: auto auto auto 1fr; }
+  .guided .promptlines span:not(.freeprompt) { border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; }
+  .freeprompt { min-height: 0; }
   .amida { text-align: center; } .amidacap { font-size: 11px; color: #475569; margin-top: -2px; line-height: 1.4; }
   .amidarow { display: flex; justify-content: center; align-items: flex-start; gap: 18px; margin: 6px 0; }
   .finish { display: flex; align-items: center; gap: 20px; margin-top: 12px; }
@@ -595,7 +599,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .namebox2 .line { flex: 1; border-bottom: 1.5px solid #94a3b8; height: 26px; } .namebox2 .line.short { flex: 0 0 90px; }
   .spheres figcaption.last { color: #1f2937; font-weight: 700; }
   /* block intro */
-  .grouphead { margin: 3px 0 2px; font-size: 10.5px; font-weight: 800; color: #334155; border-left: 4px solid #94a3b8; padding-left: 8px; }
+  .grouphead { margin: 11px 0 3px; font-size: 10.5px; font-weight: 800; color: #334155; border-left: 4px solid #94a3b8; padding-left: 8px; }
   .brow { display: flex; align-items: center; gap: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 3px 12px; margin-bottom: 4px; }
   .bg { width: 112px; text-align: center; } .bname { font-size: 12px; font-weight: 800; margin-top: 1px; }
   .brow figure { margin: 0; text-align: center; } .brow figcaption { font-size: 10.4px; font-weight: 700; color: #334155; margin-top: -8px; }
@@ -623,7 +627,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   ${storyPage()}
   ${introPage()}
   ${pairsPage()}
-  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', 'H ではさむと、まん中が変身する', '外がわの <b>H</b> 2つが消えて、まん中のブロックが<b>べつのブロックに変身</b>するよ。', TRIPLES_H, 5, 250)}
+  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', 'H ではさむと、まん中が変身する', '外がわの <b>H</b> 2つが消えて、まん中のブロックが<b>べつのブロックに変身</b>するよ。', TRIPLES_H, 5, 360)}
   ${triplesPage('④ 3つのブロックでマッチ（その2）・ p.6', 'S・T ではさむと？', '同じように、外がわの2つではさんで観察しよう。ぜんぶ消えることもあるよ。', TRIPLES_ST, 6)}
   ${swapPage()}
   ${aboutPage()}
