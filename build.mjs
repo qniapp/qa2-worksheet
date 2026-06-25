@@ -264,7 +264,7 @@ function pairRow(p) {
   const note = p.note ? `<div class="note">${furi(p.note)}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
-  const finalCaption = len(add(s2, scl(s0, -1))) > 0.05 ? furi('やじるしの移動') : 'さいご';
+  const finalCaption = furi('やじるしの移動');
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
     <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres">
@@ -298,7 +298,7 @@ function triRow(p) {
   });
   let spheres = '';
   figs.forEach((f, i) => { spheres += f + stepArrow(p.blocks[i], i === figs.length - 1); });
-  const finalCaption = len(add(states[states.length - 1], scl(states[0], -1))) > 0.05 ? furi('やじるしの移動') : 'さいご';
+  const finalCaption = furi('やじるしの移動');
   const finalSphere = `<figure>${globe({ size: 82, skin: 'bloch', state: states[states.length - 1], ghostState: states[0] })}<figcaption class="last">${finalCaption}</figcaption></figure>`;
   const box = p.example
     ? (p.result === 'vanish' ? fillBox(64, '消える') : `<div class="exfill">${gateBlock(p.result.block, 42)}</div>`)
