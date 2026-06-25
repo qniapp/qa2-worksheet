@@ -576,7 +576,40 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   ${aboutPage()}
 </body></html>`;
 
+const landingHtml = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA² なつやすみ じゆうけんきゅう ワークシート</title>
+<meta name="description" content="パズルゲーム QA² であそびながら量子コンピューターの不思議をしらべる、小学生向けA4・全8ページの印刷用PDFです。">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Noto Sans CJK JP', sans-serif; color: #172033; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 42%); }
+  main { min-height: 100vh; display: grid; place-items: center; padding: 32px 18px; }
+  .card { width: min(760px, 100%); background: rgba(255,255,255,0.92); border: 1px solid #dbe7f3; border-radius: 28px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.10); padding: clamp(28px, 6vw, 56px); text-align: center; }
+  .kicker { color: #4f46e5; font-weight: 800; letter-spacing: .14em; font-size: 14px; }
+  h1 { margin: 12px 0 14px; font-size: clamp(30px, 6vw, 52px); line-height: 1.2; letter-spacing: -0.03em; }
+  p { margin: 0 auto; max-width: 36em; color: #475569; font-size: 17px; line-height: 1.85; }
+  .actions { margin-top: 30px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+  a { color: inherit; }
+  .button { display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 24px; border-radius: 999px; font-weight: 800; text-decoration: none; }
+  .primary { background: #172033; color: #fff; box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18); }
+  .secondary { border: 1px solid #cbd5e1; color: #334155; background: #fff; }
+  .note { margin-top: 18px; color: #64748b; font-size: 13px; }
+</style></head><body><main>
+  <section class="card">
+    <div class="kicker">QA² 夏休み自由研究</div>
+    <h1>量子コンピューターの<br>不思議をしらべよう</h1>
+    <p>パズルゲーム <b>QA²</b> であそびながら完成させる、小学生向けの観察ノートです。A4・全8ページの印刷用PDFをダウンロードできます。</p>
+    <div class="actions">
+      <a class="button primary" href="./qa2-worksheet.pdf" download>PDFをダウンロード</a>
+      <a class="button secondary" href="./qa2.html">HTML版を見る</a>
+    </div>
+    <div class="note">外部サイトから直接リンクする場合は <code>https://qniapp.github.io/qa2-worksheet/qa2-worksheet.pdf</code> を使えます。</div>
+  </section>
+</main></body></html>`;
+
 const DIST = join(OUT, 'dist');
 mkdirSync(DIST, { recursive: true });
 writeFileSync(join(DIST, 'qa2.html'), html);
-console.log('wrote dist/qa2.html');
+writeFileSync(join(DIST, 'index.html'), landingHtml);
+writeFileSync(join(DIST, '.nojekyll'), '');
+console.log('wrote dist/qa2.html and dist/index.html');

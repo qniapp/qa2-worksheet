@@ -6,6 +6,9 @@
 ## 成果物
 
 - `dist/qa2-worksheet.pdf` … 配布・印刷用の最終PDF（全8ページ）
+- GitHub Pages 公開URL
+  - ダウンロードページ: <https://qniapp.github.io/qa2-worksheet/>
+  - PDF直リンク: <https://qniapp.github.io/qa2-worksheet/qa2-worksheet.pdf>
 
 ### ページ構成
 

@@ -5,7 +5,20 @@ cd "$(dirname "$0")"
 
 node build.mjs
 
-CHROME="${CHROME:-google-chrome-stable}"
+CHROME="${CHROME:-}"
+if [[ -z "$CHROME" ]]; then
+  for candidate in google-chrome-stable google-chrome chromium chromium-browser; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      CHROME="$candidate"
+      break
+    fi
+  done
+fi
+if [[ -z "$CHROME" ]]; then
+  echo "Chrome/Chromium が見つかりません。CHROME=/path/to/chrome を指定してください。" >&2
+  exit 1
+fi
+
 OUT="dist/qa2-worksheet.pdf"
 "$CHROME" --headless=new --disable-gpu --no-sandbox --no-pdf-header-footer \
   --print-to-pdf="$OUT" --virtual-time-budget=4000 \
