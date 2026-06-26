@@ -253,7 +253,7 @@ function turnKidMarkup(angle) {
 }
 const stepAction = gType => {
   const g = GATES[gType], st = axisStyle(g.axis);
-  return `<span class="actstep"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actgive">${gateBlock(gType, 24)}</span><span class="actarrow">${flowArrow()}</span></span>`;
+  return `<span class="actstep"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actgive">${gateBlock(gType, 22)}</span><span class="actarrow">${flowArrow()}</span></span>`;
 };
 const stateFigure = (size, state, caption, ghostState = null, axisHighlight = null) =>
   `<figure>${globe({ size, skin: 'bloch', state, ghostState, axisHighlight })}<figcaption>${furi(caption)}</figcaption></figure>`;
@@ -587,11 +587,13 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .spheres figcaption { font-size: 10px; color: #475569; margin-top: -5px; line-height: 1.15; font-weight: 700; }
   .pairs .spheres figcaption { font-size: 9.4px; }
   .tallrows .spheres figcaption { font-size: 9.2px; }
-  .actstep { width: 72px; height: 74px; position: relative; display: inline-flex; flex-direction: column; align-items: center; align-self: flex-start; gap: 1px; padding-top: 2px; }
-  .tallrows .actstep { width: 64px; height: 66px; padding-top: 1px; }
-  .actgive { display: inline-flex; align-items: center; justify-content: center; }
+  .actstep { width: 72px; height: 74px; position: relative; display: inline-flex; flex-direction: column; align-items: center; align-self: flex-start; gap: 1px; padding-top: 0; }
+  .tallrows .actstep { width: 64px; height: 66px; }
+  .actgive { position: absolute; left: 50%; top: 11px; transform: translateX(-50%); display: inline-flex; align-items: center; justify-content: center; }
+  .tallrows .actgive { top: 8px; }
   .actgive svg { flex: 0 0 auto; }
-  .actturn { font-size: 7.4px; color: #475569; line-height: 1; text-align: center; font-weight: 800; white-space: nowrap; }
+  .actturn { position: absolute; left: 50%; top: -3px; transform: translateX(-50%); font-size: 7.4px; color: #475569; line-height: 1; text-align: center; font-weight: 800; white-space: nowrap; }
+  .tallrows .actturn { top: -4px; }
   .pairs .actturn { font-size: 7.8px; }
   .actturn b, .actturn-main { display: inline; white-space: nowrap; }
   .actsep { color: #94a3b8; margin: 0 1px; }
