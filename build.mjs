@@ -236,9 +236,20 @@ const fillBox = (px = 80, answer = null) => {
   return base + `<text x="${px/2}" y="${px/2}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
 };
 const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
-// 球と球の間の矢印。上にその段で渡すブロックを小さく載せる（最後の段は ＝）。
-const stepArrow = (gType, isResult) =>
-  `<span class="oparr"><span class="opblk">${gateBlock(gType, 24)}</span><span class="op${isResult ? ' eq' : ''}">${isResult ? '＝' : '→'}</span></span>`;
+// 状態と状態の間に置く「操作」カード。球は状態、カードはブロック操作として分けて見せる。
+function axisKidName(axis) {
+  const name = axisStyle(axis).name;
+  return name === 'ななめ' ? 'ななめじく' : `${name}じく`;
+}
+function turnKidMarkup(angle) {
+  return `${furi(turnWords(angle))}<span class="actdeg">(${angle}°)</span>`;
+}
+const stepAction = gType => {
+  const g = GATES[gType], st = axisStyle(g.axis);
+  return `<span class="actstep"><span class="actgive">${gateBlock(gType, 22)}<span>${furi(`${gType}をわたす`)}</span></span><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actarrow">→</span></span>`;
+};
+const stateFigure = (size, state, caption, ghostState = null) =>
+  `<figure>${globe({ size, skin: 'bloch', state, ghostState })}<figcaption>${furi(caption)}</figcaption></figure>`;
 // 解説ページ用の 2×2 行列 / 2×1 ベクトル（列優先で並べる）
 const mat = (a, b, c, d) => `<span class="mat"><span>${a}</span><span>${c}</span><span>${b}</span><span>${d}</span></span>`;
 const vec = (a, b) => `<span class="mat vec"><span>${a}</span><span>${b}</span></span>`;
@@ -256,23 +267,22 @@ const PAIRS = [
   { tag: 'T²', g: 'T', start: EQ, result: { block: 'S' }, note: '赤道からスタート' },
 ];
 function pairRow(p) {
-  // 右側には答え（結論）を書かない。回転の観察だけ見せ、結果は子どもが □ に書く。
-  const g = GATES[p.g], st = axisStyle(g.axis), s0 = p.start, s1 = rotate(s0, g.axis, g.angle), s2 = rotate(s1, g.axis, g.angle), tw = turnWords(g.angle);
-  const cap = `<b style="color:${st.color}">${st.name}軸</b>のまわりを<b>${tw}</b><span class="deg">(${g.angle}°)</span>`;
+  // 右側には答え（結論）を書かない。球は状態、間のカードは操作として分けて見せる。
+  const g = GATES[p.g], s0 = p.start, s1 = rotate(s0, g.axis, g.angle), s2 = rotate(s1, g.axis, g.angle);
   const box = p.example ? fillBox(68, '消える') : fillBox(68);
   const exlabel = p.example ? `<div class="exlabel">${furi('↑ 書き方の例')}</div>` : '';
   const note = p.note ? `<div class="note">${furi(p.note)}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
-  const finalCaption = furi('やじるしの移動');
+  const finalCaption = p.result === 'vanish' ? '2回目：元どおり' : '2回目のあと';
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
     <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
-    <div class="pright"><div class="spheres">
-      <figure>${globe({ size: 76, skin: 'bloch', state: s0, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
-      ${stepArrow(p.g, false)}
-      <figure>${globe({ size: 76, skin: 'bloch', state: s1, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
-      ${stepArrow(p.g, true)}
-      <figure>${globe({ size: 76, skin: 'bloch', state: s2, ghostState: s0 })}<figcaption class="last">${finalCaption}</figcaption></figure>
+    <div class="pright"><div class="spheres flowline">
+      ${stateFigure(74, s0, 'まえの向き')}
+      ${stepAction(p.g)}
+      ${stateFigure(74, s1, '1回目のあと', s0)}
+      ${stepAction(p.g)}
+      ${stateFigure(74, s2, finalCaption, s1)}
     </div>${why}${note}</div></div>`;
 }
 
@@ -292,14 +302,11 @@ function triRow(p) {
   const gs = p.blocks.map(t => GATES[t]);
   const states = [p.start];
   for (const g of gs) states.push(rotate(states[states.length - 1], g.axis, g.angle));
-  const figs = gs.map((g, i) => {
-    const st = axisStyle(g.axis);
-    return `<figure>${globe({ size: 82, skin: 'bloch', state: states[i], spin: { axis: g.axis, angle: g.angle } })}<figcaption><b style="color:${st.color}">${st.name}</b> ${furi(turnWords(g.angle))}</figcaption></figure>`;
+  let spheres = stateFigure(66, states[0], 'まえの向き');
+  p.blocks.forEach((block, i) => {
+    const caption = i === p.blocks.length - 1 ? 'さいごの向き' : `${i + 1}こ目のあと`;
+    spheres += stepAction(block) + stateFigure(66, states[i + 1], caption, states[i]);
   });
-  let spheres = '';
-  figs.forEach((f, i) => { spheres += f + stepArrow(p.blocks[i], i === figs.length - 1); });
-  const finalCaption = furi('やじるしの移動');
-  const finalSphere = `<figure>${globe({ size: 82, skin: 'bloch', state: states[states.length - 1], ghostState: states[0] })}<figcaption class="last">${finalCaption}</figcaption></figure>`;
   const box = p.example
     ? (p.result === 'vanish' ? fillBox(64, '消える') : `<div class="exfill">${gateBlock(p.result.block, 42)}</div>`)
     : fillBox(64);
@@ -310,7 +317,7 @@ function triRow(p) {
   const divider = p.divider ? `<div class="rowdivider">${furi(p.divider)}</div>` : '';
   return `${divider}<div class="prow"><div class="pleft tleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.blocks.join('・')}</div></div>
     <div class="seq"><div class="col">${p.blocks.map(t => gateBlock(t, 34)).join('')}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
-    <div class="pright"><div class="spheres">${spheres}${finalSphere}</div>${why}${note}</div></div>`;
+    <div class="pright"><div class="spheres flowline">${spheres}</div>${why}${note}</div></div>`;
 }
 
 /* ===================== ページ ===================== */
@@ -567,16 +574,24 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .exfill { text-align: center; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 4px; background: #fffef7; display: inline-block; }
   .exlabel { font-size: 9px; color: #dc2626; margin-top: 1px; }
   .pright { flex: 1; }
-  .spheres { display: flex; align-items: center; justify-content: center; gap: 6px; } .spheres figure { margin: 0; text-align: center; }
+  .spheres { display: flex; align-items: center; justify-content: center; gap: 5px; } .spheres figure { margin: 0; text-align: center; }
   .pright { text-align: center; }
-  .spheres figcaption { font-size: 10px; color: #475569; margin-top: -5px; line-height: 1.15; }
-  .pairs .spheres figcaption { font-size: 9.2px; }
-  .tallrows .spheres figcaption { font-size: 10.5px; }
+  .flowline { gap: 4px; }
+  .spheres figcaption { font-size: 10px; color: #475569; margin-top: -5px; line-height: 1.15; font-weight: 700; }
+  .pairs .spheres figcaption { font-size: 9.4px; }
+  .tallrows .spheres figcaption { font-size: 9.2px; }
+  .actstep { width: 64px; display: inline-flex; flex-direction: column; align-items: center; align-self: center; gap: 1px; }
+  .tallrows .actstep { width: 54px; }
+  .actgive { display: inline-flex; align-items: center; justify-content: center; gap: 2px; padding: 1px 4px; border: 1px solid #cbd5e1; border-radius: 999px; background: #fff; box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06); }
+  .actgive svg { flex: 0 0 auto; }
+  .actgive span { font-size: 8.8px; color: #1f2937; font-weight: 900; white-space: nowrap; }
+  .actturn { font-size: 8.3px; color: #475569; line-height: 1.12; text-align: center; font-weight: 800; }
+  .actturn b, .actturn-main { display: block; white-space: nowrap; }
+  .actturn ruby rt { font-size: 5.5px; }
+  .actdeg { display: inline; color: #94a3b8; font-size: 7px; font-weight: 700; margin-left: 1px; }
+  .actarrow { font-size: 17px; line-height: 0.9; color: #64748b; font-weight: 900; }
   .foot { position: absolute; left: 13mm; right: 13mm; bottom: 8mm; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 9px; color: #94a3b8; display: flex; justify-content: space-between; }
   .foot sup { font-size: 7px; }
-  .spheres .op { font-size: 16px; color: #94a3b8; line-height: 1; } .spheres .op.eq { color: #475569; font-weight: 700; }
-  .oparr { display: inline-flex; flex-direction: column; align-items: center; align-self: center; }
-  .opblk { line-height: 0; margin-bottom: 2px; }
   .concl { font-size: 11.5px; line-height: 1.45; } .concl b { font-size: 12.5px; }
   .note { font-size: 9.5px; color: #0369a1; margin-top: 3px; }
   .why { font-size: 11px; color: #dc2626; font-weight: 700; text-align: center; margin-top: 4px; }
