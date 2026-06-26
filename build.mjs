@@ -1,5 +1,5 @@
 // QA2 夏休み自由研究ワークシート生成: データ＋純粋関数で SVG を手続き生成し、A4×8ページの HTML を dist/ に書き出す。
-// 設計の肝: すべての図は「1つの投影 project()」を共有する → 絶対にズレない。
+// 設計の肝: 図はページ用カメラごとの project() を共有する → 同じカメラ内で絶対にズレない。
 // 地球スキンとブロッホスキンは同じ globe() の見た目違い。配列を増やせばパターンが増える。
 // ふりがなは furi()（辞書＋BudouX）で本文のみに適用。PDF 化は build.sh（ヘッドレス Chrome）で行う。
 import { writeFileSync, mkdirSync } from 'node:fs';
@@ -22,11 +22,22 @@ function rotate(v, axis, angle) { // ロドリゲス
 }
 
 /* ===================== 共有カメラ（正射影） ===================== */
-const AZ = rad(-90), EL = rad(16);
-const F = [Math.cos(EL) * Math.cos(AZ), Math.cos(EL) * Math.sin(AZ), Math.sin(EL)];
-const RIGHT = norm(cross([0, 0, 1], F)), CAMUP = cross(F, RIGHT);
-const project = (p, cx, cy, R) => [cx + R * dot(p, RIGHT), cy - R * dot(p, CAMUP)];
-const depth = p => dot(p, F);
+function makeCamera(azDeg, elDeg = 16) {
+  const az = rad(azDeg), el = rad(elDeg);
+  const forward = [Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el)];
+  const right = norm(cross([0, 0, 1], forward)), up = cross(forward, right);
+  return { forward, right, up };
+}
+const CAMERA_FRONT = makeCamera(-90);      // 表紙だけ真正面：顔つきキュービット君をまっすぐ見せる
+const CAMERA_ANGLED = makeCamera(-58);    // 本文：x軸が右下に傾く、以前の見やすい角度
+let ACTIVE_CAMERA = CAMERA_ANGLED;
+function withCamera(camera, render) {
+  const prev = ACTIVE_CAMERA;
+  ACTIVE_CAMERA = camera;
+  try { return render(); } finally { ACTIVE_CAMERA = prev; }
+}
+const project = (p, cx, cy, R) => [cx + R * dot(p, ACTIVE_CAMERA.right), cy - R * dot(p, ACTIVE_CAMERA.up)];
+const depth = p => dot(p, ACTIVE_CAMERA.forward);
 
 /* ===================== 色（BlockColors.cs の HSV を再現） ===================== */
 function hsv(h, s, v) {
@@ -109,6 +120,7 @@ const polyline = (pts, attrs) => `<polyline points="${pts.map(p => `${fmt(p[0])}
 /* ===================== globe(): 地球/ブロッホ 共通部品 ===================== */
 let UID = 0;
 function globe(opts) {
+  if (opts.camera) { const { camera, ...rest } = opts; return withCamera(camera, () => globe(rest)); }
   const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null, poleLabels = true, ghostState = null, axisHighlight = null, pathAxis = null, pathAngle = null } = opts;
   const spinAxisName = spin ? axisStyle(spin.axis).name : null;
   const W = size, H = size, cx = W / 2, cy = H / 2, R = size * 0.34;
@@ -401,7 +413,7 @@ const coverPage = () => `<div class="page cover">
   <h1>${furi('量子')}コンピューターの<br>${furi('不思議')}を しらべよう</h1>
   <div class="subtitle">パズルゲーム <b>QA²</b> で あそびながら ${furi('完成')}させる ${furi('観察')}ノート</div>
   <div class="goal">${furi('今日のゴール：ブロックをならべると「消える／変身する」を見つけよう')}</div>
-  <div class="hero">${globe({ size: 220, skin: 'earth', state: N, face: true, poleLabels: false })}<div class="heroname">キュービット${furi('君')}</div></div>
+  <div class="hero">${globe({ size: 220, skin: 'earth', state: N, face: true, poleLabels: false, camera: CAMERA_FRONT })}<div class="heroname">キュービット${furi('君')}</div></div>
   <div class="intro">
     <h3>📚 ${furi('この自由研究でやること')}</h3>
     <ul>
