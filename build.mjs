@@ -555,7 +555,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .storyop .actturn { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); font-size: 9px; line-height: 1; font-weight: 800; white-space: nowrap; }
   .storyop .actturn ruby rt { font-size: 5.8px; }
   .storyop .actdeg { font-size: 7px; }
-  .storyop .actgive { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); }
+  .storyop .actgive { position: absolute; left: 50%; top: 22px; transform: translateX(-50%); }
   .storyop .actarrow { position: absolute; left: 50%; top: 66px; transform: translateX(-50%); width: 44px; height: 12px; line-height: 0; }
   .storyop .actarrow svg { width: 44px; height: 12px; }
   .step { display: flex; gap: 12px; align-items: flex-start; margin: 8px 0; }
@@ -597,8 +597,8 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .tallrows .spheres figcaption { font-size: 9.2px; }
   .actstep { width: 72px; height: 74px; position: relative; display: inline-flex; flex-direction: column; align-items: center; align-self: flex-start; gap: 1px; padding-top: 0; }
   .tallrows .actstep { width: 64px; height: 66px; }
-  .actgive { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); display: inline-flex; align-items: center; justify-content: center; }
-  .tallrows .actgive { top: 9px; }
+  .actgive { position: absolute; left: 50%; top: 7px; transform: translateX(-50%); display: inline-flex; align-items: center; justify-content: center; }
+  .tallrows .actgive { top: 4px; }
   .actgive svg { flex: 0 0 auto; }
   .actturn { position: absolute; left: 50%; top: -14px; transform: translateX(-50%); font-size: 7.4px; color: #475569; line-height: 1; text-align: center; font-weight: 800; white-space: nowrap; }
   .tallrows .actturn { top: -15px; }
