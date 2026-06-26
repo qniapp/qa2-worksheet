@@ -584,7 +584,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .answerhint { color: #b91c1c; font-size: 10px; font-weight: 900; margin-bottom: 2px; }
   .seq { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .col { display: flex; flex-direction: column; gap: 3px; align-items: center; }
-  .boxwrap { text-align: center; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 3px 5px 4px; }
+  .boxwrap { width: 76px; box-sizing: border-box; text-align: center; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 3px 5px 4px; }
   .pairs .boxwrap { background: transparent; border: 0; padding: 0; }
   .exfill { text-align: center; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 4px; background: #fffef7; display: inline-block; }
   .exlabel { font-size: 9px; color: #dc2626; margin-top: 1px; }

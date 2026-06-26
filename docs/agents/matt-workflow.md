@@ -39,6 +39,7 @@
 - 小学生向けページ（特に 1〜7 ページ）の漢字には `furi()` を通す。SVG など `furi()` が使えない場所では、ひらがな併記・疑似ルビ・ひらがな表記で補う。
 - PDF の全ページを画像として `docs/review/issue-<number>/` などに保存し、画像を開いて確認し、すべてのページで `interface-craft` の Design Critique が PASS になるまで修正を続ける。
 - 画像確認と Design Critique では、文字・ルビ・ブロック・矢印・球・枠線などの要素が重なっていないことを明示的に確認する。特に小さな操作ラベル、アイコン、矢印、図中の軸線は拡大して確認する。
+- 繰り返し行・表・図解では、縦横の基準線も確認する。カード端、点線枠、区切り線、右端罫線、図の列位置などが意図なくずれていないか、同じページ内で見比べる。
 - PR 本文には、変更の主対象ページを直接埋め込み、全ページ画像は必要に応じて折りたたみ内に置く。画像 URL は `https://github.com/qniapp/qa2-worksheet/blob/<commit>/<path>?raw=true` 形式を使い、`/tmp` パスや `raw.githubusercontent.com` 直リンクは使わない。
 - 見た目を伴わない運用ドキュメント変更では、上記の PDF 再生成・全ページレビューは不要。
 
@@ -92,6 +93,7 @@ orca-ide terminal list --worktree <selector> --json
    - PR 前に該当テスト、`npm run build` が必要な変更なら PDF 再生成、`git diff --check` を実行する。
    - PDF / HTML の見た目や読みやすさに影響する変更は、全ページ画像確認と Design Critique PASS を確認する。
    - 画像確認と Design Critique では、文字・ルビ・ブロック・矢印・球・枠線などの要素が重なっていないことを明示的に確認する。小さな操作ラベル、アイコン、矢印、図中の軸線は拡大して見る。
+   - 繰り返し行・表・図解では、縦横の基準線も確認する。カード端、点線枠、区切り線、右端罫線、図の列位置などが意図なくずれていないか、同じページ内で見比べる。
    - PDF / HTML の見た目や読みやすさに影響する PR では、`docs/review/issue-<number>/` などの再現可能な場所にページ画像を保存し、PR 本文へ埋め込む。変更の主対象ページは直接表示し、全ページ確認画像は必要に応じて折りたたみ内にまとめる。
    - 画像埋め込みは `https://github.com/qniapp/qa2-worksheet/blob/<commit>/<path>?raw=true` 形式を使う。`/tmp` パスや `raw.githubusercontent.com` 直リンクは使わない。
    - PR 作成後は Matt `/review` の考え方で、Standards と Spec の 2 軸を確認する。
