@@ -253,7 +253,7 @@ function turnKidMarkup(angle) {
 }
 const stepAction = gType => {
   const g = GATES[gType], st = axisStyle(g.axis);
-  return `<span class="actstep"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actgive">${gateBlock(gType, 22)}</span><span class="actarrow">${flowArrow()}</span></span>`;
+  return `<span class="actstep"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actgive">${gateBlock(gType, 24)}</span><span class="actarrow">${flowArrow()}</span></span>`;
 };
 const stateFigure = (size, state, caption, ghostState = null, axisHighlight = null) =>
   `<figure>${globe({ size, skin: 'bloch', state, ghostState, axisHighlight })}<figcaption>${furi(caption)}</figcaption></figure>`;
@@ -278,7 +278,6 @@ function pairRow(p) {
   const g = GATES[p.g], s0 = p.start, s1 = rotate(s0, g.axis, g.angle), s2 = rotate(s1, g.axis, g.angle);
   const box = p.example ? fillBox(68, '消える') : fillBox(68);
   const exlabel = p.example ? `<div class="exlabel">${furi('↑ 書き方の例')}</div>` : '';
-  const note = p.note ? `<div class="note">${furi(p.note)}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
   const finalCaption = p.result === 'vanish' ? '2回目：元どおり' : '2回目のあと';
@@ -290,7 +289,7 @@ function pairRow(p) {
       ${stateFigure(74, s1, '1回目のあと', s0, g.axis)}
       ${stepAction(p.g)}
       ${stateFigure(74, s2, finalCaption, s1, g.axis)}
-    </div>${why}${note}</div></div>`;
+    </div>${why}</div></div>`;
 }
 
 // トリプル（3ブロック）。外側2つが消え、まん中が変身（または全部消える）
@@ -318,13 +317,12 @@ function triRow(p) {
     ? (p.result === 'vanish' ? fillBox(64, '消える') : `<div class="exfill">${gateBlock(p.result.block, 42)}</div>`)
     : fillBox(64);
   const exlabel = p.example ? `<div class="exlabel">${furi('↑ 書き方の例')}</div>` : '';
-  const note = p.note ? `<div class="note">${furi(p.note)}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(gs[0].color, '#ffffff', 0.72), tagTx = mix(gs[0].color, '#000000', 0.38);
   const divider = p.divider ? `<div class="rowdivider">${furi(p.divider)}</div>` : '';
   return `${divider}<div class="prow"><div class="pleft tleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.blocks.join('・')}</div></div>
     <div class="seq"><div class="col">${p.blocks.map(t => gateBlock(t, 34)).join('')}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
-    <div class="pright"><div class="spheres flowline">${spheres}</div>${why}${note}</div></div>`;
+    <div class="pright"><div class="spheres flowline">${spheres}</div>${why}</div></div>`;
 }
 
 /* ===================== ページ ===================== */
@@ -589,8 +587,8 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .tallrows .spheres figcaption { font-size: 9.2px; }
   .actstep { width: 72px; height: 74px; position: relative; display: inline-flex; flex-direction: column; align-items: center; align-self: flex-start; gap: 1px; padding-top: 0; }
   .tallrows .actstep { width: 64px; height: 66px; }
-  .actgive { position: absolute; left: 50%; top: 11px; transform: translateX(-50%); display: inline-flex; align-items: center; justify-content: center; }
-  .tallrows .actgive { top: 8px; }
+  .actgive { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); display: inline-flex; align-items: center; justify-content: center; }
+  .tallrows .actgive { top: 3px; }
   .actgive svg { flex: 0 0 auto; }
   .actturn { position: absolute; left: 50%; top: -3px; transform: translateX(-50%); font-size: 7.4px; color: #475569; line-height: 1; text-align: center; font-weight: 800; white-space: nowrap; }
   .tallrows .actturn { top: -4px; }
