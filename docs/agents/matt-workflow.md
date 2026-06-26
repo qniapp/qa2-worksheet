@@ -16,10 +16,12 @@
    - 最初に `AGENTS.md`、`README.md`、issue 本文を読み、issue 本文を spec として実装する。
    - TDD 可能な seam があれば、1 テストずつ RED → GREEN で進める。
 5. `/review`
-   - `origin/main...HEAD` など固定点との差分を、spec 適合と documented standards の 2 軸で確認する。
+   - `origin/master...HEAD` など固定点との差分を、spec 適合と documented standards の 2 軸で確認する。
    - spec は原則 GitHub issue 本文、必要に応じて PRD / docs も参照する。
 6. PR
-   - PR 本文、検証メモ、レビュー応答は日本語で書く。
+   - PR 本文、検証メモ、レビュー応答は日本語で書き、不要な英単語を日本語文に混ぜる「ルー語」を避ける。
+   - PR 本文の冒頭に、issue を開かなくても分かる「この PR は何か」「この PR でやること」「この PR でやらないこと」を置く。
+   - PDF / HTML の見た目や読みやすさに影響する PR では、修正後のページ画像を PR 本文へ埋め込む。
    - Acceptance criteria の完了状態は issue 本文で更新する。
 
 ## fresh `/implement` ルール
@@ -35,7 +37,8 @@
 
 - `build.mjs` のレイアウト・文言・CSS・図版を変更したら、必ず `npm run build` で `dist/qa2-worksheet.pdf` を再生成する。
 - 小学生向けページ（特に 1〜7 ページ）の漢字には `furi()` を通す。SVG など `furi()` が使えない場所では、ひらがな併記・疑似ルビ・ひらがな表記で補う。
-- PDF の全ページを画像として確認し、すべてのページで `interface-craft` の Design Critique が PASS になるまで修正を続ける。
+- PDF の全ページを画像として `docs/review/issue-<number>/` などに保存し、画像を開いて確認し、すべてのページで `interface-craft` の Design Critique が PASS になるまで修正を続ける。
+- PR 本文には、変更の主対象ページを直接埋め込み、全ページ画像は必要に応じて折りたたみ内に置く。画像 URL は `https://github.com/qniapp/qa2-worksheet/blob/<commit>/<path>?raw=true` 形式を使い、`/tmp` パスや `raw.githubusercontent.com` 直リンクは使わない。
 - 見た目を伴わない運用ドキュメント変更では、上記の PDF 再生成・全ページレビューは不要。
 
 ## Orca 司令塔運用
@@ -71,10 +74,12 @@ orca-ide terminal list --worktree <selector> --json
 
 1. **Discover**
    - `gh issue list`, `gh pr list`, `orca-ide worktree list`, `orca-ide terminal list` で、open PR、active worktree、blocked issue、ready issue を確認する。
-2. **Prioritize**
+2. **Prioritize / Parallelize**
    - open PR がある場合は、新規実装より PR レビュー・検証を優先する。
    - active worktree がある dependency root issue を優先する。
    - active worktree がない ready issue は、依存関係が解けているものだけ fresh worktree / fresh `/implement` に流す。
+   - 人間を待たせないため、依存関係と編集対象が独立している ready issue は並行 worktree として追加してよい。目安は active implementation worktree 2〜3 本まで。
+   - 並行投入前に、既存 active worktree の linkedIssue、予想される変更ファイル、open PR を見て、同じファイルを大きく編集しそうな issue は待機または明示的にスコープ分離する。
 3. **Dispatch / Continue**
    - worker には issue URL、必読 docs、検証条件、GitHub コメントでの進捗報告、draft PR までで止めることを渡す。
    - 既存 worker がいる場合は、terminal 返信ではなく issue コメントへ状況報告させる。
@@ -85,18 +90,39 @@ orca-ide terminal list --worktree <selector> --json
 5. **Quality gates**
    - PR 前に該当テスト、`npm run build` が必要な変更なら PDF 再生成、`git diff --check` を実行する。
    - PDF / HTML の見た目や読みやすさに影響する変更は、全ページ画像確認と Design Critique PASS を確認する。
+   - PDF / HTML の見た目や読みやすさに影響する PR では、`docs/review/issue-<number>/` などの再現可能な場所にページ画像を保存し、PR 本文へ埋め込む。変更の主対象ページは直接表示し、全ページ確認画像は必要に応じて折りたたみ内にまとめる。
+   - 画像埋め込みは `https://github.com/qniapp/qa2-worksheet/blob/<commit>/<path>?raw=true` 形式を使う。`/tmp` パスや `raw.githubusercontent.com` 直リンクは使わない。
    - PR 作成後は Matt `/review` の考え方で、Standards と Spec の 2 軸を確認する。
    - 指摘があれば worker へ戻し、GitHub コメントに修正方針と結果を残させる。
 6. **Human gate**
    - merge、repo rename、依存関係の大きな変更、仕様判断、未解決のレビュー指摘、見た目の主観判断が必要なときだけ人間に止めて依頼する。
 7. **Cleanup**
    - PR merge / issue close が完了した worktree は、未コミット差分がないことを確認してから terminal を停止し、`orca-ide worktree rm --worktree issue:<number>` で削除する。
-   - cleanup 後は main を `git pull --ff-only` で最新化し、司令塔 worktree comment を次の active issue に更新する。
-   - squash merge 後の feature branch は main に fast-forward できないことがあるため、Orca worktree 削除は PR / issue の完了状態とローカル差分の有無で判断する。
+   - cleanup 後は master を `git pull --ff-only` で最新化し、司令塔 worktree comment を次の active issue に更新する。
+   - squash merge 後の feature branch は master に fast-forward できないことがあるため、Orca worktree 削除は PR / issue の完了状態とローカル差分の有無で判断する。
 8. **Advance chain**
    - PR が merge されたら、依存が解けた次 issue を確認し、同じループで fresh worktree / fresh `/implement` を開始する。
+   - worker を待っている間も、独立した ready issue がないか確認し、conflict risk が低ければ追加 worktree を作って並行度を上げる。
 
 このループでは、無期限に terminal を待ち続けない。GitHub 上に安定ログが出ない場合は、timeout → 再依頼 → 必要なら引き継ぎの順で進める。待つ必要があるときは、司令塔が自分で timeout 付き polling / sleep を行い、人間に「終わったら教えて」と依頼しない。
+
+繰り返し確認は、可能な限りスクリプト化した安定手順を使う。
+
+```bash
+# 現在の PR / active worktree / cleanup候補 / 着手候補を表示
+node scripts/orca-commander-tick.mjs --max-active 2
+
+# 完了済みで clean な worktree を削除候補として処理
+node scripts/orca-commander-tick.mjs --cleanup-completed
+
+# 5分間、60秒ごとに司令塔状態を polling
+node scripts/orca-commander-tick.mjs --watch-seconds 300 --interval-seconds 60
+
+# 特定 issue を fresh Orca worktree + Pi worker で開始
+node scripts/orca-commander-tick.mjs --start 20
+```
+
+スクリプトは完全自動判断の代替ではなく、同じ確認・cleanup・dispatch 手順を毎回同じ形で実行するための司令塔補助とする。
 
 worker に状況報告を依頼するときは、terminal 返信ではなく issue / PR コメントに残すよう明示する。例:
 
