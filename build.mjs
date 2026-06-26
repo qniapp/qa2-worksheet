@@ -371,7 +371,7 @@ function amidakujiDemo() {
   s += `<g transform="translate(${ax-13},${ySwap-13})">${swapIcon(26)}</g><g transform="translate(${bx-13},${ySwap-13})">${swapIcon(26)}</g>`;
   s += `<text x="${(ax+bx)/2}" y="${ySwap-9}" font-size="9" fill="#b45309" text-anchor="middle">SWAP</text>`;
   s += `<g transform="translate(${ax-blk/2},${yTop-blk/2})">${gateBlock('H', blk)}</g><g transform="translate(${bx-blk/2},${yBot-blk/2})">${gateBlock('H', blk)}</g>`;
-  s += `<text x="${bx+16}" y="${yBot+3}" font-size="11" fill="#dc2626" font-weight="700">そろう！</text>`;
+  s += `<text x="${bx + blk / 2 + 8}" y="${yBot+3}" font-size="11" fill="#dc2626" font-weight="700">そろう！</text>`;
   s += `</svg>`;
   return s;
 }
@@ -390,7 +390,7 @@ function amidakujiDemo2() {
   s += `<text x="${(b + c) / 2}" y="${s2 - 9}" font-size="9" fill="#b45309" text-anchor="middle">SWAP</text>`;
   s += `<g transform="translate(${a - blk / 2},${yTop - blk / 2})">${gateBlock('H', blk)}</g>`;
   s += `<g transform="translate(${c - blk / 2},${yBot - blk / 2})">${gateBlock('H', blk)}</g>`;
-  s += `<text x="${c + 16}" y="${yBot + 3}" font-size="11.5" fill="#dc2626" font-weight="700">そろう！</text>`;
+  s += `<text x="${c + blk / 2 + 8}" y="${yBot + 3}" font-size="11.5" fill="#dc2626" font-weight="700">そろう！</text>`;
   s += `</svg>`;
   return s;
 }
@@ -459,7 +459,7 @@ const pairsPage = () => `<div class="page pairs">
   ${footer(4)}
 </div>`;
 
-const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="page ${n === 6 ? 'tallrows' : ''}">
+const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="page triples ${n === 6 ? 'tallrows' : ''}">
   ${headTitle(sub)}
   <h2><span class="dot"></span>${furi(heading)}</h2>
   <div class="howto">${furi(lead + ' 前のページと同じように考えよう。')}</div>
@@ -588,15 +588,17 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .pairs .boxwrap { background: transparent; border: 0; padding: 0; }
   .exfill { text-align: center; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 4px; background: #fffef7; display: inline-block; }
   .exlabel { font-size: 9px; color: #dc2626; margin-top: 1px; }
-  .pright { flex: 1; }
+  .pright { flex: 1; padding: 0 8px; box-sizing: border-box; }
   .spheres { display: flex; align-items: center; justify-content: center; gap: 5px; } .spheres figure { margin: 0; text-align: center; }
   .pright { text-align: center; }
+  .triples .pright { padding-left: 4px; padding-right: 18px; }
   .flowline { gap: 4px; align-items: flex-start; }
   .spheres figcaption { font-size: 10px; color: #475569; margin-top: -5px; line-height: 1.15; font-weight: 700; }
   .pairs .spheres figcaption { font-size: 9.4px; }
   .tallrows .spheres figcaption { font-size: 9.2px; }
   .actstep { width: 72px; height: 74px; position: relative; display: inline-flex; flex-direction: column; align-items: center; align-self: flex-start; gap: 1px; padding-top: 0; }
   .tallrows .actstep { width: 64px; height: 66px; }
+  .triples:not(.tallrows) .actstep { width: 64px; }
   .actgive { position: absolute; left: 50%; top: 7px; transform: translateX(-50%); display: inline-flex; align-items: center; justify-content: center; }
   .tallrows .actgive { top: 4px; }
   .actgive svg { flex: 0 0 auto; }
