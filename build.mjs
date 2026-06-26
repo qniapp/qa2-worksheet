@@ -104,9 +104,14 @@ const furi = s => wrapJa(addRuby(s));
 const fmt = n => (Math.round(n * 100) / 100);
 function arrowhead(tip, dir, size, color) {
   const d = norm([dir[0], dir[1], 0]), px = -d[1], py = d[0];
-  const a = [tip[0] - d[0] * size + px * size * 0.55, tip[1] - d[1] * size + py * size * 0.55];
-  const b = [tip[0] - d[0] * size - px * size * 0.55, tip[1] - d[1] * size - py * size * 0.55];
+  const length = size * 1.22, half = size * 0.38;
+  const a = [tip[0] - d[0] * length + px * half, tip[1] - d[1] * length + py * half];
+  const b = [tip[0] - d[0] * length - px * half, tip[1] - d[1] * length - py * half];
   return `<path d="M${fmt(tip[0])},${fmt(tip[1])} L${fmt(a[0])},${fmt(a[1])} L${fmt(b[0])},${fmt(b[1])} Z" fill="${color}"/>`;
+}
+function insetFromTip(tip, dir, amount) {
+  const d = norm([dir[0], dir[1], 0]);
+  return [tip[0] - d[0] * amount, tip[1] - d[1] * amount];
 }
 function arcSegments(fn, cx, cy, R, steps = 64) {
   const pts = [];
@@ -169,31 +174,38 @@ function globe(opts) {
     s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">なんきょく</text>`;
   }
   if (axisHighlight && !spin) s += highlightAxis(axisHighlight, false);
+  let trajectoryLayer = '';
   if (spin) { // 回転の中心軸を強調 → 軌跡＋矢印
     s += highlightAxis(spin.axis);
-    const segs = arcSegments(t => rotate(state, spin.axis, spin.angle * t), cx, cy, R, 48);
-    for (const seg of segs) s += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.4" ${seg.back ? 'stroke-opacity="0.45"' : ''}`);
+    const arrowGap = Math.min(6, Math.abs(spin.angle) * 0.45);
+    const drawAngle = spin.angle - Math.sign(spin.angle) * arrowGap;
+    const segs = arcSegments(t => rotate(state, spin.axis, drawAngle * t), cx, cy, R, 48);
+    for (const seg of segs) trajectoryLayer += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.4" ${seg.back ? 'stroke-opacity="0.45"' : ''}`);
     const endV = rotate(state, spin.axis, spin.angle), endP = project(endV, cx, cy, R);
-    const prevP = project(rotate(state, spin.axis, spin.angle - 6), cx, cy, R);
-    s += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 7, '#f59e0b');
+    const prevP = project(rotate(state, spin.axis, drawAngle), cx, cy, R);
+    trajectoryLayer += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 7, '#f59e0b');
   }
   if (ghostState && len(add(state, scl(ghostState, -1))) > 0.05) {
     const gs = norm(ghostState), en = norm(state), gp = project(gs, cx, cy, R);
-    s += `<g opacity="0.35"><line x1="${cx}" y1="${cy}" x2="${fmt(gp[0])}" y2="${fmt(gp[1])}" stroke="#64748b" stroke-width="2" stroke-dasharray="3 3"/>${arrowhead(gp, [gp[0] - cx, gp[1] - cy, 0], 6, '#64748b')}</g>`;
+    const ghostDir = [gp[0] - cx, gp[1] - cy, 0], ghostLineEnd = insetFromTip(gp, ghostDir, 6);
+    s += `<g opacity="0.35"><line x1="${cx}" y1="${cy}" x2="${fmt(ghostLineEnd[0])}" y2="${fmt(ghostLineEnd[1])}" stroke="#64748b" stroke-width="2" stroke-dasharray="3 3"/>${arrowhead(gp, ghostDir, 6, '#64748b')}</g>`;
     let axis = pathAxis ? norm(pathAxis) : cross(gs, en);
     let angleDeg = pathAngle ?? (Math.acos(Math.max(-1, Math.min(1, dot(gs, en)))) * 180 / Math.PI);
     if (len(axis) < 0.01) axis = cross(gs, Math.abs(gs[2]) < 0.9 ? [0, 0, 1] : [0, 1, 0]);
     axis = norm(axis);
     const move = t => rotate(gs, axis, angleDeg * t);
-    for (const seg of arcSegments(move, cx, cy, R, 40))
-      s += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.1" stroke-linecap="round" ${seg.back ? 'stroke-opacity="0.35" stroke-dasharray="3 3"' : ''}`);
-    const endP = project(en, cx, cy, R), prevP = project(move(0.92), cx, cy, R);
-    s += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 6.5, '#f59e0b');
+    const pathGap = Math.min(6, Math.abs(angleDeg) * 0.45);
+    const lineEndT = Math.max(0, (Math.abs(angleDeg) - pathGap) / Math.max(1, Math.abs(angleDeg)));
+    for (const seg of arcSegments(t => move(t * lineEndT), cx, cy, R, 40))
+      trajectoryLayer += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.1" stroke-linecap="round" ${seg.back ? 'stroke-opacity="0.35" stroke-dasharray="3 3"' : ''}`);
+    const endP = project(en, cx, cy, R), prevP = project(move(lineEndT), cx, cy, R);
+    trajectoryLayer += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 6.5, '#f59e0b');
   }
-  const tip = project(state, cx, cy, R);
-  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#fff" stroke-width="5" stroke-opacity="0.75" stroke-linecap="round"/>`;
-  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#dc2626" stroke-width="2.6"/>`;
-  s += arrowhead(tip, [tip[0] - cx, tip[1] - cy, 0], 8, '#dc2626');
+  const tip = project(state, cx, cy, R), stateDir = [tip[0] - cx, tip[1] - cy, 0], shaftTip = insetFromTip(tip, stateDir, 8.2);
+  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(shaftTip[0])}" y2="${fmt(shaftTip[1])}" stroke="#fff" stroke-width="5" stroke-opacity="0.75" stroke-linecap="round"/>`;
+  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(shaftTip[0])}" y2="${fmt(shaftTip[1])}" stroke="#dc2626" stroke-width="2.6"/>`;
+  s += arrowhead(tip, stateDir, 8, '#dc2626');
+  s += trajectoryLayer;
   s += `<circle cx="${cx}" cy="${cy}" r="2.4" fill="#dc2626"/>`;
   if (face) {
     const ex = R * 0.34, ey = cy - R * 0.18, eyeR = R * 0.085;
