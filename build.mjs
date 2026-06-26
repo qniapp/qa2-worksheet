@@ -255,6 +255,10 @@ const stepAction = gType => {
   const g = GATES[gType], st = axisStyle(g.axis);
   return `<span class="actstep"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actgive">${gateBlock(gType, 24)}</span><span class="actarrow">${flowArrow()}</span></span>`;
 };
+const storyAction = gType => {
+  const g = GATES[gType], st = axisStyle(g.axis);
+  return `<span class="storyop"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actgive">${gateBlock(gType, 34)}</span><span class="actarrow">${flowArrow()}</span></span>`;
+};
 const stateFigure = (size, state, caption, ghostState = null, axisHighlight = null) =>
   `<figure>${globe({ size, skin: 'bloch', state, ghostState, axisHighlight })}<figcaption>${furi(caption)}</figcaption></figure>`;
 // 解説ページ用の 2×2 行列 / 2×1 ベクトル（列優先で並べる）
@@ -429,13 +433,13 @@ const storyPage = () => `<div class="page">
   </div>
   <div class="step"><div class="num">4</div>
     <div class="stepbody">
-      <p>${furi('北極のキュービット君に <b>X</b> をわたすと…… <b style="color:#2563eb">x軸</b>を中心に くるっと回転！（→ 南極） もう一回 <b>X</b> をわたすと…… また <b style="color:#2563eb">x軸</b>で回って <b>元に戻った！</b>')}</p>
+      <p>${furi('北極のキュービット君に <b>X</b> をわたすと…… <b style="color:#f59e0b">x軸</b>を中心に くるっと回転！（→ 南極） もう一回 <b>X</b> をわたすと…… また <b style="color:#f59e0b">x軸</b>で回って <b>元に戻った！</b>')}</p>
       <div class="strip">
-        <figure><div class="figlabel">${furi('① 北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('北極を指している')}</figcaption></figure>
-        <div class="opx">${gateBlock('X', 42)}<span>${furi('Xブロック')}</span></div>
-        <figure><div class="figlabel">${furi('② X後：南極')}</div>${globe({ size: 124, skin: 'earth', state: [0,0,-1], face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('南極へ')}</figcaption></figure>
-        <div class="opx">${gateBlock('X', 42)}<span>${furi('もう1回 X')}</span></div>
-        <figure><div class="figlabel">${furi('③ 2回目：北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('元に戻った！')}</figcaption></figure>
+        <figure><div class="figlabel">${furi('① 北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('北極を指している')}</figcaption></figure>
+        ${storyAction('X')}
+        <figure><div class="figlabel">${furi('② X後：南極')}</div>${globe({ size: 124, skin: 'earth', state: [0,0,-1], face: true, poleLabels: false, ghostState: N, axisHighlight: GATES.X.axis })}<figcaption>${furi('南極へ')}</figcaption></figure>
+        ${storyAction('X')}
+        <figure><div class="figlabel">${furi('③ 2回目：北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false, ghostState: [0,0,-1], axisHighlight: GATES.X.axis })}<figcaption>${furi('元に戻った！')}</figcaption></figure>
       </div>
     </div>
   </div>
@@ -544,10 +548,16 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .nbrow { display: flex; align-items: flex-end; gap: 12px; font-size: 15px; margin-top: 10px; }
   .nbrow .line { flex: 1; border-bottom: 2px solid #94a3b8; height: 30px; }
   /* story */
-  .strip { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 8px 0; }
+  .strip { display: flex; align-items: flex-start; justify-content: center; gap: 2px; margin: 8px 0; }
   .strip figure { margin: 0; text-align: center; } .strip figcaption { font-size: 11px; color: #475569; margin-top: -8px; }
   .figlabel { display: inline-block; font-size: 12px; font-weight: 800; background: #eef2ff; color: #3730a3; border-radius: 999px; padding: 2px 9px; margin-bottom: -4px; }
-  .opx { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; } .opx span { font-size: 10px; color: #475569; font-weight: 700; white-space: nowrap; width: max-content; line-height: 1.25; }
+  .storyop { width: 74px; height: 132px; position: relative; flex: 0 0 74px; }
+  .storyop .actturn { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); font-size: 9px; line-height: 1; font-weight: 800; white-space: nowrap; }
+  .storyop .actturn ruby rt { font-size: 5.8px; }
+  .storyop .actdeg { font-size: 7px; }
+  .storyop .actgive { position: absolute; left: 50%; top: 29px; transform: translateX(-50%); }
+  .storyop .actarrow { position: absolute; left: 50%; top: 59px; transform: translateX(-50%); width: 44px; height: 12px; line-height: 0; }
+  .storyop .actarrow svg { width: 44px; height: 12px; }
   .step { display: flex; gap: 12px; align-items: flex-start; margin: 8px 0; }
   .num { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: #1f2937; color: #fff; font-weight: 800; text-align: center; line-height: 26px; font-size: 15px; }
   .stepbody { flex: 1; } .stepbody p { font-size: 13px; line-height: 1.85; margin: 0; }
