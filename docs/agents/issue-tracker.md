@@ -6,7 +6,7 @@
 
 - GitHub repo: `qniapp/qa2-worksheet`
 - 主要 label: `ready-for-agent`
-- GitHub 上のコメント、PR本文、レビュー、検証メモは原則 **日本語** で書く
+- GitHub 上のコメント、PR本文、レビュー、検証メモは原則 **日本語** で書き、不要な英単語を日本語文に混ぜる「ルー語」を避ける
 - issue 本文が実装 spec の正本になる。特に Acceptance criteria は本文のチェックボックスを更新して管理する
 - `/to-issues` 由来で `ready-for-agent` が付いた issue は、原則として追加の `/triage` を挟まず、fresh session の `/implement` で着手する
 
@@ -61,20 +61,36 @@ gh issue comment <number> \
 ```bash
 gh pr create \
   --repo qniapp/qa2-worksheet \
-  --base main \
+  --base master \
   --head <branch> \
   --title '<日本語タイトル>' \
   --body-file /tmp/qa2-worksheet-pr-body.md
 ```
 
-PR 本文には最低限、次を日本語で書きます。
+PR 本文には最低限、次を日本語で書きます。冒頭には、issue を開かなくても分かるように「この PR は何か」「この PR でやること」「この PR でやらないこと」を置きます。不要な英単語を日本語文に混ぜる「ルー語」は避け、固有名詞・コマンド名・ファイル名・ライブラリ名・GitHub の自動処理キーワードだけ英語のまま残します。
 
+- この PR は何か
+- この PR でやること / やらないこと
 - 対応 issue
 - 変更概要
 - 実行した検証コマンド
 - PDF / HTML の見た目や読みやすさに影響する場合は、`npm run build` の結果、全ページ画像確認、Design Critique の PASS 状況
-- PDF / HTML の見た目や読みやすさに影響する場合は、確認用スクリーンショットやページ画像の所在
+- PDF / HTML の見た目や読みやすさに影響する場合は、確認用スクリーンショットやページ画像を PR 本文へ埋め込む
 - リサーチを伴った場合は、リポジトリ内に残す必要がある要約と判断（非公開の GBrain slug は共有リンクとして貼らない）
+
+### 画像の貼り方
+
+PDF / HTML の見た目や読みやすさに影響する PR では、レビュー用画像を `docs/review/issue-<number>/` などに保存して commit し、push 後の commit SHA を使って PR 本文に埋め込みます。
+
+```markdown
+![p4 2つのブロックでマッチ](https://github.com/qniapp/qa2-worksheet/blob/<commit>/docs/review/issue-1/page-4.png?raw=true)
+```
+
+- `/tmp/...` などローカルだけのパスは PR 本文に書かない。
+- `raw.githubusercontent.com` 直リンクではなく、`https://github.com/qniapp/qa2-worksheet/blob/<commit>/<path>?raw=true` 形式を使う。
+- 変更の主対象ページは PR 本文から直接見えるようにする。
+- 全ページ確認画像は、必要に応じて `<details>` 折りたたみ内にまとめる。
+- 投稿前に画像を開いて、読めること・重なりがないこと・レビュー対象が伝わることを確認する。
 
 ## PR を確認・merge する
 

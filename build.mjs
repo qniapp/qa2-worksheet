@@ -49,7 +49,7 @@ const GATES = {
 };
 function axisStyle(axis) { // 回転の中心軸の強調色
   const n = norm(axis);
-  if (Math.abs(n[0]) > 0.99) return { name: 'x', color: '#2563eb' };
+  if (Math.abs(n[0]) > 0.99) return { name: 'x', color: '#f59e0b' };
   if (Math.abs(n[1]) > 0.99) return { name: 'y', color: '#16a34a' };
   if (Math.abs(n[2]) > 0.99) return { name: 'z', color: '#9333ea' };
   return { name: 'ななめ', color: '#0891b2' };
@@ -109,7 +109,7 @@ const polyline = (pts, attrs) => `<polyline points="${pts.map(p => `${fmt(p[0])}
 /* ===================== globe(): 地球/ブロッホ 共通部品 ===================== */
 let UID = 0;
 function globe(opts) {
-  const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null, poleLabels = true, ghostState = null } = opts;
+  const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null, poleLabels = true, ghostState = null, axisHighlight = null } = opts;
   const spinAxisName = spin ? axisStyle(spin.axis).name : null;
   const W = size, H = size, cx = W / 2, cy = H / 2, R = size * 0.34;
   const id = `g${UID++}`, ink = '#334155', faint = '#94a3b8';
@@ -136,6 +136,15 @@ function globe(opts) {
     return `<line x1="${fmt(p0[0])}" y1="${fmt(p0[1])}" x2="${fmt(p1[0])}" y2="${fmt(p1[1])}" stroke="${color}" stroke-width="1" stroke-opacity="0.6"/>` +
       `<text x="${fmt(out[0])}" y="${fmt(out[1])}" font-size="10" fill="${color}" text-anchor="middle" dominant-baseline="middle">${lbl}</text>`;
   };
+  const highlightAxis = (axis, showAxisLabel = true) => {
+    const st = axisStyle(axis), an = norm(axis);
+    const h0 = project(scl(an, -1.16), cx, cy, R), h1 = project(scl(an, 1.16), cx, cy, R);
+    let out = `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="5.8" stroke-opacity="0.18" stroke-linecap="round"/>`;
+    out += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="2.4" stroke-linecap="round"/>`;
+    if (showAxisLabel && st.name !== 'z') { const hl = project(scl(an, 1.34), cx, cy, R);
+      out += `<text x="${fmt(hl[0])}" y="${fmt(hl[1])}" font-size="11" font-weight="700" fill="${st.color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2.6">${st.name}</text>`; }
+    return out;
+  };
   if (skin === 'bloch') { // |0⟩|1⟩ のケット記号は上級者向けなので出さない（地球の方位ばんとして見せる）
     if (spinAxisName !== 'x') s += axisEnd([1, 0, 0], 'x', faint);
     if (spinAxisName !== 'y') s += axisEnd([0, 1, 0], 'y', faint);
@@ -147,13 +156,9 @@ function globe(opts) {
     s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">南極</text>`;
     s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">なんきょく</text>`;
   }
+  if (axisHighlight && !spin) s += highlightAxis(axisHighlight, false);
   if (spin) { // 回転の中心軸を強調 → 軌跡＋矢印
-    const st = axisStyle(spin.axis), an = norm(spin.axis);
-    const h0 = project(scl(an, -1.16), cx, cy, R), h1 = project(scl(an, 1.16), cx, cy, R);
-    s += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="6.5" stroke-opacity="0.18" stroke-linecap="round"/>`;
-    s += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="2.8" stroke-linecap="round"/>`;
-    if (st.name !== 'z') { const hl = project(scl(an, 1.34), cx, cy, R);
-      s += `<text x="${fmt(hl[0])}" y="${fmt(hl[1])}" font-size="11" font-weight="700" fill="${st.color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2.6">${st.name}</text>`; }
+    s += highlightAxis(spin.axis);
     const segs = arcSegments(t => rotate(state, spin.axis, spin.angle * t), cx, cy, R * 1.04, 48);
     for (const seg of segs) s += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.4" ${seg.back ? 'stroke-opacity="0.45"' : ''}`);
     const endV = rotate(state, spin.axis, spin.angle), endP = project(endV, cx, cy, R * 1.04);
@@ -173,6 +178,7 @@ function globe(opts) {
     s += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 6.5, '#f59e0b');
   }
   const tip = project(state, cx, cy, R);
+  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#fff" stroke-width="5" stroke-opacity="0.75" stroke-linecap="round"/>`;
   s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#dc2626" stroke-width="2.6"/>`;
   s += arrowhead(tip, [tip[0] - cx, tip[1] - cy, 0], 8, '#dc2626');
   s += `<circle cx="${cx}" cy="${cy}" r="2.4" fill="#dc2626"/>`;
@@ -236,9 +242,25 @@ const fillBox = (px = 80, answer = null) => {
   return base + `<text x="${px/2}" y="${px/2}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
 };
 const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
-// 球と球の間の矢印。上にその段で渡すブロックを小さく載せる（最後の段は ＝）。
-const stepArrow = (gType, isResult) =>
-  `<span class="oparr"><span class="opblk">${gateBlock(gType, 24)}</span><span class="op${isResult ? ' eq' : ''}">${isResult ? '＝' : '→'}</span></span>`;
+const flowArrow = () => `<svg width="34" height="10" viewBox="0 0 34 10" aria-hidden="true"><path d="M2,5 L29,5 M29,5 L24,1.5 M29,5 L24,8.5" stroke="#64748b" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+// 状態と状態の間に置く「操作」カード。球は状態、カードはブロック操作として分けて見せる。
+function axisKidName(axis) {
+  const name = axisStyle(axis).name;
+  return name === 'ななめ' ? 'ななめじく' : `${name}じく`;
+}
+function turnKidMarkup(angle) {
+  return `${furi(turnWords(angle))}<span class="actdeg">(${angle}°)</span>`;
+}
+const stepAction = gType => {
+  const g = GATES[gType], st = axisStyle(g.axis);
+  return `<span class="actstep"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actgive">${gateBlock(gType, 24)}</span><span class="actarrow">${flowArrow()}</span></span>`;
+};
+const storyAction = gType => {
+  const g = GATES[gType], st = axisStyle(g.axis);
+  return `<span class="storyop"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actgive">${gateBlock(gType, 34)}</span><span class="actarrow">${flowArrow()}</span></span>`;
+};
+const stateFigure = (size, state, caption, ghostState = null, axisHighlight = null) =>
+  `<figure>${globe({ size, skin: 'bloch', state, ghostState, axisHighlight })}<figcaption>${furi(caption)}</figcaption></figure>`;
 // 解説ページ用の 2×2 行列 / 2×1 ベクトル（列優先で並べる）
 const mat = (a, b, c, d) => `<span class="mat"><span>${a}</span><span>${c}</span><span>${b}</span><span>${d}</span></span>`;
 const vec = (a, b) => `<span class="mat vec"><span>${a}</span><span>${b}</span></span>`;
@@ -256,24 +278,22 @@ const PAIRS = [
   { tag: 'T²', g: 'T', start: EQ, result: { block: 'S' }, note: '赤道からスタート' },
 ];
 function pairRow(p) {
-  // 右側には答え（結論）を書かない。回転の観察だけ見せ、結果は子どもが □ に書く。
-  const g = GATES[p.g], st = axisStyle(g.axis), s0 = p.start, s1 = rotate(s0, g.axis, g.angle), s2 = rotate(s1, g.axis, g.angle), tw = turnWords(g.angle);
-  const cap = `<b style="color:${st.color}">${st.name}軸</b>のまわりを<b>${tw}</b><span class="deg">(${g.angle}°)</span>`;
+  // 右側には答え（結論）を書かない。球は状態、間のカードは操作として分けて見せる。
+  const g = GATES[p.g], s0 = p.start, s1 = rotate(s0, g.axis, g.angle), s2 = rotate(s1, g.axis, g.angle);
   const box = p.example ? fillBox(68, '消える') : fillBox(68);
   const exlabel = p.example ? `<div class="exlabel">${furi('↑ 書き方の例')}</div>` : '';
-  const note = p.note ? `<div class="note">${furi(p.note)}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
-  const finalCaption = furi('やじるしの移動');
+  const finalCaption = p.result === 'vanish' ? '2回目：元どおり' : '2回目のあと';
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
     <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
-    <div class="pright"><div class="spheres">
-      <figure>${globe({ size: 76, skin: 'bloch', state: s0, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
-      ${stepArrow(p.g, false)}
-      <figure>${globe({ size: 76, skin: 'bloch', state: s1, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
-      ${stepArrow(p.g, true)}
-      <figure>${globe({ size: 76, skin: 'bloch', state: s2, ghostState: s0 })}<figcaption class="last">${finalCaption}</figcaption></figure>
-    </div>${why}${note}</div></div>`;
+    <div class="pright"><div class="spheres flowline">
+      ${stateFigure(74, s0, 'まえの向き')}
+      ${stepAction(p.g)}
+      ${stateFigure(74, s1, '1回目のあと', s0, g.axis)}
+      ${stepAction(p.g)}
+      ${stateFigure(74, s2, finalCaption, s1, g.axis)}
+    </div>${why}</div></div>`;
 }
 
 // トリプル（3ブロック）。外側2つが消え、まん中が変身（または全部消える）
@@ -292,25 +312,21 @@ function triRow(p) {
   const gs = p.blocks.map(t => GATES[t]);
   const states = [p.start];
   for (const g of gs) states.push(rotate(states[states.length - 1], g.axis, g.angle));
-  const figs = gs.map((g, i) => {
-    const st = axisStyle(g.axis);
-    return `<figure>${globe({ size: 82, skin: 'bloch', state: states[i], spin: { axis: g.axis, angle: g.angle } })}<figcaption><b style="color:${st.color}">${st.name}</b> ${furi(turnWords(g.angle))}</figcaption></figure>`;
+  let spheres = stateFigure(66, states[0], 'まえの向き');
+  p.blocks.forEach((block, i) => {
+    const caption = i === p.blocks.length - 1 ? 'さいごの向き' : `${i + 1}こ目のあと`;
+    spheres += stepAction(block) + stateFigure(66, states[i + 1], caption, states[i], gs[i].axis);
   });
-  let spheres = '';
-  figs.forEach((f, i) => { spheres += f + stepArrow(p.blocks[i], i === figs.length - 1); });
-  const finalCaption = furi('やじるしの移動');
-  const finalSphere = `<figure>${globe({ size: 82, skin: 'bloch', state: states[states.length - 1], ghostState: states[0] })}<figcaption class="last">${finalCaption}</figcaption></figure>`;
   const box = p.example
     ? (p.result === 'vanish' ? fillBox(64, '消える') : `<div class="exfill">${gateBlock(p.result.block, 42)}</div>`)
     : fillBox(64);
   const exlabel = p.example ? `<div class="exlabel">${furi('↑ 書き方の例')}</div>` : '';
-  const note = p.note ? `<div class="note">${furi(p.note)}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(gs[0].color, '#ffffff', 0.72), tagTx = mix(gs[0].color, '#000000', 0.38);
   const divider = p.divider ? `<div class="rowdivider">${furi(p.divider)}</div>` : '';
   return `${divider}<div class="prow"><div class="pleft tleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.blocks.join('・')}</div></div>
     <div class="seq"><div class="col">${p.blocks.map(t => gateBlock(t, 34)).join('')}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
-    <div class="pright"><div class="spheres">${spheres}${finalSphere}</div>${why}${note}</div></div>`;
+    <div class="pright"><div class="spheres flowline">${spheres}</div>${why}</div></div>`;
 }
 
 /* ===================== ページ ===================== */
@@ -355,7 +371,7 @@ function amidakujiDemo() {
   s += `<g transform="translate(${ax-13},${ySwap-13})">${swapIcon(26)}</g><g transform="translate(${bx-13},${ySwap-13})">${swapIcon(26)}</g>`;
   s += `<text x="${(ax+bx)/2}" y="${ySwap-9}" font-size="9" fill="#b45309" text-anchor="middle">SWAP</text>`;
   s += `<g transform="translate(${ax-blk/2},${yTop-blk/2})">${gateBlock('H', blk)}</g><g transform="translate(${bx-blk/2},${yBot-blk/2})">${gateBlock('H', blk)}</g>`;
-  s += `<text x="${bx+16}" y="${yBot+3}" font-size="11" fill="#dc2626" font-weight="700">そろう！</text>`;
+  s += `<text x="${bx + blk / 2 + 8}" y="${yBot+3}" font-size="11" fill="#dc2626" font-weight="700">そろう！</text>`;
   s += `</svg>`;
   return s;
 }
@@ -374,7 +390,7 @@ function amidakujiDemo2() {
   s += `<text x="${(b + c) / 2}" y="${s2 - 9}" font-size="9" fill="#b45309" text-anchor="middle">SWAP</text>`;
   s += `<g transform="translate(${a - blk / 2},${yTop - blk / 2})">${gateBlock('H', blk)}</g>`;
   s += `<g transform="translate(${c - blk / 2},${yBot - blk / 2})">${gateBlock('H', blk)}</g>`;
-  s += `<text x="${c + 16}" y="${yBot + 3}" font-size="11.5" fill="#dc2626" font-weight="700">そろう！</text>`;
+  s += `<text x="${c + blk / 2 + 8}" y="${yBot + 3}" font-size="11.5" fill="#dc2626" font-weight="700">そろう！</text>`;
   s += `</svg>`;
   return s;
 }
@@ -417,13 +433,13 @@ const storyPage = () => `<div class="page">
   </div>
   <div class="step"><div class="num">4</div>
     <div class="stepbody">
-      <p>${furi('北極のキュービット君に <b>X</b> をわたすと…… <b style="color:#2563eb">x軸</b>を中心に くるっと回転！（→ 南極） もう一回 <b>X</b> をわたすと…… また <b style="color:#2563eb">x軸</b>で回って <b>元に戻った！</b>')}</p>
+      <p>${furi('北極のキュービット君に <b>X</b> をわたすと…… <b style="color:#f59e0b">x軸</b>を中心に くるっと回転！（→ 南極） もう一回 <b>X</b> をわたすと…… また <b style="color:#f59e0b">x軸</b>で回って <b>元に戻った！</b>')}</p>
       <div class="strip">
-        <figure><div class="figlabel">${furi('① 北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('北極を指している')}</figcaption></figure>
-        <div class="opx">${gateBlock('X', 42)}<span>${furi('Xブロック')}</span></div>
-        <figure><div class="figlabel">${furi('② X後：南極')}</div>${globe({ size: 124, skin: 'earth', state: [0,0,-1], face: true, poleLabels: false, spin: { axis: GATES.X.axis, angle: 180 } })}<figcaption>${furi('南極へ')}</figcaption></figure>
-        <div class="opx">${gateBlock('X', 42)}<span>${furi('もう1回 X')}</span></div>
-        <figure><div class="figlabel">${furi('③ 2回目：北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('元に戻った！')}</figcaption></figure>
+        <figure><div class="figlabel">${furi('① 北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('北極を指している')}</figcaption></figure>
+        ${storyAction('X')}
+        <figure><div class="figlabel">${furi('② X後：南極')}</div>${globe({ size: 124, skin: 'earth', state: [0,0,-1], face: true, poleLabels: false, ghostState: N, axisHighlight: GATES.X.axis })}<figcaption>${furi('南極へ')}</figcaption></figure>
+        ${storyAction('X')}
+        <figure><div class="figlabel">${furi('③ 2回目：北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false, ghostState: [0,0,-1], axisHighlight: GATES.X.axis })}<figcaption>${furi('元に戻った！')}</figcaption></figure>
       </div>
     </div>
   </div>
@@ -443,7 +459,7 @@ const pairsPage = () => `<div class="page pairs">
   ${footer(4)}
 </div>`;
 
-const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="page ${n === 6 ? 'tallrows' : ''}">
+const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="page triples ${n === 6 ? 'tallrows' : ''}">
   ${headTitle(sub)}
   <h2><span class="dot"></span>${furi(heading)}</h2>
   <div class="howto">${furi(lead + ' 前のページと同じように考えよう。')}</div>
@@ -532,10 +548,16 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .nbrow { display: flex; align-items: flex-end; gap: 12px; font-size: 15px; margin-top: 10px; }
   .nbrow .line { flex: 1; border-bottom: 2px solid #94a3b8; height: 30px; }
   /* story */
-  .strip { display: flex; align-items: center; justify-content: center; gap: 2px; margin: 8px 0; }
+  .strip { display: flex; align-items: flex-start; justify-content: center; gap: 2px; margin: 8px 0; }
   .strip figure { margin: 0; text-align: center; } .strip figcaption { font-size: 11px; color: #475569; margin-top: -8px; }
   .figlabel { display: inline-block; font-size: 12px; font-weight: 800; background: #eef2ff; color: #3730a3; border-radius: 999px; padding: 2px 9px; margin-bottom: -4px; }
-  .opx { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; } .opx span { font-size: 10px; color: #475569; font-weight: 700; white-space: nowrap; width: max-content; line-height: 1.25; }
+  .storyop { width: 74px; height: 132px; position: relative; flex: 0 0 74px; }
+  .storyop .actturn { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); font-size: 9px; line-height: 1; font-weight: 800; white-space: nowrap; }
+  .storyop .actturn ruby rt { font-size: 5.8px; }
+  .storyop .actdeg { font-size: 7px; }
+  .storyop .actgive { position: absolute; left: 50%; top: 24px; transform: translateX(-50%); }
+  .storyop .actarrow { position: absolute; left: 50%; top: 66px; transform: translateX(-50%); width: 44px; height: 12px; line-height: 0; }
+  .storyop .actarrow svg { width: 44px; height: 12px; }
   .step { display: flex; gap: 12px; align-items: flex-start; margin: 8px 0; }
   .num { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: #1f2937; color: #fff; font-weight: 800; text-align: center; line-height: 26px; font-size: 15px; }
   .stepbody { flex: 1; } .stepbody p { font-size: 13px; line-height: 1.85; margin: 0; }
@@ -562,21 +584,35 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .answerhint { color: #b91c1c; font-size: 10px; font-weight: 900; margin-bottom: 2px; }
   .seq { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .col { display: flex; flex-direction: column; gap: 3px; align-items: center; }
-  .boxwrap { text-align: center; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 3px 5px 4px; }
+  .boxwrap { width: 76px; box-sizing: border-box; text-align: center; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 3px 5px 4px; }
   .pairs .boxwrap { background: transparent; border: 0; padding: 0; }
   .exfill { text-align: center; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 4px; background: #fffef7; display: inline-block; }
   .exlabel { font-size: 9px; color: #dc2626; margin-top: 1px; }
-  .pright { flex: 1; }
-  .spheres { display: flex; align-items: center; justify-content: center; gap: 6px; } .spheres figure { margin: 0; text-align: center; }
+  .pright { flex: 1; padding: 0 8px; box-sizing: border-box; }
+  .spheres { display: flex; align-items: center; justify-content: center; gap: 5px; } .spheres figure { margin: 0; text-align: center; }
   .pright { text-align: center; }
-  .spheres figcaption { font-size: 10px; color: #475569; margin-top: -5px; line-height: 1.15; }
-  .pairs .spheres figcaption { font-size: 9.2px; }
-  .tallrows .spheres figcaption { font-size: 10.5px; }
+  .triples .pright { padding-left: 4px; padding-right: 18px; }
+  .flowline { gap: 4px; align-items: flex-start; }
+  .spheres figcaption { font-size: 10px; color: #475569; margin-top: -5px; line-height: 1.15; font-weight: 700; }
+  .pairs .spheres figcaption { font-size: 9.4px; }
+  .tallrows .spheres figcaption { font-size: 9.2px; }
+  .actstep { width: 72px; height: 74px; position: relative; display: inline-flex; flex-direction: column; align-items: center; align-self: flex-start; gap: 1px; padding-top: 0; }
+  .tallrows .actstep { width: 64px; height: 66px; }
+  .triples:not(.tallrows) .actstep { width: 64px; }
+  .actgive { position: absolute; left: 50%; top: 7px; transform: translateX(-50%); display: inline-flex; align-items: center; justify-content: center; }
+  .tallrows .actgive { top: 4px; }
+  .actgive svg { flex: 0 0 auto; }
+  .actturn { position: absolute; left: 50%; top: -14px; transform: translateX(-50%); font-size: 7.4px; color: #475569; line-height: 1; text-align: center; font-weight: 800; white-space: nowrap; }
+  .tallrows .actturn { top: -15px; }
+  .pairs .actturn { font-size: 7.8px; }
+  .actturn b, .actturn-main { display: inline; white-space: nowrap; }
+  .actsep { color: #94a3b8; margin: 0 1px; }
+  .actturn ruby rt { font-size: 5px; }
+  .actdeg { display: inline; color: #94a3b8; font-size: 6.4px; font-weight: 700; margin-left: 1px; }
+  .actarrow { position: absolute; left: 50%; top: 33px; transform: translateX(-50%); width: 34px; height: 10px; line-height: 0; }
+  .tallrows .actarrow { top: 29px; }
   .foot { position: absolute; left: 13mm; right: 13mm; bottom: 8mm; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 9px; color: #94a3b8; display: flex; justify-content: space-between; }
   .foot sup { font-size: 7px; }
-  .spheres .op { font-size: 16px; color: #94a3b8; line-height: 1; } .spheres .op.eq { color: #475569; font-weight: 700; }
-  .oparr { display: inline-flex; flex-direction: column; align-items: center; align-self: center; }
-  .opblk { line-height: 0; margin-bottom: 2px; }
   .concl { font-size: 11.5px; line-height: 1.45; } .concl b { font-size: 12.5px; }
   .note { font-size: 9.5px; color: #0369a1; margin-top: 3px; }
   .why { font-size: 11px; color: #dc2626; font-weight: 700; text-align: center; margin-top: 4px; }
