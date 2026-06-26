@@ -49,7 +49,7 @@ const GATES = {
 };
 function axisStyle(axis) { // 回転の中心軸の強調色
   const n = norm(axis);
-  if (Math.abs(n[0]) > 0.99) return { name: 'x', color: '#2563eb' };
+  if (Math.abs(n[0]) > 0.99) return { name: 'x', color: '#f59e0b' };
   if (Math.abs(n[1]) > 0.99) return { name: 'y', color: '#16a34a' };
   if (Math.abs(n[2]) > 0.99) return { name: 'z', color: '#9333ea' };
   return { name: 'ななめ', color: '#0891b2' };
@@ -109,7 +109,7 @@ const polyline = (pts, attrs) => `<polyline points="${pts.map(p => `${fmt(p[0])}
 /* ===================== globe(): 地球/ブロッホ 共通部品 ===================== */
 let UID = 0;
 function globe(opts) {
-  const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null, poleLabels = true, ghostState = null } = opts;
+  const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null, poleLabels = true, ghostState = null, axisHighlight = null } = opts;
   const spinAxisName = spin ? axisStyle(spin.axis).name : null;
   const W = size, H = size, cx = W / 2, cy = H / 2, R = size * 0.34;
   const id = `g${UID++}`, ink = '#334155', faint = '#94a3b8';
@@ -136,6 +136,15 @@ function globe(opts) {
     return `<line x1="${fmt(p0[0])}" y1="${fmt(p0[1])}" x2="${fmt(p1[0])}" y2="${fmt(p1[1])}" stroke="${color}" stroke-width="1" stroke-opacity="0.6"/>` +
       `<text x="${fmt(out[0])}" y="${fmt(out[1])}" font-size="10" fill="${color}" text-anchor="middle" dominant-baseline="middle">${lbl}</text>`;
   };
+  const highlightAxis = (axis, showAxisLabel = true) => {
+    const st = axisStyle(axis), an = norm(axis);
+    const h0 = project(scl(an, -1.16), cx, cy, R), h1 = project(scl(an, 1.16), cx, cy, R);
+    let out = `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="5.8" stroke-opacity="0.18" stroke-linecap="round"/>`;
+    out += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="2.4" stroke-linecap="round"/>`;
+    if (showAxisLabel && st.name !== 'z') { const hl = project(scl(an, 1.34), cx, cy, R);
+      out += `<text x="${fmt(hl[0])}" y="${fmt(hl[1])}" font-size="11" font-weight="700" fill="${st.color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2.6">${st.name}</text>`; }
+    return out;
+  };
   if (skin === 'bloch') { // |0⟩|1⟩ のケット記号は上級者向けなので出さない（地球の方位ばんとして見せる）
     if (spinAxisName !== 'x') s += axisEnd([1, 0, 0], 'x', faint);
     if (spinAxisName !== 'y') s += axisEnd([0, 1, 0], 'y', faint);
@@ -147,13 +156,9 @@ function globe(opts) {
     s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">南極</text>`;
     s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">なんきょく</text>`;
   }
+  if (axisHighlight && !spin) s += highlightAxis(axisHighlight, false);
   if (spin) { // 回転の中心軸を強調 → 軌跡＋矢印
-    const st = axisStyle(spin.axis), an = norm(spin.axis);
-    const h0 = project(scl(an, -1.16), cx, cy, R), h1 = project(scl(an, 1.16), cx, cy, R);
-    s += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="6.5" stroke-opacity="0.18" stroke-linecap="round"/>`;
-    s += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="2.8" stroke-linecap="round"/>`;
-    if (st.name !== 'z') { const hl = project(scl(an, 1.34), cx, cy, R);
-      s += `<text x="${fmt(hl[0])}" y="${fmt(hl[1])}" font-size="11" font-weight="700" fill="${st.color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2.6">${st.name}</text>`; }
+    s += highlightAxis(spin.axis);
     const segs = arcSegments(t => rotate(state, spin.axis, spin.angle * t), cx, cy, R * 1.04, 48);
     for (const seg of segs) s += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.4" ${seg.back ? 'stroke-opacity="0.45"' : ''}`);
     const endV = rotate(state, spin.axis, spin.angle), endP = project(endV, cx, cy, R * 1.04);
@@ -173,6 +178,7 @@ function globe(opts) {
     s += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 6.5, '#f59e0b');
   }
   const tip = project(state, cx, cy, R);
+  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#fff" stroke-width="5" stroke-opacity="0.75" stroke-linecap="round"/>`;
   s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#dc2626" stroke-width="2.6"/>`;
   s += arrowhead(tip, [tip[0] - cx, tip[1] - cy, 0], 8, '#dc2626');
   s += `<circle cx="${cx}" cy="${cy}" r="2.4" fill="#dc2626"/>`;
@@ -236,6 +242,7 @@ const fillBox = (px = 80, answer = null) => {
   return base + `<text x="${px/2}" y="${px/2}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
 };
 const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
+const flowArrow = () => `<svg width="34" height="10" viewBox="0 0 34 10" aria-hidden="true"><path d="M2,5 L29,5 M29,5 L24,1.5 M29,5 L24,8.5" stroke="#64748b" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 // 状態と状態の間に置く「操作」カード。球は状態、カードはブロック操作として分けて見せる。
 function axisKidName(axis) {
   const name = axisStyle(axis).name;
@@ -246,10 +253,10 @@ function turnKidMarkup(angle) {
 }
 const stepAction = gType => {
   const g = GATES[gType], st = axisStyle(g.axis);
-  return `<span class="actstep"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actop"><span class="actgive">${gateBlock(gType, 24)}</span><span class="actarrow">→</span></span></span>`;
+  return `<span class="actstep"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actgive">${gateBlock(gType, 24)}</span><span class="actarrow">${flowArrow()}</span></span>`;
 };
-const stateFigure = (size, state, caption, ghostState = null) =>
-  `<figure>${globe({ size, skin: 'bloch', state, ghostState })}<figcaption>${furi(caption)}</figcaption></figure>`;
+const stateFigure = (size, state, caption, ghostState = null, axisHighlight = null) =>
+  `<figure>${globe({ size, skin: 'bloch', state, ghostState, axisHighlight })}<figcaption>${furi(caption)}</figcaption></figure>`;
 // 解説ページ用の 2×2 行列 / 2×1 ベクトル（列優先で並べる）
 const mat = (a, b, c, d) => `<span class="mat"><span>${a}</span><span>${c}</span><span>${b}</span><span>${d}</span></span>`;
 const vec = (a, b) => `<span class="mat vec"><span>${a}</span><span>${b}</span></span>`;
@@ -280,9 +287,9 @@ function pairRow(p) {
     <div class="pright"><div class="spheres flowline">
       ${stateFigure(74, s0, 'まえの向き')}
       ${stepAction(p.g)}
-      ${stateFigure(74, s1, '1回目のあと', s0)}
+      ${stateFigure(74, s1, '1回目のあと', s0, g.axis)}
       ${stepAction(p.g)}
-      ${stateFigure(74, s2, finalCaption, s1)}
+      ${stateFigure(74, s2, finalCaption, s1, g.axis)}
     </div>${why}${note}</div></div>`;
 }
 
@@ -305,7 +312,7 @@ function triRow(p) {
   let spheres = stateFigure(66, states[0], 'まえの向き');
   p.blocks.forEach((block, i) => {
     const caption = i === p.blocks.length - 1 ? 'さいごの向き' : `${i + 1}こ目のあと`;
-    spheres += stepAction(block) + stateFigure(66, states[i + 1], caption, states[i]);
+    spheres += stepAction(block) + stateFigure(66, states[i + 1], caption, states[i], gs[i].axis);
   });
   const box = p.example
     ? (p.result === 'vanish' ? fillBox(64, '消える') : `<div class="exfill">${gateBlock(p.result.block, 42)}</div>`)
@@ -576,22 +583,22 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .pright { flex: 1; }
   .spheres { display: flex; align-items: center; justify-content: center; gap: 5px; } .spheres figure { margin: 0; text-align: center; }
   .pright { text-align: center; }
-  .flowline { gap: 4px; }
+  .flowline { gap: 4px; align-items: flex-start; }
   .spheres figcaption { font-size: 10px; color: #475569; margin-top: -5px; line-height: 1.15; font-weight: 700; }
   .pairs .spheres figcaption { font-size: 9.4px; }
   .tallrows .spheres figcaption { font-size: 9.2px; }
-  .actstep { width: 70px; display: inline-flex; flex-direction: column; align-items: center; align-self: center; gap: 1px; }
-  .tallrows .actstep { width: 62px; }
-  .actop { height: 28px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+  .actstep { width: 72px; height: 74px; position: relative; display: inline-flex; flex-direction: column; align-items: center; align-self: flex-start; gap: 1px; padding-top: 2px; }
+  .tallrows .actstep { width: 64px; height: 66px; padding-top: 1px; }
   .actgive { display: inline-flex; align-items: center; justify-content: center; }
   .actgive svg { flex: 0 0 auto; }
-  .actturn { font-size: 7.2px; color: #475569; line-height: 1; text-align: center; font-weight: 800; white-space: nowrap; }
-  .pairs .actturn { font-size: 7.6px; }
+  .actturn { font-size: 7.4px; color: #475569; line-height: 1; text-align: center; font-weight: 800; white-space: nowrap; }
+  .pairs .actturn { font-size: 7.8px; }
   .actturn b, .actturn-main { display: inline; white-space: nowrap; }
   .actsep { color: #94a3b8; margin: 0 1px; }
   .actturn ruby rt { font-size: 5px; }
-  .actdeg { display: inline; color: #94a3b8; font-size: 6.6px; font-weight: 700; margin-left: 1px; }
-  .actarrow { font-size: 17px; line-height: 1; color: #64748b; font-weight: 900; }
+  .actdeg { display: inline; color: #94a3b8; font-size: 6.4px; font-weight: 700; margin-left: 1px; }
+  .actarrow { position: absolute; left: 50%; top: 33px; transform: translateX(-50%); width: 34px; height: 10px; line-height: 0; }
+  .tallrows .actarrow { top: 29px; }
   .foot { position: absolute; left: 13mm; right: 13mm; bottom: 8mm; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 9px; color: #94a3b8; display: flex; justify-content: space-between; }
   .foot sup { font-size: 7px; }
   .concl { font-size: 11.5px; line-height: 1.45; } .concl b { font-size: 12.5px; }
