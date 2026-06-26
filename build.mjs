@@ -246,7 +246,7 @@ function turnKidMarkup(angle) {
 }
 const stepAction = gType => {
   const g = GATES[gType], st = axisStyle(g.axis);
-  return `<span class="actstep"><span class="actgive">${gateBlock(gType, 22)}<span>${furi(`${gType}をわたす`)}</span></span><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actarrow">→</span></span>`;
+  return `<span class="actstep"><span class="actturn"><b style="color:${st.color}">${axisKidName(g.axis)}</b><span class="actsep">・</span><span class="actturn-main">${turnKidMarkup(g.angle)}</span></span><span class="actop"><span class="actgive">${gateBlock(gType, 24)}</span><span class="actarrow">→</span></span></span>`;
 };
 const stateFigure = (size, state, caption, ghostState = null) =>
   `<figure>${globe({ size, skin: 'bloch', state, ghostState })}<figcaption>${furi(caption)}</figcaption></figure>`;
@@ -580,16 +580,18 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .spheres figcaption { font-size: 10px; color: #475569; margin-top: -5px; line-height: 1.15; font-weight: 700; }
   .pairs .spheres figcaption { font-size: 9.4px; }
   .tallrows .spheres figcaption { font-size: 9.2px; }
-  .actstep { width: 64px; display: inline-flex; flex-direction: column; align-items: center; align-self: center; gap: 1px; }
-  .tallrows .actstep { width: 54px; }
-  .actgive { display: inline-flex; align-items: center; justify-content: center; gap: 2px; padding: 1px 4px; border: 1px solid #cbd5e1; border-radius: 999px; background: #fff; box-shadow: 0 1px 0 rgba(15, 23, 42, 0.06); }
+  .actstep { width: 70px; display: inline-flex; flex-direction: column; align-items: center; align-self: center; gap: 1px; }
+  .tallrows .actstep { width: 62px; }
+  .actop { height: 28px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
+  .actgive { display: inline-flex; align-items: center; justify-content: center; }
   .actgive svg { flex: 0 0 auto; }
-  .actgive span { font-size: 8.8px; color: #1f2937; font-weight: 900; white-space: nowrap; }
-  .actturn { font-size: 8.3px; color: #475569; line-height: 1.12; text-align: center; font-weight: 800; }
-  .actturn b, .actturn-main { display: block; white-space: nowrap; }
-  .actturn ruby rt { font-size: 5.5px; }
-  .actdeg { display: inline; color: #94a3b8; font-size: 7px; font-weight: 700; margin-left: 1px; }
-  .actarrow { font-size: 17px; line-height: 0.9; color: #64748b; font-weight: 900; }
+  .actturn { font-size: 7.2px; color: #475569; line-height: 1; text-align: center; font-weight: 800; white-space: nowrap; }
+  .pairs .actturn { font-size: 7.6px; }
+  .actturn b, .actturn-main { display: inline; white-space: nowrap; }
+  .actsep { color: #94a3b8; margin: 0 1px; }
+  .actturn ruby rt { font-size: 5px; }
+  .actdeg { display: inline; color: #94a3b8; font-size: 6.6px; font-weight: 700; margin-left: 1px; }
+  .actarrow { font-size: 17px; line-height: 1; color: #64748b; font-weight: 900; }
   .foot { position: absolute; left: 13mm; right: 13mm; bottom: 8mm; border-top: 1px solid #e2e8f0; padding-top: 5px; font-size: 9px; color: #94a3b8; display: flex; justify-content: space-between; }
   .foot sup { font-size: 7px; }
   .concl { font-size: 11.5px; line-height: 1.45; } .concl b { font-size: 12.5px; }
