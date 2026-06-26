@@ -4,6 +4,42 @@
 
 タスクを受けたら「やります」と返事するだけで止まらず、実際に必要な作業・検証まで進めてください。
 
+## 最初に読むもの
+
+- `README.md` — 成果物、ページ構成、ビルド方法、設計の要点
+- `docs/agents/issue-tracker.md` — GitHub issue / PR 操作の最小手順
+- `docs/agents/matt-workflow.md` — Matt skills 前提の標準開発フロー、Orca 司令塔運用、GBrain 運用
+
+PDF の見た目や読みやすさに関係する変更では、必要に応じて `build.mjs` と生成済み `dist/qa2.html` / `dist/qa2-worksheet.pdf` の現状も確認してください。
+
+## 共通運用ルール
+
+1. **GitHub 上のやり取りは日本語で書くこと**
+   - issue / PR / review コメント、実装完了報告、検証メモは原則日本語にする。
+   - subagent / worker の英語出力を貼る場合も、そのまま貼らず日本語で要約する。
+
+2. **生成物とソースを混同しないこと**
+   - PDF / HTML の正本は `build.mjs` と関連データで、`dist/` は生成物として扱う。
+   - ただし配布物である `dist/qa2-worksheet.pdf` を更新する必要がある変更では、必ず再生成して差分に含める。
+
+3. **リサーチ結果は GBrain を一次保存先にすること**
+   - 依存調査、OSS 調査、技術選定、外部ドキュメント調査、教育表現の裏取りなどのリサーチ結果は、新規ファイル作成・既存ファイルへの追記を問わず、一次保存先を GBrain にする。
+   - 設計書・計画書・GitHub Issues では、他の開発者が読めるように必要な要約と判断をリポジトリ内に残す。
+   - 非公開の GBrain slug は共有ドキュメントの参照リンクとして使わない。
+   - 今後 `docs/research/` は作らない。既に存在する調査メモを見つけた場合は、必要に応じて GBrain へ移す。
+
+4. **Matt skills 前提の開発運用に寄せること**
+   - 新規実装は issue ごとに fresh `/implement` で進め、完了後に `/review` を通す。
+   - `/to-issues` 由来で `ready-for-agent` が付いた issue は、原則として追加の `/triage` を挟まない。
+   - 詳細な issue / PR 操作や skill の使い分けは `docs/agents/` に置く。
+
+5. **Orca では司令塔セッションを置いて進めること**
+   - 1つの Pi セッションが司令塔として GitHub issue / PR と Orca worktree / terminal を定期確認し、重複作業を避けながら次の実装 issue を fresh worktree へ配る。
+   - 司令塔は `orca-cli` / `orca-ide` で worktree・terminal・agent 状態を確認し、必要に応じて作業者へ状況確認や human review 依頼を行う。
+   - Orca terminal のログは読めない場合があるため、worker は重要な進捗・blocker・PR化準備完了を GitHub issue / PR コメントに日本語で残し、司令塔はそれを安定ログとして読む。
+   - PR merge / issue close 済みの worktree は、未コミット差分がないことを確認してこまめに削除する。
+   - merge、リポジトリ rename、大きな方針変更、PDF 配布内容の大幅変更などの不可逆・広範囲な操作は、人間の明示指示を待つ。
+
 ## PDFデザイン変更時のルール
 
 `build.mjs` のレイアウト・文言・CSS・図版など、生成される PDF の見た目や読みやすさに影響する変更をした場合は、必ず次を行ってください。
@@ -15,3 +51,11 @@
 5. すべてのページについて `interface-craft` の Design Critique スキルでレビューする。
 6. コメントが出た場合は修正し、再ビルド・再レビューを繰り返す。
 7. 全ページでコメントがなくなり PASS になるまで完了扱いにしない。
+
+## 関連ファイル
+
+- `README.md` — ワークシートの目的、構成、ビルド方法
+- `build.mjs` — PDF / HTML 生成の正本
+- `build.sh` — HTML 生成から PDF 書き出しまでのビルド手順
+- `docs/agents/issue-tracker.md` — GitHub issue / PR 操作の最小手順
+- `docs/agents/matt-workflow.md` — Matt skills、Orca 司令塔、GBrain 運用
