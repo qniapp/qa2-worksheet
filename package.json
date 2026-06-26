@@ -6,9 +6,17 @@
   "private": true,
   "scripts": {
     "html": "node build.mjs",
-    "build": "bash build.sh"
+    "build": "bash build.sh",
+    "lint": "eslint .",
+    "pretest": "npm run html",
+    "test": "node --test"
   },
   "dependencies": {
     "budoux": "^0.8.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.5.0",
+    "globals": "^17.7.0"
   }
 }

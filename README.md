@@ -24,7 +24,7 @@
 ## ビルド
 
 ```sh
-npm install      # 初回のみ（依存は budoux のみ）
+npm install      # 初回のみ（実行時依存は budoux、開発用に ESLint など）
 npm run build    # dist/qa2-worksheet.pdf を生成
 ```
 
@@ -37,6 +37,15 @@ CHROME=chromium npm run build
 ```
 
 HTML だけ生成したいときは `npm run html`。
+
+## 検証
+
+```sh
+npm run lint   # ESLint で build.mjs / tests / 設定ファイルを確認
+npm test       # HTML を再生成し、Node.js 標準 test runner で smoke test
+```
+
+pull request と `master` への push では、GitHub Actions の CI が `npm ci` → `npm run lint` → `npm run build` → `npm test` を実行します。配布用の GitHub Pages workflow は従来どおり `dist/` を公開します。
 
 ## 設計の要点
 
