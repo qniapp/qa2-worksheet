@@ -9,7 +9,8 @@
     "build": "bash build.sh",
     "lint": "eslint .",
     "pretest": "npm run html",
-    "test": "node --test"
+    "test": "node --test",
+    "audit": "npm audit --audit-level=moderate"
   },
   "dependencies": {
     "budoux": "^0.8.4"
@@ -18,5 +19,8 @@
     "@eslint/js": "^10.0.1",
     "eslint": "^10.5.0",
     "globals": "^17.7.0"
+  },
+  "overrides": {
+    "gaxios": "^7.1.5"
   }
 }

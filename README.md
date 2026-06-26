@@ -41,11 +41,12 @@ HTML だけ生成したいときは `npm run html`。
 ## 検証
 
 ```sh
+npm run audit  # npm audit で moderate 以上の脆弱性がないことを確認
 npm run lint   # ESLint で build.mjs / tests / 設定ファイルを確認
 npm test       # HTML を再生成し、Node.js 標準 test runner で smoke test
 ```
 
-pull request と `master` への push では、GitHub Actions の CI が `npm ci` → `npm run lint` → `npm run build` → `npm test` を実行します。配布用の GitHub Pages workflow は従来どおり `dist/` を公開します。
+pull request と `master` への push では、GitHub Actions の CI が `npm ci` → `npm run audit` → `npm run lint` → `npm run build` → `npm test` を実行します。配布用の GitHub Pages workflow は従来どおり `dist/` を公開します。
 
 ## 設計の要点
 
