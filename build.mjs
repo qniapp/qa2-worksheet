@@ -279,7 +279,7 @@ const mat = (a, b, c, d) => `<span class="mat"><span>${a}</span><span>${c}</span
 const vec = (a, b) => `<span class="mat vec"><span>${a}</span><span>${b}</span></span>`;
 
 /* ===================== 観察ノートの行 ===================== */
-const N = [0, 0, 1], EQ = [1, 0, 0], NEG_EQ = [-1, 0, 0]; // |0>北極 / |+>赤道(東京) / |->
+const N = [0, 0, 1], EQ = [1, 0, 0], NEG_EQ = [-1, 0, 0], FRONT_Y = [0, -1, 0]; // |0>北極 / |+>赤道(東京) / |-> / 手前のY軸側
 
 // ペア（2ブロック）
 const PAIRS = [
@@ -287,8 +287,8 @@ const PAIRS = [
   { tag: 'Y²', g: 'Y', start: N,  result: 'vanish' },
   { tag: 'Z²', g: 'Z', start: EQ, result: 'vanish', note: '赤道からスタート' },
   { tag: 'H²', g: 'H', start: N,  result: 'vanish' },
-  { tag: 'S²', g: 'S', start: NEG_EQ, result: { block: 'Z' }, note: '赤道からスタート' },
-  { tag: 'T²', g: 'T', start: NEG_EQ, result: { block: 'S' }, note: '赤道からスタート' },
+  { tag: 'S²', g: 'S', start: FRONT_Y, result: { block: 'Z' }, note: '赤道からスタート' },
+  { tag: 'T²', g: 'T', start: FRONT_Y, result: { block: 'S' }, note: '赤道からスタート' },
 ];
 function pairRow(p) {
   // 右側には答え（結論）を書かない。球は状態、間のカードは操作として分けて見せる。
@@ -316,10 +316,10 @@ const TRIPLES_H = [
   { tag: 'HYH', blocks: ['H', 'Y', 'H'], start: N,  result: { block: 'Y' } },
 ];
 const TRIPLES_ST = [
-  { tag: 'SXS', blocks: ['S', 'X', 'S'], start: [0, 1, 0], result: { block: 'X' }, note: '赤道からスタート', example: true, hint: 'x軸のまわりを 半周 ＝ X と同じ' },
-  { tag: 'SYS', blocks: ['S', 'Y', 'S'], start: [1, 0, 0], result: { block: 'Y' }, note: '赤道からスタート' },
-  { tag: 'SZS', blocks: ['S', 'Z', 'S'], start: EQ, result: 'vanish', note: '赤道からスタート' },
-  { tag: 'TST', blocks: ['T', 'S', 'T'], start: EQ, result: { block: 'Z' }, note: '赤道からスタート', divider: 'Tではさんでみよう' },
+  { tag: 'SXS', blocks: ['S', 'X', 'S'], start: FRONT_Y, result: { block: 'X' }, note: '赤道からスタート', example: true, hint: 'x軸のまわりを 半周 ＝ X と同じ' },
+  { tag: 'SYS', blocks: ['S', 'Y', 'S'], start: FRONT_Y, result: { block: 'Y' }, note: '赤道からスタート' },
+  { tag: 'SZS', blocks: ['S', 'Z', 'S'], start: FRONT_Y, result: 'vanish', note: '赤道からスタート' },
+  { tag: 'TST', blocks: ['T', 'S', 'T'], start: FRONT_Y, result: { block: 'Z' }, note: '赤道からスタート', divider: 'Tではさんでみよう' },
 ];
 function triRow(p) {
   const gs = p.blocks.map(t => GATES[t]);
@@ -352,8 +352,8 @@ const INTRO_BLOCKS = [
   { g: 'Y', name: 'Y ブロック', start: N, fact: 'Y軸で半周。X ブロックと、まわる向きがちがうんだ。' },
   { g: 'Z', name: 'Z ブロック', start: NEG_EQ, fact: 'たての z軸で半周。北極・南極は動かないよ。' },
   { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'ななめ軸で半周。名前はフランスの数学者アダマール（Hadamard）さんから。' },
-  { group: '小さい回転', g: 'S', name: 'S ブロック', start: NEG_EQ, fact: 'z軸を4分の1周。2つあつまると Z ブロック に変身！' },
-  { g: 'T', name: 'T ブロック', start: NEG_EQ, fact: 'z軸を8分の1周。2つで S ブロック に変身！' },
+  { group: '小さい回転', g: 'S', name: 'S ブロック', start: FRONT_Y, fact: 'z軸を4分の1周。2つあつまると Z ブロック に変身！' },
+  { g: 'T', name: 'T ブロック', start: FRONT_Y, fact: 'z軸を8分の1周。2つで S ブロック に変身！' },
 ];
 function introRow(b) {
   const g = GATES[b.g], st = axisStyle(g.axis);
