@@ -556,7 +556,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .storyop .actturn ruby rt { font-size: 5.8px; }
   .storyop .actdeg { font-size: 7px; }
   .storyop .actgive { position: absolute; left: 50%; top: 24px; transform: translateX(-50%); }
-  .storyop .actarrow { position: absolute; left: 50%; top: 59px; transform: translateX(-50%); width: 44px; height: 12px; line-height: 0; }
+  .storyop .actarrow { position: absolute; left: 50%; top: 66px; transform: translateX(-50%); width: 44px; height: 12px; line-height: 0; }
   .storyop .actarrow svg { width: 44px; height: 12px; }
   .step { display: flex; gap: 12px; align-items: flex-start; margin: 8px 0; }
   .num { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: #1f2937; color: #fff; font-weight: 800; text-align: center; line-height: 26px; font-size: 15px; }
