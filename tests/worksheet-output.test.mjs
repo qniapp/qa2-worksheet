@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 const readDist = path => readFile(new URL(`../dist/${path}`, import.meta.url), 'utf8');
+const readRepo = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const visibleText = html => html
   .replace(/<rt>.*?<\/rt>/gs, '')
   .replace(/<[^>]+>/g, '')
@@ -76,6 +77,21 @@ test('landing page links to the generated worksheet PDF and HTML preview', async
 
   assert.match(html, /href="\.\/qa2-worksheet\.pdf"/);
   assert.match(html, /href="\.\/qa2\.html"/);
+});
+
+test('manuscript content is separated from the build entrypoint', async () => {
+  const build = await readRepo('build.mjs');
+  const content = await readRepo('content/worksheet-content.mjs');
+  const worksheetCss = await readRepo('src/worksheet/worksheet.css');
+
+  assert.ok(build.split('\n').length < 30);
+  assert.match(build, /buildWorksheetHtml/);
+  assert.doesNotMatch(build, /const PAIRS/);
+  assert.doesNotMatch(build, /const TRIPLES_/);
+  assert.doesNotMatch(build, /<style>/);
+  assert.match(content, /export const PAIRS/);
+  assert.match(content, /<Gate name="X" \/>/);
+  assert.match(worksheetCss, /@page \{ size: A4 portrait; margin: 0; \}/);
 });
 
 test('GitHub Pages nojekyll marker is generated', async () => {
