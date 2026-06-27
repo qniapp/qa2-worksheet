@@ -29,7 +29,7 @@ function makeCamera(azDeg, elDeg = 16) {
   return { forward, right, up };
 }
 const CAMERA_FRONT = makeCamera(-90);      // 表紙だけ真正面：顔つきキュービット君をまっすぐ見せる
-const CAMERA_ANGLED = makeCamera(-58);    // 本文：x軸が右下に傾く、以前の見やすい角度
+const CAMERA_ANGLED = makeCamera(-58);    // 本文：xじくが右下に傾く、以前の見やすい角度
 let ACTIVE_CAMERA = CAMERA_ANGLED;
 function withCamera(camera, render) {
   const prev = ACTIVE_CAMERA;
@@ -58,7 +58,7 @@ const GATES = {
   S: { label: 'S', color: hsv(267, 76, 71), axis: [0, 0, 1], angle: 90 },
   T: { label: 'T', color: hsv(268, 55, 42), axis: [0, 0, 1], angle: 45 },
 };
-function axisStyle(axis) { // 回転の中心軸の強調色
+function axisStyle(axis) { // 回転の中心じくの強調色
   const n = norm(axis);
   if (Math.abs(n[0]) > 0.99) return { name: 'x', color: '#f59e0b' };
   if (Math.abs(n[1]) > 0.99) return { name: 'y', color: '#16a34a' };
@@ -87,7 +87,7 @@ const FURI = [
   ['地球', 'ちきゅう'], ['半周', 'はんしゅう'], ['一点', 'いってん'], ['主役', 'しゅやく'], ['上下', 'じょうげ'],
   ['変身', 'へんしん'], ['注目', 'ちゅうもく'], ['位置', 'いち'], ['日づけ', 'ひづけ'], ['同じ', 'おなじ'],
   ['回転', 'かいてん'], ['記号', 'きごう'], ['名前', 'なまえ'], ['数学者', 'すうがくしゃ'],
-  ['軸', 'じく'], ['量', 'りょう'], ['組', 'くみ'], ['君', 'くん'], ['絵', 'え'], ['外', 'そと'],
+  ['量', 'りょう'], ['組', 'くみ'], ['君', 'くん'], ['絵', 'え'], ['外', 'そと'],
   ['上', 'うえ'], ['右', 'みぎ'], ['左', 'ひだり'], ['大', 'おお'], ['中', 'なか'], ['線', 'せん'], ['棒', 'ぼう'], ['後', 'あと'], ['回目', 'かいめ'],
   ['指', 'さ'], ['向', 'む'], ['元', 'もと'], ['戻', 'もど'], ['動', 'うご'], ['書', 'か'], ['見', 'み'], ['消', 'き'],
 ];
@@ -183,7 +183,7 @@ function globe(opts) {
   }
   if (axisHighlight && !spin) s += highlightAxis(axisHighlight);
   let trajectoryLayer = '';
-  if (spin) { // 回転の中心軸を強調 → 軌跡＋矢印
+  if (spin) { // 回転の中心じくを強調 → 軌跡＋矢印
     s += highlightAxis(spin.axis);
     const arrowGap = Math.min(6, Math.abs(spin.angle) * 0.45);
     const drawAngle = spin.angle - Math.sign(spin.angle) * arrowGap;
@@ -301,7 +301,7 @@ const mat = (a, b, c, d) => `<span class="mat"><span>${a}</span><span>${c}</span
 const vec = (a, b) => `<span class="mat vec"><span>${a}</span><span>${b}</span></span>`;
 
 /* ===================== 観察ノートの行 ===================== */
-const N = [0, 0, 1], EQ = [1, 0, 0], FRONT_Y = [0, -1, 0]; // |0>北極 / |+>赤道(東京) / 手前のY軸側
+const N = [0, 0, 1], EQ = [1, 0, 0], FRONT_Y = [0, -1, 0]; // |0>北極 / |+>赤道(東京) / 手前のYじく側
 
 // ペア（2ブロック）
 const PAIRS = [
@@ -333,12 +333,12 @@ function pairRow(p) {
 
 // トリプル（3ブロック）。外側2つが消え、まん中が変身（または全部消える）
 const TRIPLES_H = [
-  { tag: 'HXH', blocks: ['H', 'X', 'H'], start: EQ, result: { block: 'Z' }, note: '赤道からスタート', example: true, hint: `z軸のまわりを 半周 ＝ ${inlineGate('Z')}と同じ` },
+  { tag: 'HXH', blocks: ['H', 'X', 'H'], start: EQ, result: { block: 'Z' }, note: '赤道からスタート', example: true, hint: `zじくのまわりを 半周 ＝ ${inlineGate('Z')}と同じ` },
   { tag: 'HZH', blocks: ['H', 'Z', 'H'], start: N,  result: { block: 'X' } },
   { tag: 'HYH', blocks: ['H', 'Y', 'H'], start: N,  result: { block: 'Y' } },
 ];
 const TRIPLES_ST = [
-  { tag: 'SXS', blocks: ['S', 'X', 'S'], start: FRONT_Y, result: { block: 'X' }, note: '赤道からスタート', example: true, hint: `x軸のまわりを 半周 ＝ ${inlineGate('X')}と同じ` },
+  { tag: 'SXS', blocks: ['S', 'X', 'S'], start: FRONT_Y, result: { block: 'X' }, note: '赤道からスタート', example: true, hint: `xじくのまわりを 半周 ＝ ${inlineGate('X')}と同じ` },
   { tag: 'SYS', blocks: ['S', 'Y', 'S'], start: FRONT_Y, result: { block: 'Y' }, note: '赤道からスタート' },
   { tag: 'SZS', blocks: ['S', 'Z', 'S'], start: FRONT_Y, result: 'vanish', note: '赤道からスタート' },
   { tag: 'TST', blocks: ['T', 'S', 'T'], start: FRONT_Y, result: { block: 'Z' }, note: '赤道からスタート', divider: `${inlineGate('T')}ではさんでみよう` },
@@ -368,18 +368,18 @@ function triRow(p) {
 const headTitle = sub => `<div class="head"><div class="title">QA<sup>2</sup> ${furi('観察')}ノート</div><div class="sub">${furi(sub)}</div></div>`;
 const footer = n => `<div class="foot"><span>QA<sup>2</sup> なつやすみ じゆうけんきゅう ワークシート</span><span>${n} / 8</span></div>`;
 
-// ブロック紹介（名前・回転軸・回転量）
+// ブロック紹介（名前・回転じく・回転量）
 const INTRO_BLOCKS = [
-  { group: 'まずは半周のブロック', g: 'X', name: 'X ブロック', start: N, fact: `${inlineGate('X')}は <b>＋マーク</b>。x軸で半周するよ。` },
-  { g: 'Y', name: 'Y ブロック', start: N, fact: `Y軸で半周。${inlineGate('X')}と、まわる向きがちがうんだ。` },
-  { g: 'Z', name: 'Z ブロック', start: FRONT_Y, fact: 'たての z軸で半周。北極・南極は動かないよ。' },
-  { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'ななめ軸で半周。名前はフランスの数学者アダマール（Hadamard）さんから。' },
-  { group: '小さい回転', g: 'S', name: 'S ブロック', start: FRONT_Y, fact: `z軸を4分の1周。2つあつまると ${inlineGate('Z')}に変身！` },
-  { g: 'T', name: 'T ブロック', start: FRONT_Y, fact: `z軸を8分の1周。2つで ${inlineGate('S')}に変身！` },
+  { group: 'まずは半周のブロック', g: 'X', name: 'X ブロック', start: N, fact: `${inlineGate('X')}は <b>＋マーク</b>。xじくで半周するよ。` },
+  { g: 'Y', name: 'Y ブロック', start: N, fact: `yじくで半周。${inlineGate('X')}と、まわる向きがちがうんだ。` },
+  { g: 'Z', name: 'Z ブロック', start: FRONT_Y, fact: 'たての zじくで半周。北極・南極は動かないよ。' },
+  { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'ななめじくで半周。名前はフランスの数学者アダマール（Hadamard）さんから。' },
+  { group: '小さい回転', g: 'S', name: 'S ブロック', start: FRONT_Y, fact: `zじくを4分の1周。2つあつまると ${inlineGate('Z')}に変身！` },
+  { g: 'T', name: 'T ブロック', start: FRONT_Y, fact: `zじくを8分の1周。2つで ${inlineGate('S')}に変身！` },
 ];
 function introRow(b) {
   const g = GATES[b.g], st = axisStyle(g.axis);
-  const axisName = st.name === 'ななめ' ? 'ななめ' : st.name + '軸';
+  const axisName = st.name === 'ななめ' ? 'ななめじく' : st.name + 'じく';
   const cap = `<b style="color:${st.color}">${axisName}</b>のまわりを<b>${turnWords(g.angle)}</b>`;
   return `<div class="brow">
     <div class="bg">${gateBlock(b.g, 44)}<div class="bname">${furi(b.name)}</div></div>
@@ -390,7 +390,7 @@ function introRow(b) {
 const introPage = () => `<div class="page">
   ${headTitle('② ブロックのなかまたち ・ p.3')}
   <h2><span class="dot"></span>${furi('ブロック（量子ゲート）には、6つのなかま')}</h2>
-  <div class="howto">${furi('ブロックをキュービット君にわたすと、キュービット君の<b>やじるし</b>が<b>くるっと回転</b>するよ。<b>まわる軸</b>と<b>まわる量</b>を、色だけでなくラベルでも見よう。')}</div>
+  <div class="howto">${furi('ブロックをキュービット君にわたすと、キュービット君の<b>やじるし</b>が<b>くるっと回転</b>するよ。<b>まわるじく</b>と<b>まわる量</b>を、色だけでなくラベルでも見よう。')}</div>
   ${INTRO_BLOCKS.map(b => `${b.group ? `<div class="grouphead">${furi(b.group)}</div>` : ''}${introRow(b)}`).join('')}
   ${footer(3)}
 </div>`;
@@ -468,7 +468,7 @@ const storyPage = () => `<div class="page">
   </div>
   <div class="step"><div class="num">4</div>
     <div class="stepbody">
-      <p>${furi(`北極のキュービット君に ${inlineGate('X')} をわたすと…… <b style="color:#f59e0b">x軸</b>を中心に くるっと回転！（→ 南極） もう一回 ${inlineGate('X')} をわたすと…… また <b style="color:#f59e0b">x軸</b>で回って <b>元に戻った！</b>`)}</p>
+      <p>${furi(`北極のキュービット君に ${inlineGate('X')} をわたすと…… <b style="color:#f59e0b">xじく</b>を中心に くるっと回転！（→ 南極） もう一回 ${inlineGate('X')} をわたすと…… また <b style="color:#f59e0b">xじく</b>で回って <b>元に戻った！</b>`)}</p>
       <div class="strip">
         <figure><div class="figlabel">${furi('① 北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('北極を指している')}</figcaption></figure>
         ${storyAction('X')}
@@ -535,15 +535,15 @@ const aboutPage = () => `<div class="page about">
     <h3>数学的には</h3>
     <p>${wrapJa('キュービット君の状態は「状態ベクトル」で表されます。')}</p>
     <div class="eq">|0⟩ = ${vec('1', '0')}　|1⟩ = ${vec('0', '1')}　|+⟩ = <span class="frac">1/√2</span> ${vec('1', '1')}</div>
-    <p>${wrapJa('各ゲートは「ユニタリ行列」＝ある軸を中心とする回転行列です。')}</p>
-    <div class="eq">X = ${mat('0', '1', '1', '0')}<span class="ann">x軸 180°</span> 　Z = ${mat('1', '0', '0', '-1')}<span class="ann">z軸 180°</span> 　S = ${mat('1', '0', '0', 'i')}<span class="ann">z軸 90°</span> 　H = <span class="frac">1/√2</span>${mat('1', '1', '1', '-1')}</div>
+    <p>${wrapJa('各ゲートは「ユニタリ行列」＝あるじくを中心とする回転行列です。')}</p>
+    <div class="eq">X = ${mat('0', '1', '1', '0')}<span class="ann">xじく 180°</span> 　Z = ${mat('1', '0', '0', '-1')}<span class="ann">zじく 180°</span> 　S = ${mat('1', '0', '0', 'i')}<span class="ann">zじく 90°</span> 　H = <span class="frac">1/√2</span>${mat('1', '1', '1', '-1')}</div>
     <p>${wrapJa('状態ベクトルにゲートを適用する＝行列とベクトルの掛け算です。プリントの図は、この計算の結果に対応します。')}</p>
     <div class="eq">例1：X|0⟩ = ${mat('0', '1', '1', '0')}${vec('1', '0')} = ${vec('0', '1')} = |1⟩</div>
     <div class="eqnote">${wrapJa('→ キュービット君が 北極→南極 に反転（p.2 の X）。')}</div>
     <div class="eq">例2：X·X|0⟩ = X|1⟩ = |0⟩</div>
     <div class="eqnote">${wrapJa('→ 2回で もとどおり＝マッチして消える（p.4 の X²）。')}</div>
     <div class="eq">例3：S·S = ${mat('1', '0', '0', 'i')}<span class="sup">2</span> = ${mat('1', '0', '0', '-1')} = Z</div>
-    <div class="eqnote">${wrapJa('→ S を2回で Z と同じ（p.4 の S²→Z）。T は z軸 45°（位相 e^{iπ/4}）で、2回で S になります。')}</div>
+    <div class="eqnote">${wrapJa('→ S を2回で Z と同じ（p.4 の S²→Z）。T は zじく 45°（位相 e^{iπ/4}）で、2回で S になります。')}</div>
   </div>
   <div class="sect">
     <h3>この教材のねらい</h3>

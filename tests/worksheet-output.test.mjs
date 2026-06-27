@@ -12,6 +12,14 @@ test('worksheet HTML contains the expected eight printable pages', async () => {
   assert.match(html, /<ruby>自由研究<rt>じゆうけんきゅう<\/rt><\/ruby>/);
 });
 
+test('worksheet keeps axis wording in hiragana', async () => {
+  const html = await readDist('qa2.html');
+
+  assert.doesNotMatch(html, /軸/);
+  assert.match(html, /xじく/);
+  assert.match(html, /zじく/);
+});
+
 test('landing page links to the generated worksheet PDF and HTML preview', async () => {
   const html = await readDist('index.html');
 
