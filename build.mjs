@@ -104,9 +104,14 @@ const furi = s => wrapJa(addRuby(s));
 const fmt = n => (Math.round(n * 100) / 100);
 function arrowhead(tip, dir, size, color) {
   const d = norm([dir[0], dir[1], 0]), px = -d[1], py = d[0];
-  const a = [tip[0] - d[0] * size + px * size * 0.55, tip[1] - d[1] * size + py * size * 0.55];
-  const b = [tip[0] - d[0] * size - px * size * 0.55, tip[1] - d[1] * size - py * size * 0.55];
+  const length = size * 1.22, half = size * 0.38;
+  const a = [tip[0] - d[0] * length + px * half, tip[1] - d[1] * length + py * half];
+  const b = [tip[0] - d[0] * length - px * half, tip[1] - d[1] * length - py * half];
   return `<path d="M${fmt(tip[0])},${fmt(tip[1])} L${fmt(a[0])},${fmt(a[1])} L${fmt(b[0])},${fmt(b[1])} Z" fill="${color}"/>`;
+}
+function insetFromTip(tip, dir, amount) {
+  const d = norm([dir[0], dir[1], 0]);
+  return [tip[0] - d[0] * amount, tip[1] - d[1] * amount];
 }
 function arcSegments(fn, cx, cy, R, steps = 64) {
   const pts = [];
@@ -122,7 +127,8 @@ let UID = 0;
 function globe(opts) {
   if (opts.camera) { const { camera, ...rest } = opts; return withCamera(camera, () => globe(rest)); }
   const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null, poleLabels = true, ghostState = null, axisHighlight = null, pathAxis = null, pathAngle = null } = opts;
-  const spinAxisName = spin ? axisStyle(spin.axis).name : null;
+  const activeAxis = spin?.axis ?? axisHighlight ?? null;
+  const activeAxisName = activeAxis ? axisStyle(activeAxis).name : null;
   const W = size, H = size, cx = W / 2, cy = H / 2, R = size * 0.34;
   const id = `g${UID++}`, ink = '#334155', faint = '#94a3b8';
   let s = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif">`;
@@ -143,24 +149,31 @@ function globe(opts) {
   s += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#${id}sph)" stroke="${ink}" stroke-width="1.6" fill-opacity="0.55"/>`;
   for (const seg of arcSegments(t => { const a = t * 2 * Math.PI; return [Math.cos(a), Math.sin(a), 0]; }, cx, cy, R))
     s += polyline(seg.pts, `stroke="${ink}" stroke-width="1" stroke-opacity="0.5" ${seg.back ? 'stroke-dasharray="3 3"' : ''}`);
-  const axisEnd = (v, lbl, color) => {
-    const p0 = project(scl(v, -1), cx, cy, R), p1 = project(v, cx, cy, R), out = project(scl(v, 1.28), cx, cy, R);
+  const axisLabelPoint = (axis, gap = 9) => {
+    const p = project(norm(axis), cx, cy, R), vx = p[0] - cx, vy = p[1] - cy, d = Math.hypot(vx, vy) || 1;
+    const out = [cx + (vx / d) * (R + gap), cy + (vy / d) * (R + gap)], pad = 6;
+    return [Math.max(pad, Math.min(W - pad, out[0])), Math.max(pad, Math.min(H - pad, out[1]))];
+  };
+  const axisEnd = (v, lbl, color, showLabel = true) => {
+    const p0 = project(scl(v, -1), cx, cy, R), p1 = project(v, cx, cy, R), out = axisLabelPoint(v);
     return `<line x1="${fmt(p0[0])}" y1="${fmt(p0[1])}" x2="${fmt(p1[0])}" y2="${fmt(p1[1])}" stroke="${color}" stroke-width="1" stroke-opacity="0.6"/>` +
-      `<text x="${fmt(out[0])}" y="${fmt(out[1])}" font-size="10" fill="${color}" text-anchor="middle" dominant-baseline="middle">${lbl}</text>`;
+      (showLabel ? `<text x="${fmt(out[0])}" y="${fmt(out[1])}" font-size="10" fill="${color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2">${lbl}</text>` : '');
   };
   const highlightAxis = (axis, showAxisLabel = true) => {
     const st = axisStyle(axis), an = norm(axis);
     const h0 = project(scl(an, -1.16), cx, cy, R), h1 = project(scl(an, 1.16), cx, cy, R);
     let out = `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="5.8" stroke-opacity="0.18" stroke-linecap="round"/>`;
     out += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="2.4" stroke-linecap="round"/>`;
-    if (showAxisLabel && st.name !== 'z') { const hl = project(scl(an, 1.34), cx, cy, R);
-      out += `<text x="${fmt(hl[0])}" y="${fmt(hl[1])}" font-size="11" font-weight="700" fill="${st.color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2.6">${st.name}</text>`; }
+    if (showAxisLabel) {
+      const isDiagonal = st.name === 'ななめ', hl = axisLabelPoint(an, isDiagonal ? 7 : 9);
+      out += `<text x="${fmt(hl[0])}" y="${fmt(hl[1])}" font-size="${isDiagonal ? 10 : 11}" font-weight="700" fill="${st.color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2.8">${st.name}</text>`; }
     return out;
   };
   if (skin === 'bloch') { // |0⟩|1⟩ のケット記号は上級者向けなので出さない（地球の方位ばんとして見せる）
-    if (spinAxisName !== 'x') s += axisEnd([1, 0, 0], 'x', faint);
-    if (spinAxisName !== 'y') s += axisEnd([0, 1, 0], 'y', faint);
-    s += `<line x1="${cx}" y1="${fmt(project([0,0,-1],cx,cy,R)[1])}" x2="${cx}" y2="${fmt(project([0,0,1],cx,cy,R)[1])}" stroke="${faint}" stroke-width="1" stroke-opacity="0.6"/>`;
+    const showDefaultAxisLabels = false;
+    if (activeAxisName !== 'x') s += axisEnd([1, 0, 0], 'x', faint, showDefaultAxisLabels);
+    if (activeAxisName !== 'y') s += axisEnd([0, 1, 0], 'y', faint, showDefaultAxisLabels);
+    if (activeAxisName !== 'z') s += axisEnd([0, 0, 1], 'z', faint, false);
   } else if (poleLabels) {
     const np = project([0, 0, 1.3], cx, cy, R), sp = project([0, 0, -1.34], cx, cy, R);
     s += `<text x="${fmt(np[0])}" y="${fmt(np[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">北極</text>`;
@@ -168,32 +181,39 @@ function globe(opts) {
     s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">南極</text>`;
     s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">なんきょく</text>`;
   }
-  if (axisHighlight && !spin) s += highlightAxis(axisHighlight, false);
+  if (axisHighlight && !spin) s += highlightAxis(axisHighlight);
+  let trajectoryLayer = '';
   if (spin) { // 回転の中心軸を強調 → 軌跡＋矢印
     s += highlightAxis(spin.axis);
-    const segs = arcSegments(t => rotate(state, spin.axis, spin.angle * t), cx, cy, R, 48);
-    for (const seg of segs) s += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.4" ${seg.back ? 'stroke-opacity="0.45"' : ''}`);
+    const arrowGap = Math.min(6, Math.abs(spin.angle) * 0.45);
+    const drawAngle = spin.angle - Math.sign(spin.angle) * arrowGap;
+    const segs = arcSegments(t => rotate(state, spin.axis, drawAngle * t), cx, cy, R, 48);
+    for (const seg of segs) trajectoryLayer += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.4" ${seg.back ? 'stroke-opacity="0.45"' : ''}`);
     const endV = rotate(state, spin.axis, spin.angle), endP = project(endV, cx, cy, R);
-    const prevP = project(rotate(state, spin.axis, spin.angle - 6), cx, cy, R);
-    s += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 7, '#f59e0b');
+    const prevP = project(rotate(state, spin.axis, drawAngle), cx, cy, R);
+    trajectoryLayer += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 7, '#f59e0b');
   }
   if (ghostState && len(add(state, scl(ghostState, -1))) > 0.05) {
     const gs = norm(ghostState), en = norm(state), gp = project(gs, cx, cy, R);
-    s += `<g opacity="0.35"><line x1="${cx}" y1="${cy}" x2="${fmt(gp[0])}" y2="${fmt(gp[1])}" stroke="#64748b" stroke-width="2" stroke-dasharray="3 3"/>${arrowhead(gp, [gp[0] - cx, gp[1] - cy, 0], 6, '#64748b')}</g>`;
+    const ghostDir = [gp[0] - cx, gp[1] - cy, 0], ghostLineEnd = insetFromTip(gp, ghostDir, 6);
+    s += `<g opacity="0.35"><line x1="${cx}" y1="${cy}" x2="${fmt(ghostLineEnd[0])}" y2="${fmt(ghostLineEnd[1])}" stroke="#64748b" stroke-width="2" stroke-dasharray="3 3"/>${arrowhead(gp, ghostDir, 6, '#64748b')}</g>`;
     let axis = pathAxis ? norm(pathAxis) : cross(gs, en);
     let angleDeg = pathAngle ?? (Math.acos(Math.max(-1, Math.min(1, dot(gs, en)))) * 180 / Math.PI);
     if (len(axis) < 0.01) axis = cross(gs, Math.abs(gs[2]) < 0.9 ? [0, 0, 1] : [0, 1, 0]);
     axis = norm(axis);
     const move = t => rotate(gs, axis, angleDeg * t);
-    for (const seg of arcSegments(move, cx, cy, R, 40))
-      s += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.1" stroke-linecap="round" ${seg.back ? 'stroke-opacity="0.35" stroke-dasharray="3 3"' : ''}`);
-    const endP = project(en, cx, cy, R), prevP = project(move(0.92), cx, cy, R);
-    s += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 6.5, '#f59e0b');
+    const pathGap = Math.min(6, Math.abs(angleDeg) * 0.45);
+    const lineEndT = Math.max(0, (Math.abs(angleDeg) - pathGap) / Math.max(1, Math.abs(angleDeg)));
+    for (const seg of arcSegments(t => move(t * lineEndT), cx, cy, R, 40))
+      trajectoryLayer += polyline(seg.pts, `stroke="#f59e0b" stroke-width="2.1" stroke-linecap="round" ${seg.back ? 'stroke-opacity="0.35" stroke-dasharray="3 3"' : ''}`);
+    const endP = project(en, cx, cy, R), prevP = project(move(lineEndT), cx, cy, R);
+    trajectoryLayer += arrowhead(endP, [endP[0] - prevP[0], endP[1] - prevP[1], 0], 6.5, '#f59e0b');
   }
-  const tip = project(state, cx, cy, R);
-  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#fff" stroke-width="5" stroke-opacity="0.75" stroke-linecap="round"/>`;
-  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(tip[0])}" y2="${fmt(tip[1])}" stroke="#dc2626" stroke-width="2.6"/>`;
-  s += arrowhead(tip, [tip[0] - cx, tip[1] - cy, 0], 8, '#dc2626');
+  const tip = project(state, cx, cy, R), stateDir = [tip[0] - cx, tip[1] - cy, 0], shaftTip = insetFromTip(tip, stateDir, 8.2);
+  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(shaftTip[0])}" y2="${fmt(shaftTip[1])}" stroke="#fff" stroke-width="5" stroke-opacity="0.75" stroke-linecap="round"/>`;
+  s += `<line x1="${cx}" y1="${cy}" x2="${fmt(shaftTip[0])}" y2="${fmt(shaftTip[1])}" stroke="#dc2626" stroke-width="2.6"/>`;
+  s += arrowhead(tip, stateDir, 8, '#dc2626');
+  s += trajectoryLayer;
   s += `<circle cx="${cx}" cy="${cy}" r="2.4" fill="#dc2626"/>`;
   if (face) {
     const ex = R * 0.34, ey = cy - R * 0.18, eyeR = R * 0.085;
@@ -251,7 +271,7 @@ function sakuraStamp() {
 const fillBox = (px = 80, answer = null) => {
   const base = `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif"><rect x="3" y="3" width="${px-6}" height="${px-6}" rx="10" fill="#fffef7" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 5"/>`;
   if (!answer) return base + `<text x="${px/2}" y="${px/2}" font-size="13" fill="#cbd5e1" text-anchor="middle" dominant-baseline="central">？</text></svg>`;
-  if (answer === '消える') return base + `<text x="${px/2 - 13}" y="${px/2 - 12}" font-size="7" fill="#dc2626" text-anchor="middle">き</text><text x="${px/2}" y="${px/2 + 3}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
+  if (answer === '消える') return base + `<text x="${px/2 - 13}" y="${px/2 - 6}" font-size="7" fill="#dc2626" text-anchor="middle">き</text><text x="${px/2}" y="${px/2 + 3}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
   return base + `<text x="${px/2}" y="${px/2}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
 };
 const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
@@ -301,7 +321,7 @@ function pairRow(p) {
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
     <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres flowline">
-      ${stateFigure(74, s0, 'まえの向き')}
+      ${stateFigure(74, s0, 'さいしょの向き')}
       ${stepAction(p.g)}
       ${stateFigure(74, s1, '1回目のあと', s0, g.axis, g.angle)}
       ${stepAction(p.g)}
@@ -325,7 +345,7 @@ function triRow(p) {
   const gs = p.blocks.map(t => GATES[t]);
   const states = [p.start];
   for (const g of gs) states.push(rotate(states[states.length - 1], g.axis, g.angle));
-  let spheres = stateFigure(66, states[0], 'まえの向き');
+  let spheres = stateFigure(66, states[0], 'さいしょの向き');
   p.blocks.forEach((block, i) => {
     const caption = i === p.blocks.length - 1 ? 'さいごの向き' : `${i + 1}こ目のあと`;
     spheres += stepAction(block) + stateFigure(66, states[i + 1], caption, states[i], gs[i].axis, gs[i].angle);
