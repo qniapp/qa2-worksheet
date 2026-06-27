@@ -1,6 +1,6 @@
 # Matt Skills Workflow
 
-このリポジトリでは、開発運用を Matt Pocock skills 前提の流れに寄せます。ワークシート内容とビルド手順の正本は `README.md`、エージェント向けルールの正本は `AGENTS.md` です。この文書は、エージェント作業の進め方、Orca 司令塔運用、GBrain へのリサーチ蓄積だけを扱います。
+このリポジトリでは、開発運用を Matt Pocock skills 前提の流れに寄せます。ワークシート内容とビルド手順の正本は `README.md`、エージェント向けルールの正本は `AGENTS.md` です。教材本文・問題データの正本は `content/worksheet-content.mjs`、描画とページ合成は `src/worksheet/` です。この文書は、エージェント作業の進め方、Orca 司令塔運用、GBrain へのリサーチ蓄積だけを扱います。
 
 ## 標準フロー
 
@@ -35,7 +35,7 @@
 
 ## QA² worksheet 固有の品質ゲート
 
-- `build.mjs` のレイアウト・文言・CSS・図版を変更したら、必ず `npm run build` で `dist/qa2-worksheet.pdf` を再生成する。
+- `content/worksheet-content.mjs`、`src/worksheet/`、`build.mjs` など、生成 PDF / HTML に影響するファイルを変更したら、必ず `npm run build` で `dist/qa2-worksheet.pdf` を再生成する。
 - 見た目を変えない構造変更・リファクタリングでは、`npm run test:visual` で基準画像との差分が 0 であることを確認する。意図的に見た目を変える変更では、全ページ確認と人間レビューが済んだ後だけ基準画像を更新する。
 - 小学生向けページ（特に 1〜7 ページ）の漢字には `furi()` を通す。SVG など `furi()` が使えない場所では、ひらがな併記・疑似ルビ・ひらがな表記で補う。
 - PDF の全ページを画像として `docs/review/issue-<number>/` などに保存し、画像を開いて確認し、すべてのページで `interface-craft` の Design Critique が PASS になるまで修正を続ける。

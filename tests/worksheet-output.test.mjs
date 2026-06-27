@@ -1,8 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { renderContentMarkup } from '../src/worksheet/artwork.mjs';
+import { buildWorksheetHtml } from '../src/worksheet/site.mjs';
 
 const readDist = path => readFile(new URL(`../dist/${path}`, import.meta.url), 'utf8');
+const readRepo = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const visibleText = html => html
   .replace(/<rt>.*?<\/rt>/gs, '')
   .replace(/<[^>]+>/g, '')
@@ -76,6 +79,45 @@ test('landing page links to the generated worksheet PDF and HTML preview', async
 
   assert.match(html, /href="\.\/qa2-worksheet\.pdf"/);
   assert.match(html, /href="\.\/qa2\.html"/);
+});
+
+test('worksheet HTML rendering is idempotent in one process', () => {
+  assert.equal(buildWorksheetHtml(), buildWorksheetHtml());
+});
+
+test('content gate markup renders to icons and does not leak raw tags', async () => {
+  const html = await readDist('qa2.html');
+  const sample = renderContentMarkup('<Gate name="X" /><GatePair name="Y" /><GateSeq names="H, Z, T" />');
+
+  assert.doesNotMatch(html, /<Gate(?:Pair|Seq)?\b/);
+  assert.doesNotMatch(sample, /<Gate(?:Pair|Seq)?\b/);
+  assert.match(sample, /class="inlinegate"/);
+  assert.match(sample, /class="inlinegates"/);
+});
+
+test('manuscript content is separated from the build entrypoint', async () => {
+  const build = await readRepo('build.mjs');
+  const content = await readRepo('content/worksheet-content.mjs');
+  const worksheetCss = await readRepo('src/worksheet/worksheet.css');
+  const pages = await readRepo('src/worksheet/pages.mjs');
+  const artwork = await readRepo('src/worksheet/artwork.mjs');
+
+  assert.ok(build.split('\n').length < 30);
+  assert.match(build, /buildWorksheetHtml/);
+  assert.doesNotMatch(build, /const PAIRS/);
+  assert.doesNotMatch(build, /const TRIPLES_/);
+  assert.doesNotMatch(build, /<style>/);
+  assert.match(content, /export const PAIRS/);
+  assert.match(content, /<Gate name="X" \/>/);
+  assert.match(content, /subtitle: 'パズルゲーム <b>QA²<\/b> で あそびながら 完成させる 観察ノート'/);
+  assert.match(content, /heroName: 'キュービット'/);
+  assert.match(content, /sakuraStamp: \['よく', 'できました'\]/);
+  assert.doesNotMatch(pages, /パズルゲーム <b>QA²<\/b> で あそびながら/);
+  assert.doesNotMatch(pages, /キュービット\$\{/);
+  assert.doesNotMatch(pages, /そろう！/);
+  assert.doesNotMatch(artwork, /よく/);
+  assert.doesNotMatch(artwork, /できました/);
+  assert.match(worksheetCss, /@page \{ size: A4 portrait; margin: 0; \}/);
 });
 
 test('GitHub Pages nojekyll marker is generated', async () => {

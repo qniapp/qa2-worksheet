@@ -62,17 +62,28 @@ pull request と `master` への push では、GitHub Actions の CI が `npm ci
 
 ## 設計の要点
 
+- **原稿と生成ロジックを分離**：教材本文・ワークシート問題データは `content/worksheet-content.mjs` に集約し、`build.mjs` は HTML を生成して `dist/` に書き出す entrypoint に留めます。
 - **1つの投影を全図で共有**：`project()` という単一の正射影をすべての図が使うため、地球／ブロッホ球・針・回転弧・軸が原理的にズレません。
 - **同じ部品を skin で出し分け**：`globe()` が、物語ページの「地球（顔つきキュービット君）」と、観察ノートの「ブロッホ球」を兼ねます。
-- **データ駆動**：`PAIRS` / `TRIPLES_*` / `INTRO_BLOCKS` の配列に1行足すだけでパターンが増えます。各ステップの矢印には、その段で渡すブロックを自動で載せます。
+- **データ駆動**：`content/worksheet-content.mjs` の `PAIRS` / `TRIPLES_*` / `INTRO_BLOCKS` の配列に1行足すだけでパターンが増えます。各ステップの矢印には、その段で渡すブロックを自動で載せます。
+- **軽量マークアップ**：原稿内でブロックを参照するときは `<Gate name="X" />`、2個並びは `<GatePair name="X" />`、複数並びは `<GateSeq names="H,X,H" />` のように書けます。
 - **回転は物理準拠**：ゲームのアニメーション軸や下書き画像には頼らず、物理的に正しい (軸, 角度) を持ち、`X·X=I`, `S²=Z`, `T²=S`, `SZS=I` などと整合（例: SXS はゲームでも X が残るため「消える」ではなく X）。
 - **ブロック色**：QA²（Unity）の `BlockColors.cs` の HSV を再現し、ガラス質（斜めグラデ＋ハイライト＋白文字）に。
 - **低学年配慮**：本文の漢字に `furi()`（辞書ベースのふりがな）、角度は「半周／4分の1周／8分の1周」、長文は **BudouX** で自然な文節改行。図は SVG ベクターなので印刷でくっきり。
 
+## 原稿修正の流れ
+
+1. 教材本文、ページ見出し、ワークシート問題データは `content/worksheet-content.mjs` を編集します。
+2. 見た目を変えない原稿移動・構造変更では、`npm run build` のあと `npm run test:visual` で基準画像との差分が 0 であることを確認します。
+3. 意図的に見た目を変える場合だけ、全ページ画像確認と人間レビュー後に `npm run update:visual-baseline` で基準画像を更新します。
+4. 球・矢印・回転軌跡・ブロック描画は `src/worksheet/` 側の生成ロジックで扱い、原稿側に手置き SVG を増やさない方針です。
+
 ## 構成
 
 ```
-build.mjs              生成スクリプト（データ＋SVG部品＋ページ合成）
+content/               教材本文・ページ見出し・ワークシート問題データ
+src/worksheet/         ルビ処理、SVG部品、ブロッホ球描画、ページ合成、CSS
+build.mjs              HTML / 静的サイトを dist/ に書き出す entrypoint
 build.sh               HTML生成→Chromeで印刷PDF化
 scripts/               PDF ページ画像化・視覚回帰確認の補助スクリプト
 tests/                 生成 HTML の smoke test と視覚回帰の基準画像
