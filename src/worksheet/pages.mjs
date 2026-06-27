@@ -137,7 +137,7 @@ export const coverPage = () => `<div class="page cover">
   <h1>${furi(copy.cover.titleLine1)}${furi(copy.cover.titleLine1Suffix)}<br>${furi(copy.cover.titleLine2)}${furi(copy.cover.titleLine2Suffix)}</h1>
   <div class="subtitle">${furi(copy.cover.subtitle)}</div>
   <div class="goal">${furi(copy.cover.goal)}</div>
-  <div class="hero">${globe({ size: 220, skin: 'earth', state: N, face: true, poleLabels: false, camera: CAMERA_FRONT })}<div class="heroname">キュービット${furi(copy.cover.heroNameSuffix)}</div></div>
+  <div class="hero">${globe({ size: 220, skin: 'earth', state: N, face: true, poleLabels: false, camera: CAMERA_FRONT })}<div class="heroname">${copy.cover.heroName}${furi(copy.cover.heroNameSuffix)}</div></div>
   <div class="intro">
     <h3>📚 ${furi(copy.cover.introHeading)}</h3>
     <ul>

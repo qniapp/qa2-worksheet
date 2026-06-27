@@ -6,6 +6,13 @@ import { arcSegments, arrowhead, fmt, insetFromTip, polyline } from './svg-primi
 
 /* ===================== globe(): 地球/ブロッホ 共通部品 ===================== */
 let UID = 0;
+let BID = 0;
+
+export function resetArtworkIds() {
+  UID = 0;
+  BID = 0;
+}
+
 export function globe(opts) {
   if (opts.camera) { const { camera, ...rest } = opts; return withCamera(camera, () => globe(rest)); }
   const { size = 150, skin = 'bloch', state = [0, 0, 1], face = false, spin = null, poleLabels = true, ghostState = null, axisHighlight = null, pathAxis = null, pathAngle = null } = opts;
@@ -108,7 +115,6 @@ export function globe(opts) {
 }
 
 /* ===================== ブロック & 穴埋め枠 ===================== */
-let BID = 0;
 export function mix(a, b, t) {
   const p = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
   const ca = p(a), cb = p(b), h = n => Math.round(ca[n] + (cb[n] - ca[n]) * t).toString(16).padStart(2, '0');

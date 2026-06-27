@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LANDING_COPY } from '../../content/worksheet-content.mjs';
+import { resetArtworkIds } from './artwork.mjs';
 import { worksheetPages } from './pages.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -9,6 +10,8 @@ const worksheetCss = readFileSync(join(HERE, 'worksheet.css'), 'utf8');
 const landingCss = readFileSync(join(HERE, 'landing.css'), 'utf8');
 
 export function buildWorksheetHtml() {
+  resetArtworkIds();
+
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <style>
 ${worksheetCss}</style></head>

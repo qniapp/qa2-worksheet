@@ -78,6 +78,7 @@ export const PAGE_COPY = {
     titleLine2Suffix: 'を しらべよう',
     subtitle: 'パズルゲーム <b>QA²</b> で あそびながら 完成させる 観察ノート',
     goal: '今日のゴール：ブロックをならべると「消える／変身する」を見つけよう',
+    heroName: 'キュービット',
     heroNameSuffix: '君',
     introHeading: 'この自由研究でやること',
     introItems: ['<b>QA²であそぶ</b>', '<b>ブロック＝命令</b> の動きを観察する', '気づいた法則をこのプリントに書く'],
