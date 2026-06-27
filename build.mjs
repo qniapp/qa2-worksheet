@@ -85,7 +85,7 @@ const FURI = [
   ['小', 'ちい'], ['色', 'いろ'], ['回', 'かい'],
   ['真上', 'まうえ'], ['方位', 'ほうい'], ['赤道', 'せきどう'], ['北極', 'ほっきょく'], ['南極', 'なんきょく'],
   ['地球', 'ちきゅう'], ['半周', 'はんしゅう'], ['一点', 'いってん'], ['主役', 'しゅやく'], ['上下', 'じょうげ'],
-  ['変身', 'へんしん'], ['注目', 'ちゅうもく'], ['位置', 'いち'], ['日づけ', 'ひづけ'], ['同じ', 'おなじ'],
+  ['まん中', 'まんなか'], ['変身', 'へんしん'], ['注目', 'ちゅうもく'], ['位置', 'いち'], ['日づけ', 'ひづけ'], ['同じ', 'おなじ'],
   ['回転', 'かいてん'], ['記号', 'きごう'], ['名前', 'なまえ'], ['数学者', 'すうがくしゃ'],
   ['量', 'りょう'], ['組', 'くみ'], ['君', 'くん'], ['絵', 'え'], ['外', 'そと'],
   ['上', 'うえ'], ['右', 'みぎ'], ['左', 'ひだり'], ['大', 'おお'], ['中', 'なか'], ['線', 'せん'], ['棒', 'ぼう'], ['後', 'あと'], ['回目', 'かいめ'],
@@ -97,7 +97,7 @@ const FURI_RE = new RegExp(FURI.map(e => e[0]).sort((a, b) => b.length - a.lengt
 const addRuby = s => s.replace(FURI_RE, m => `<ruby>${m}<rt>${FURI_MAP[m]}</rt></ruby>`);
 const compactRuby = (base, reading) => `<span class="cruby" data-rt="${reading}">${base}</span>`;
 const compactRubyTargets = html => html
-  .replaceAll('<ruby>中<rt>なか</rt></ruby>', compactRuby('中', 'なか'))
+  .replaceAll('<ruby>まん中<rt>まんなか</rt></ruby>', compactRuby('まん中', 'まんなか'))
   .replaceAll('<ruby>変身<rt>へんしん</rt></ruby>', compactRuby('変身', 'へんしん'));
 // BudouX: 日本語を自然な文節で改行。タグはそのまま、テキストノードだけ分割して <wbr> を挿入。
 const bparser = loadDefaultJapaneseParser();
@@ -283,6 +283,7 @@ const flowArrow = () => `<svg width="34" height="10" viewBox="0 0 34 10" aria-hi
 const inlineGate = (type, px = 18) => `<span class="inlinegate" aria-hidden="true">${gateBlock(type, px)}</span>`;
 const inlineGateSequence = types => `<span class="inlinegates">${types.map(type => inlineGate(type)).join('')}</span>`;
 const inlineGatePair = type => inlineGateSequence([type, type]);
+const afterGateCaption = types => `<span class="statecap">${inlineGateSequence(types)}のあと</span>`;
 // 状態と状態の間に置く「操作」カード。球は状態、カードはブロック操作として分けて見せる。
 function axisKidName(axis) {
   const name = axisStyle(axis).name;
@@ -324,8 +325,8 @@ function pairRow(p) {
   const exlabel = p.example ? `<div class="exlabel">${furi('↑ 書き方の例')}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
-  const afterCaption = `${inlineGate(p.g)}のあと`;
-  const afterPairCaption = `${inlineGatePair(p.g)}のあと`;
+  const afterCaption = afterGateCaption([p.g]);
+  const afterPairCaption = afterGateCaption([p.g, p.g]);
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
     <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres flowline">
@@ -355,7 +356,7 @@ function triRow(p) {
   for (const g of gs) states.push(rotate(states[states.length - 1], g.axis, g.angle));
   let spheres = stateFigure(66, states[0], 'さいしょの向き');
   p.blocks.forEach((block, i) => {
-    const caption = `${inlineGateSequence(p.blocks.slice(0, i + 1))}のあと`;
+    const caption = afterGateCaption(p.blocks.slice(0, i + 1));
     spheres += stepAction(block) + stateFigure(66, states[i + 1], caption, states[i], gs[i].axis, gs[i].angle);
   });
   const box = p.example
@@ -379,7 +380,7 @@ const INTRO_BLOCKS = [
   { group: 'まずは半周のブロック', g: 'X', name: 'X ブロック', start: N, fact: `${inlineGate('X')}は <b>＋マーク</b>。xじくで半周するよ。` },
   { g: 'Y', name: 'Y ブロック', start: N, fact: `yじくで半周。${inlineGate('X')}と、まわる向きがちがうんだ。` },
   { g: 'Z', name: 'Z ブロック', start: FRONT_Y, fact: 'たての zじくで半周。北極・南極は動かないよ。' },
-  { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'ななめじくで半周。名前はフランスの数学者アダマール（Hadamard）さんから。' },
+  { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'ななめじくで半周。名前はアダマールさんから。' },
   { group: '小さい回転', g: 'S', name: 'S ブロック', start: FRONT_Y, fact: `zじくを4分の1周。2つあつまると ${inlineGate('Z')}に変身！` },
   { g: 'T', name: 'T ブロック', start: FRONT_Y, fact: `zじくを8分の1周。2つで ${inlineGate('S')}に変身！` },
 ];
@@ -512,7 +513,7 @@ const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="page tri
 const swapPage = () => `<div class="page">
   ${headTitle('⑤ はってん：SWAP（スワップ）・ p.7')}
   <h2><span class="dot"></span>${furi('はってん：SWAP は「あみだくじ」みたいな命令')}</h2>
-  <p class="lead">${furi('<b>SWAP（スワップ）</b>は、棒でつながった2つのレーンを<b>いれかえる</b>命令。あみだくじみたいに線をたどると、はなれた2つのブロックが <b>上下にそろう</b> ことがあるよ！')}</p>
+  <p class="lead">${furi('<b>SWAP（スワップ）</b>は、棒でつながった2つの道（レーン）を<b>いれかえる</b>命令。あみだくじみたいに線をたどると、はなれた2つのブロックが <b>上下にそろう</b> ことがあるよ！')}</p>
   <div class="amidarow">
     <div class="amida">${amidakujiDemo()}<div class="amidacap">${furi(`SWAP 1つ：${inlineGate('H')} と ${inlineGate('H')} がそろって <span class="red">消える</span>`)}</div></div>
     <div class="amida">${amidakujiDemo2()}<div class="amidacap">${furi(`SWAP 2つ＝2段：もっと はなれた ${inlineGate('H')} もそろう！`)}</div></div>
@@ -580,6 +581,8 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .inlinegate svg { width: 1.25em; height: 1.25em; }
   .inlinegates { display: inline-flex; align-items: center; gap: 2px; vertical-align: -0.28em; margin: 0 2px; line-height: 0; white-space: nowrap; }
   .inlinegates .inlinegate { margin: 0; }
+  .statecap { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+  .statecap wbr { display: none; }
   /* cover */
   .cover { text-align: center; }
   .cover .kicker { margin-top: 10mm; font-size: 15px; letter-spacing: 4px; color: #6366f1; font-weight: 700; }

@@ -40,8 +40,13 @@ test('worksheet guidance and operation captions use the current wording', async 
   assert.doesNotMatch(text, /2回目のあと/);
   assert.doesNotMatch(text, /1こ目のあと/);
   assert.doesNotMatch(text, /2こ目のあと/);
-  assert.match(html, /まん<span class="cruby" data-rt="なか">中<\/span>が<span class="cruby" data-rt="へんしん">変身<\/span>する/);
+  assert.match(html, /<span class="cruby" data-rt="まんなか">まん中<\/span>が<span class="cruby" data-rt="へんしん">変身<\/span>する/);
+  assert.doesNotMatch(html, /まん<span class="cruby" data-rt="なか">中<\/span>/);
   assert.doesNotMatch(text, /まんなかがへんしんする/);
+  assert.match(text, /名前はアダマールさんから。/);
+  assert.doesNotMatch(text, /フランスの数学者アダマール/);
+  assert.match(text, /2つの道（レーン）をいれかえる命令/);
+  assert.match(html, /class="statecap"/);
 });
 
 test('landing page links to the generated worksheet PDF and HTML preview', async () => {
