@@ -572,9 +572,9 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .head .sub { font-size: 12px; color: #64748b; }
   ruby rt { font-size: 0.5em; font-weight: 400; opacity: 0.85; }
   .cruby { display: inline-block; position: relative; line-height: 1; vertical-align: baseline; }
-  .cruby::before { content: attr(data-rt); position: absolute; left: 50%; bottom: 1.08em; transform: translateX(-50%); display: block; font-size: 0.5em; line-height: 1; font-weight: 400; opacity: 0.85; white-space: nowrap; pointer-events: none; }
-  h2 { font-size: 16px; margin: 14px 0 6px; display: flex; align-items: center; gap: 8px; line-height: 1.5; }
-  h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block; border-radius: 2px; }
+  .cruby::before { content: attr(data-rt); position: absolute; left: 50%; bottom: 1.22em; transform: translateX(-50%); display: block; font-size: 0.5em; line-height: 1; font-weight: 400; opacity: 0.85; white-space: nowrap; pointer-events: none; }
+  h2 { font-size: 16px; margin: 14px 0 6px; line-height: 1.5; }
+  h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block; border-radius: 2px; margin-right: 8px; vertical-align: -0.22em; }
   .lead { font-size: 13px; line-height: 1.8; }
   .red { color: #dc2626; font-weight: 700; }
   .inlinegate { display: inline-flex; align-items: center; justify-content: center; vertical-align: -0.28em; margin: 0 2px; line-height: 0; white-space: nowrap; }

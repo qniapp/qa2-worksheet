@@ -49,6 +49,14 @@ test('worksheet guidance and operation captions use the current wording', async 
   assert.match(html, /class="statecap"/);
 });
 
+test('heading layout does not add flex gaps around ruby text', async () => {
+  const html = await readDist('qa2.html');
+
+  assert.doesNotMatch(html, /h2 \{[^}]*display:\s*flex/);
+  assert.doesNotMatch(html, /h2 \{[^}]*gap:/);
+  assert.match(html, /h2 \.dot \{[^}]*margin-right:\s*8px/);
+});
+
 test('landing page links to the generated worksheet PDF and HTML preview', async () => {
   const html = await readDist('index.html');
 
