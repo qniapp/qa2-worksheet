@@ -81,11 +81,11 @@ const FURI = [
   ['予想', 'よそう'], ['結果', 'けっか'], ['法則', 'ほうそく'], ['今日', 'きょう'], ['場所', 'ばしょ'],
   ['点線', 'てんせん'], ['四角', 'しかく'], ['答', 'こた'], ['例', 'れい'], ['前', 'まえ'],
   ['計算', 'けいさん'], ['大切', 'たいせつ'], ['東京', 'とうきょう'], ['中心', 'ちゅうしん'], ['一回', 'いっかい'],
-  ['意味', 'いみ'], ['移動', 'いどう'], ['書き方', 'かきかた'], ['気', 'き'], ['考', 'かんが'], ['長', 'なが'], ['高', 'たか'], ['使', 'つか'], ['段', 'だん'],
+  ['意味', 'いみ'], ['移動', 'いどう'], ['書き方', 'かきかた'], ['気', 'き'], ['考', 'かんが'], ['長', 'なが'], ['高とくてん', '<ruby>高<rt>こう</rt></ruby>とくてん'], ['高', 'たか'], ['使', 'つか'], ['段', 'だん'],
   ['小', 'ちい'], ['色', 'いろ'], ['回', 'かい'],
   ['真上', 'まうえ'], ['方位', 'ほうい'], ['赤道', 'せきどう'], ['北極', 'ほっきょく'], ['南極', 'なんきょく'],
   ['地球', 'ちきゅう'], ['半周', 'はんしゅう'], ['一点', 'いってん'], ['主役', 'しゅやく'], ['上下', 'じょうげ'],
-  ['まん中', 'まんなか'], ['変身', 'へんしん'], ['注目', 'ちゅうもく'], ['位置', 'いち'], ['日づけ', 'ひづけ'], ['同じ', 'おなじ'],
+  ['まん中', 'まんなか'], ['変身', 'へんしん'], ['注目', 'ちゅうもく'], ['位置', 'いち'], ['日づけ', 'ひづけ'], ['同じ', '<ruby>同<rt>おな</rt></ruby>じ'],
   ['回転', 'かいてん'], ['記号', 'きごう'], ['名前', 'なまえ'], ['数学者', 'すうがくしゃ'],
   ['量', 'りょう'], ['組', 'くみ'], ['君', 'くん'], ['絵', 'え'], ['外', 'そと'],
   ['上', 'うえ'], ['右', 'みぎ'], ['左', 'ひだり'], ['大', 'おお'], ['中', 'なか'], ['線', 'せん'], ['棒', 'ぼう'], ['後', 'あと'], ['回目', 'かいめ'],
@@ -94,15 +94,11 @@ const FURI = [
 const FURI_MAP = Object.fromEntries(FURI);
 const FURI_RE = new RegExp(FURI.map(e => e[0]).sort((a, b) => b.length - a.length)
   .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
-const addRuby = s => s.replace(FURI_RE, m => `<ruby>${m}<rt>${FURI_MAP[m]}</rt></ruby>`);
-const compactRuby = (base, reading) => `<span class="cruby" data-rt="${reading}">${base}</span>`;
-const compactRubyTargets = html => html
-  .replaceAll('<ruby>まん中<rt>まんなか</rt></ruby>', compactRuby('まん中', 'まんなか'))
-  .replaceAll('<ruby>変身<rt>へんしん</rt></ruby>', compactRuby('変身', 'へんしん'));
+const addRuby = s => s.replace(FURI_RE, m => (FURI_MAP[m].startsWith('<') ? FURI_MAP[m] : `<ruby>${m}<rt>${FURI_MAP[m]}</rt></ruby>`));
 // BudouX: 日本語を自然な文節で改行。タグはそのまま、テキストノードだけ分割して <wbr> を挿入。
 const bparser = loadDefaultJapaneseParser();
 const wrapJa = html => html.replace(/[^<]+|<[^>]+>/g, m => (m[0] === '<' ? m : bparser.parse(m).join('<wbr>')));
-const furi = s => wrapJa(compactRubyTargets(addRuby(s)));
+const furi = s => wrapJa(addRuby(s));
 
 /* ===================== SVG プリミティブ ===================== */
 const fmt = n => (Math.round(n * 100) / 100);
@@ -486,7 +482,7 @@ const storyPage = () => `<div class="page">
     </div>
   </div>
   <div class="step"><div class="num">5</div>
-    <div class="stepbody"><p>${furi(`元に戻った＝ <b>${inlineGate('X')}を2回わたす意味がない</b>。だから <b>${inlineGatePair('X')}</b> のならびがあったら <b>消してもいい</b>！ キュービット君には なんの えいきょうもないからね。`)} ＝ <span class="red">${furi('マッチして消える！')}</span></p></div>
+    <div class="stepbody"><p>${furi(`元に戻った＝ <b>${inlineGate('X')}を2回わたす意味がない</b>。だから <b>${inlineGatePair('X')}</b> のならびがあったら <b>消してもいい</b>！ キュービット君には なんの えいきょうもないからね。`)} ${inlineGatePair('X')} ＝ <span class="red">${furi('マッチして消える！')}</span></p></div>
   </div>
   <div class="trythis">${furi(`🎮 やってみよう：QA² で <b>${inlineGate('X')}を2つ たてにそろえて</b>、ほんとうに消えるか たしかめてみよう！`)}</div>
   <div class="observebox"><b>${furi('観察メモ')}</b><div class="obsline">${furi('予想')}：□ ${furi('消える')}　□ ${furi('消えない')}</div><div class="obsline">${furi('結果')}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div><div class="obsfree"><span class="freelabel">${furi('気づいたこと')}：</span></div></div>
@@ -527,7 +523,6 @@ const swapPage = () => `<div class="page">
 const aboutPage = () => `<div class="page about">
   ${headTitle('おうちの方・先生へ ・ p.8')}
   <h2><span class="dot"></span>この教材の背景（おとなの方へ）</h2>
-  <div class="adultsummary"><b>3分でわかる要点</b><span>① キュービット君＝量子ビット</span><span>② ブロック＝量子ゲート</span><span>③ 図の回転＝行列計算の結果</span></div>
   <div class="sect">
     <h3>量子ビット（qubit）とキュービット君</h3>
     <div class="miniglobe">${globe({ size: 122, skin: 'bloch', state: [0.5, 0, 0.866] })}<figcaption>北極＝|0⟩ ・ 南極＝|1⟩<br>とちゅう＝重ね合わせ</figcaption></div>
@@ -571,8 +566,6 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .head .title { font-size: 27px; font-weight: 800; line-height: 1.7; } .head .title sup { font-size: 14px; }
   .head .sub { font-size: 12px; color: #64748b; }
   ruby rt { font-size: 0.5em; font-weight: 400; opacity: 0.85; }
-  .cruby { display: inline-block; position: relative; line-height: 1; vertical-align: baseline; }
-  .cruby::before { content: attr(data-rt); position: absolute; left: 50%; bottom: 1.22em; transform: translateX(-50%); display: block; font-size: 0.5em; line-height: 1; font-weight: 400; opacity: 0.85; white-space: nowrap; pointer-events: none; }
   h2 { font-size: 16px; margin: 14px 0 6px; line-height: 1.5; }
   h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block; border-radius: 2px; margin-right: 8px; vertical-align: -0.22em; }
   .lead { font-size: 13px; line-height: 1.8; }
@@ -693,8 +686,6 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .bfact { flex: 1; font-size: 11.5px; line-height: 1.45; }
   .amida { text-align: center; margin: 8px 0; }
   /* 解説ページ（おとな向け） */
-  .adultsummary { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px 12px; font-size: 11.5px; margin: 4px 0 8px; }
-  .adultsummary span { border: 1px solid #cbd5e1; border-radius: 999px; padding: 3px 8px; background: #fff; }
   .about h3 { font-size: 14px; margin: 10px 0 4px; color: #1f2937; }
   .sect { margin-bottom: 5px; }
   .sect p { font-size: 12.5px; line-height: 1.85; margin: 2px 0; }

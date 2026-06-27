@@ -40,9 +40,16 @@ test('worksheet guidance and operation captions use the current wording', async 
   assert.doesNotMatch(text, /2回目のあと/);
   assert.doesNotMatch(text, /1こ目のあと/);
   assert.doesNotMatch(text, /2こ目のあと/);
-  assert.match(html, /<span class="cruby" data-rt="まんなか">まん中<\/span>が<span class="cruby" data-rt="へんしん">変身<\/span>する/);
-  assert.doesNotMatch(html, /まん<span class="cruby" data-rt="なか">中<\/span>/);
+  assert.match(html, /<ruby>まん中<rt>まんなか<\/rt><\/ruby>が<ruby>変身<rt>へんしん<\/rt><\/ruby>する/);
+  assert.doesNotMatch(html, /class="cruby"/);
+  assert.doesNotMatch(html, /まん<ruby>中<rt>なか<\/rt><\/ruby>/);
   assert.doesNotMatch(text, /まんなかがへんしんする/);
+  assert.match(html, /<ruby>同<rt>おな<\/rt><\/ruby>じ/);
+  assert.doesNotMatch(html, /<ruby>同じ<rt>おなじ<\/rt><\/ruby>/);
+  assert.match(html, /<ruby>高<rt>こう<\/rt><\/ruby>とくてん/);
+  assert.doesNotMatch(html, /<ruby>高<rt>たか<\/rt><\/ruby>とくてん/);
+  assert.match(html, /からね。 <span class="inlinegates">[\s\S]*?＝ <span class="red">/);
+  assert.doesNotMatch(html, /からね。 ＝ <span class="red">/);
   assert.match(text, /名前はアダマールさんから。/);
   assert.doesNotMatch(text, /フランスの数学者アダマール/);
   assert.match(text, /2つの道（レーン）をいれかえる命令/);
@@ -55,6 +62,13 @@ test('heading layout does not add flex gaps around ruby text', async () => {
   assert.doesNotMatch(html, /h2 \{[^}]*display:\s*flex/);
   assert.doesNotMatch(html, /h2 \{[^}]*gap:/);
   assert.match(html, /h2 \.dot \{[^}]*margin-right:\s*8px/);
+});
+
+test('adult page omits the removed quick-summary strip', async () => {
+  const html = await readDist('qa2.html');
+
+  assert.doesNotMatch(html, /3分でわかる要点/);
+  assert.doesNotMatch(html, /class="adultsummary"/);
 });
 
 test('landing page links to the generated worksheet PDF and HTML preview', async () => {
