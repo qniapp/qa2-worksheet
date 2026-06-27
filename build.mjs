@@ -95,10 +95,14 @@ const FURI_MAP = Object.fromEntries(FURI);
 const FURI_RE = new RegExp(FURI.map(e => e[0]).sort((a, b) => b.length - a.length)
   .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
 const addRuby = s => s.replace(FURI_RE, m => `<ruby>${m}<rt>${FURI_MAP[m]}</rt></ruby>`);
+const compactRuby = (base, reading) => `<span class="cruby" data-rt="${reading}">${base}</span>`;
+const compactRubyTargets = html => html
+  .replaceAll('<ruby>中<rt>なか</rt></ruby>', compactRuby('中', 'なか'))
+  .replaceAll('<ruby>変身<rt>へんしん</rt></ruby>', compactRuby('変身', 'へんしん'));
 // BudouX: 日本語を自然な文節で改行。タグはそのまま、テキストノードだけ分割して <wbr> を挿入。
 const bparser = loadDefaultJapaneseParser();
 const wrapJa = html => html.replace(/[^<]+|<[^>]+>/g, m => (m[0] === '<' ? m : bparser.parse(m).join('<wbr>')));
-const furi = s => wrapJa(addRuby(s));
+const furi = s => wrapJa(compactRubyTargets(addRuby(s)));
 
 /* ===================== SVG プリミティブ ===================== */
 const fmt = n => (Math.round(n * 100) / 100);
@@ -566,6 +570,8 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .head .title { font-size: 27px; font-weight: 800; line-height: 1.7; } .head .title sup { font-size: 14px; }
   .head .sub { font-size: 12px; color: #64748b; }
   ruby rt { font-size: 0.5em; font-weight: 400; opacity: 0.85; }
+  .cruby { display: inline-block; position: relative; line-height: 1; vertical-align: baseline; }
+  .cruby::before { content: attr(data-rt); position: absolute; left: 50%; bottom: 1.08em; transform: translateX(-50%); display: block; font-size: 0.5em; line-height: 1; font-weight: 400; opacity: 0.85; white-space: nowrap; pointer-events: none; }
   h2 { font-size: 16px; margin: 14px 0 6px; display: flex; align-items: center; gap: 8px; line-height: 1.5; }
   h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block; border-radius: 2px; }
   .lead { font-size: 13px; line-height: 1.8; }
@@ -705,7 +711,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   ${storyPage()}
   ${introPage()}
   ${pairsPage()}
-  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', `${inlineGate('H')}ではさむと、まんなかがへんしんする`, `外がわの ${inlineGate('H')} 2つが消えて、まんなかのブロックが<b>べつのブロックにへんしん</b>するよ。`, TRIPLES_H, 5, 360)}
+  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', `${inlineGate('H')}ではさむと、まん中が変身する`, `外がわの ${inlineGate('H')} 2つが消えて、まん中のブロックが<b>べつのブロックに変身</b>するよ。`, TRIPLES_H, 5, 360)}
   ${triplesPage('④ 3つのブロックでマッチ（その2）・ p.6', `${inlineGate('S')}・${inlineGate('T')} ではさむと？`, '同じように、外がわの2つではさんで観察しよう。ぜんぶ消えることもあるよ。', TRIPLES_ST, 6)}
   ${swapPage()}
   ${aboutPage()}
