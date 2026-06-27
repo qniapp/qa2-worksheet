@@ -29,7 +29,7 @@ function makeCamera(azDeg, elDeg = 16) {
   return { forward, right, up };
 }
 const CAMERA_FRONT = makeCamera(-90);      // 表紙だけ真正面：顔つきキュービット君をまっすぐ見せる
-const CAMERA_ANGLED = makeCamera(-58);    // 本文：x軸が右下に傾く、以前の見やすい角度
+const CAMERA_ANGLED = makeCamera(-58);    // 本文：xじくが右下に傾く、以前の見やすい角度
 let ACTIVE_CAMERA = CAMERA_ANGLED;
 function withCamera(camera, render) {
   const prev = ACTIVE_CAMERA;
@@ -58,7 +58,7 @@ const GATES = {
   S: { label: 'S', color: hsv(267, 76, 71), axis: [0, 0, 1], angle: 90 },
   T: { label: 'T', color: hsv(268, 55, 42), axis: [0, 0, 1], angle: 45 },
 };
-function axisStyle(axis) { // 回転の中心軸の強調色
+function axisStyle(axis) { // 回転の中心じくの強調色
   const n = norm(axis);
   if (Math.abs(n[0]) > 0.99) return { name: 'x', color: '#f59e0b' };
   if (Math.abs(n[1]) > 0.99) return { name: 'y', color: '#16a34a' };
@@ -81,20 +81,20 @@ const FURI = [
   ['予想', 'よそう'], ['結果', 'けっか'], ['法則', 'ほうそく'], ['今日', 'きょう'], ['場所', 'ばしょ'],
   ['点線', 'てんせん'], ['四角', 'しかく'], ['答', 'こた'], ['例', 'れい'], ['前', 'まえ'],
   ['計算', 'けいさん'], ['大切', 'たいせつ'], ['東京', 'とうきょう'], ['中心', 'ちゅうしん'], ['一回', 'いっかい'],
-  ['意味', 'いみ'], ['移動', 'いどう'], ['書き方', 'かきかた'], ['気', 'き'], ['考', 'かんが'], ['長', 'なが'], ['高', 'たか'], ['使', 'つか'], ['段', 'だん'],
+  ['意味', 'いみ'], ['移動', 'いどう'], ['書き方', 'かきかた'], ['気', 'き'], ['考', 'かんが'], ['長', 'なが'], ['高とくてん', '<ruby>高<rt>こう</rt></ruby>とくてん'], ['高', 'たか'], ['使', 'つか'], ['段', 'だん'],
   ['小', 'ちい'], ['色', 'いろ'], ['回', 'かい'],
   ['真上', 'まうえ'], ['方位', 'ほうい'], ['赤道', 'せきどう'], ['北極', 'ほっきょく'], ['南極', 'なんきょく'],
   ['地球', 'ちきゅう'], ['半周', 'はんしゅう'], ['一点', 'いってん'], ['主役', 'しゅやく'], ['上下', 'じょうげ'],
-  ['変身', 'へんしん'], ['注目', 'ちゅうもく'], ['位置', 'いち'], ['日づけ', 'ひづけ'], ['同じ', 'おなじ'],
+  ['まん中', 'まんなか'], ['変身', 'へんしん'], ['注目', 'ちゅうもく'], ['位置', 'いち'], ['日づけ', 'ひづけ'], ['同じ', '<ruby>同<rt>おな</rt></ruby>じ'],
   ['回転', 'かいてん'], ['記号', 'きごう'], ['名前', 'なまえ'], ['数学者', 'すうがくしゃ'],
-  ['軸', 'じく'], ['量', 'りょう'], ['組', 'くみ'], ['君', 'くん'], ['絵', 'え'], ['外', 'そと'],
+  ['量', 'りょう'], ['組', 'くみ'], ['君', 'くん'], ['絵', 'え'], ['外', 'そと'],
   ['上', 'うえ'], ['右', 'みぎ'], ['左', 'ひだり'], ['大', 'おお'], ['中', 'なか'], ['線', 'せん'], ['棒', 'ぼう'], ['後', 'あと'], ['回目', 'かいめ'],
   ['指', 'さ'], ['向', 'む'], ['元', 'もと'], ['戻', 'もど'], ['動', 'うご'], ['書', 'か'], ['見', 'み'], ['消', 'き'],
 ];
 const FURI_MAP = Object.fromEntries(FURI);
 const FURI_RE = new RegExp(FURI.map(e => e[0]).sort((a, b) => b.length - a.length)
   .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'g');
-const addRuby = s => s.replace(FURI_RE, m => `<ruby>${m}<rt>${FURI_MAP[m]}</rt></ruby>`);
+const addRuby = s => s.replace(FURI_RE, m => (FURI_MAP[m].startsWith('<') ? FURI_MAP[m] : `<ruby>${m}<rt>${FURI_MAP[m]}</rt></ruby>`));
 // BudouX: 日本語を自然な文節で改行。タグはそのまま、テキストノードだけ分割して <wbr> を挿入。
 const bparser = loadDefaultJapaneseParser();
 const wrapJa = html => html.replace(/[^<]+|<[^>]+>/g, m => (m[0] === '<' ? m : bparser.parse(m).join('<wbr>')));
@@ -183,7 +183,7 @@ function globe(opts) {
   }
   if (axisHighlight && !spin) s += highlightAxis(axisHighlight);
   let trajectoryLayer = '';
-  if (spin) { // 回転の中心軸を強調 → 軌跡＋矢印
+  if (spin) { // 回転の中心じくを強調 → 軌跡＋矢印
     s += highlightAxis(spin.axis);
     const arrowGap = Math.min(6, Math.abs(spin.angle) * 0.45);
     const drawAngle = spin.angle - Math.sign(spin.angle) * arrowGap;
@@ -276,6 +276,10 @@ const fillBox = (px = 80, answer = null) => {
 };
 const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
 const flowArrow = () => `<svg width="34" height="10" viewBox="0 0 34 10" aria-hidden="true"><path d="M2,5 L29,5 M29,5 L24,1.5 M29,5 L24,8.5" stroke="#64748b" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const inlineGate = (type, px = 18) => `<span class="inlinegate" aria-hidden="true">${gateBlock(type, px)}</span>`;
+const inlineGateSequence = types => `<span class="inlinegates">${types.map(type => inlineGate(type)).join('')}</span>`;
+const inlineGatePair = type => inlineGateSequence([type, type]);
+const afterGateCaption = types => `<span class="statecap">${inlineGateSequence(types)}のあと</span>`;
 // 状態と状態の間に置く「操作」カード。球は状態、カードはブロック操作として分けて見せる。
 function axisKidName(axis) {
   const name = axisStyle(axis).name;
@@ -299,13 +303,13 @@ const mat = (a, b, c, d) => `<span class="mat"><span>${a}</span><span>${c}</span
 const vec = (a, b) => `<span class="mat vec"><span>${a}</span><span>${b}</span></span>`;
 
 /* ===================== 観察ノートの行 ===================== */
-const N = [0, 0, 1], EQ = [1, 0, 0], NEG_EQ = [-1, 0, 0], FRONT_Y = [0, -1, 0]; // |0>北極 / |+>赤道(東京) / |-> / 手前のY軸側
+const N = [0, 0, 1], EQ = [1, 0, 0], FRONT_Y = [0, -1, 0]; // |0>北極 / |+>赤道(東京) / 手前のYじく側
 
 // ペア（2ブロック）
 const PAIRS = [
   { tag: 'X²', g: 'X', start: N,  result: 'vanish', example: true, hint: 'やじるしが もとどおり だから 消える' },
   { tag: 'Y²', g: 'Y', start: N,  result: 'vanish' },
-  { tag: 'Z²', g: 'Z', start: EQ, result: 'vanish', note: '赤道からスタート' },
+  { tag: 'Z²', g: 'Z', start: FRONT_Y, result: 'vanish', note: '赤道からスタート' },
   { tag: 'H²', g: 'H', start: N,  result: 'vanish' },
   { tag: 'S²', g: 'S', start: FRONT_Y, result: { block: 'Z' }, note: '赤道からスタート' },
   { tag: 'T²', g: 'T', start: FRONT_Y, result: { block: 'S' }, note: '赤道からスタート' },
@@ -317,29 +321,30 @@ function pairRow(p) {
   const exlabel = p.example ? `<div class="exlabel">${furi('↑ 書き方の例')}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
-  const finalCaption = p.result === 'vanish' ? '2回目：元どおり' : '2回目のあと';
+  const afterCaption = afterGateCaption([p.g]);
+  const afterPairCaption = afterGateCaption([p.g, p.g]);
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
     <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres flowline">
       ${stateFigure(74, s0, 'さいしょの向き')}
       ${stepAction(p.g)}
-      ${stateFigure(74, s1, '1回目のあと', s0, g.axis, g.angle)}
+      ${stateFigure(74, s1, afterCaption, s0, g.axis, g.angle)}
       ${stepAction(p.g)}
-      ${stateFigure(74, s2, finalCaption, s1, g.axis, g.angle)}
+      ${stateFigure(74, s2, afterPairCaption, s1, g.axis, g.angle)}
     </div>${why}</div></div>`;
 }
 
 // トリプル（3ブロック）。外側2つが消え、まん中が変身（または全部消える）
 const TRIPLES_H = [
-  { tag: 'HXH', blocks: ['H', 'X', 'H'], start: EQ, result: { block: 'Z' }, note: '赤道からスタート', example: true, hint: 'z軸のまわりを 半周 ＝ Z と同じ' },
+  { tag: 'HXH', blocks: ['H', 'X', 'H'], start: EQ, result: { block: 'Z' }, note: '赤道からスタート', example: true, hint: `zじくのまわりを 半周 ＝ ${inlineGate('Z')}と同じ` },
   { tag: 'HZH', blocks: ['H', 'Z', 'H'], start: N,  result: { block: 'X' } },
   { tag: 'HYH', blocks: ['H', 'Y', 'H'], start: N,  result: { block: 'Y' } },
 ];
 const TRIPLES_ST = [
-  { tag: 'SXS', blocks: ['S', 'X', 'S'], start: FRONT_Y, result: { block: 'X' }, note: '赤道からスタート', example: true, hint: 'x軸のまわりを 半周 ＝ X と同じ' },
+  { tag: 'SXS', blocks: ['S', 'X', 'S'], start: FRONT_Y, result: { block: 'X' }, note: '赤道からスタート', example: true, hint: `xじくのまわりを 半周 ＝ ${inlineGate('X')}と同じ` },
   { tag: 'SYS', blocks: ['S', 'Y', 'S'], start: FRONT_Y, result: { block: 'Y' }, note: '赤道からスタート' },
   { tag: 'SZS', blocks: ['S', 'Z', 'S'], start: FRONT_Y, result: 'vanish', note: '赤道からスタート' },
-  { tag: 'TST', blocks: ['T', 'S', 'T'], start: FRONT_Y, result: { block: 'Z' }, note: '赤道からスタート', divider: 'Tではさんでみよう' },
+  { tag: 'TST', blocks: ['T', 'S', 'T'], start: FRONT_Y, result: { block: 'Z' }, note: '赤道からスタート', divider: `${inlineGate('T')}ではさんでみよう` },
 ];
 function triRow(p) {
   const gs = p.blocks.map(t => GATES[t]);
@@ -347,7 +352,7 @@ function triRow(p) {
   for (const g of gs) states.push(rotate(states[states.length - 1], g.axis, g.angle));
   let spheres = stateFigure(66, states[0], 'さいしょの向き');
   p.blocks.forEach((block, i) => {
-    const caption = i === p.blocks.length - 1 ? 'さいごの向き' : `${i + 1}こ目のあと`;
+    const caption = afterGateCaption(p.blocks.slice(0, i + 1));
     spheres += stepAction(block) + stateFigure(66, states[i + 1], caption, states[i], gs[i].axis, gs[i].angle);
   });
   const box = p.example
@@ -366,18 +371,18 @@ function triRow(p) {
 const headTitle = sub => `<div class="head"><div class="title">QA<sup>2</sup> ${furi('観察')}ノート</div><div class="sub">${furi(sub)}</div></div>`;
 const footer = n => `<div class="foot"><span>QA<sup>2</sup> なつやすみ じゆうけんきゅう ワークシート</span><span>${n} / 8</span></div>`;
 
-// ブロック紹介（名前・回転軸・回転量）
+// ブロック紹介（名前・回転じく・回転量）
 const INTRO_BLOCKS = [
-  { group: 'まずは半周のブロック', g: 'X', name: 'X ブロック', start: N, fact: 'Xブロックは <b>＋マーク</b>。x軸で半周するよ。' },
-  { g: 'Y', name: 'Y ブロック', start: N, fact: 'Y軸で半周。X ブロックと、まわる向きがちがうんだ。' },
-  { g: 'Z', name: 'Z ブロック', start: NEG_EQ, fact: 'たての z軸で半周。北極・南極は動かないよ。' },
-  { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'ななめ軸で半周。名前はフランスの数学者アダマール（Hadamard）さんから。' },
-  { group: '小さい回転', g: 'S', name: 'S ブロック', start: FRONT_Y, fact: 'z軸を4分の1周。2つあつまると Z ブロック に変身！' },
-  { g: 'T', name: 'T ブロック', start: FRONT_Y, fact: 'z軸を8分の1周。2つで S ブロック に変身！' },
+  { group: 'まずは半周のブロック', g: 'X', name: 'X ブロック', start: N, fact: `${inlineGate('X')}は <b>＋マーク</b>。xじくで半周するよ。` },
+  { g: 'Y', name: 'Y ブロック', start: N, fact: `yじくで半周。${inlineGate('X')}と、まわる向きがちがうんだ。` },
+  { g: 'Z', name: 'Z ブロック', start: FRONT_Y, fact: 'たての zじくで半周。北極・南極は動かないよ。' },
+  { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'ななめじくで半周。名前はアダマールさんから。' },
+  { group: '小さい回転', g: 'S', name: 'S ブロック', start: FRONT_Y, fact: `zじくを4分の1周。2つあつまると ${inlineGate('Z')}に変身！` },
+  { g: 'T', name: 'T ブロック', start: FRONT_Y, fact: `zじくを8分の1周。2つで ${inlineGate('S')}に変身！` },
 ];
 function introRow(b) {
   const g = GATES[b.g], st = axisStyle(g.axis);
-  const axisName = st.name === 'ななめ' ? 'ななめ' : st.name + '軸';
+  const axisName = st.name === 'ななめ' ? 'ななめじく' : st.name + 'じく';
   const cap = `<b style="color:${st.color}">${axisName}</b>のまわりを<b>${turnWords(g.angle)}</b>`;
   return `<div class="brow">
     <div class="bg">${gateBlock(b.g, 44)}<div class="bname">${furi(b.name)}</div></div>
@@ -388,7 +393,7 @@ function introRow(b) {
 const introPage = () => `<div class="page">
   ${headTitle('② ブロックのなかまたち ・ p.3')}
   <h2><span class="dot"></span>${furi('ブロック（量子ゲート）には、6つのなかま')}</h2>
-  <div class="howto">${furi('ブロックをキュービット君にわたすと、キュービット君の<b>やじるし</b>が<b>くるっと回転</b>するよ。<b>まわる軸</b>と<b>まわる量</b>を、色だけでなくラベルでも見よう。')}</div>
+  <div class="howto">${furi('ブロックをキュービット君にわたすと、キュービット君の<b>やじるし</b>が<b>くるっと回転</b>するよ。<b>まわるじく</b>と<b>まわる量</b>のちがいを、よく観察しよう。')}</div>
   ${INTRO_BLOCKS.map(b => `${b.group ? `<div class="grouphead">${furi(b.group)}</div>` : ''}${introRow(b)}`).join('')}
   ${footer(3)}
 </div>`;
@@ -466,7 +471,7 @@ const storyPage = () => `<div class="page">
   </div>
   <div class="step"><div class="num">4</div>
     <div class="stepbody">
-      <p>${furi('北極のキュービット君に <b>X</b> をわたすと…… <b style="color:#f59e0b">x軸</b>を中心に くるっと回転！（→ 南極） もう一回 <b>X</b> をわたすと…… また <b style="color:#f59e0b">x軸</b>で回って <b>元に戻った！</b>')}</p>
+      <p>${furi(`北極のキュービット君に ${inlineGate('X')} をわたすと…… <b style="color:#f59e0b">xじく</b>を中心に くるっと回転！（→ 南極） もう一回 ${inlineGate('X')} をわたすと…… また <b style="color:#f59e0b">xじく</b>で回って <b>元に戻った！</b>`)}</p>
       <div class="strip">
         <figure><div class="figlabel">${furi('① 北極')}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi('北極を指している')}</figcaption></figure>
         ${storyAction('X')}
@@ -477,9 +482,9 @@ const storyPage = () => `<div class="page">
     </div>
   </div>
   <div class="step"><div class="num">5</div>
-    <div class="stepbody"><p>${furi('元に戻った＝ <b>X を2回わたす意味がない</b>。だから <b>X X</b> のならびがあったら <b>消してもいい</b>！ キュービット君には なんの えいきょうもないからね。')} ＝ <span class="red">${furi('マッチして消える！')}</span></p></div>
+    <div class="stepbody"><p>${furi(`元に戻った＝ <b>${inlineGate('X')}を2回わたす意味がない</b>。だから <b>${inlineGatePair('X')}</b> のならびがあったら <b>消してもいい</b>！ キュービット君には なんの えいきょうもないからね。`)} ${inlineGatePair('X')} ＝ <span class="red">${furi('マッチして消える！')}</span></p></div>
   </div>
-  <div class="trythis">${furi('🎮 やってみよう：QA² で <b>X ブロックを2つ たてにそろえて</b>、ほんとうに消えるか たしかめてみよう！')}</div>
+  <div class="trythis">${furi(`🎮 やってみよう：QA² で <b>${inlineGate('X')}を2つ たてにそろえて</b>、ほんとうに消えるか たしかめてみよう！`)}</div>
   <div class="observebox"><b>${furi('観察メモ')}</b><div class="obsline">${furi('予想')}：□ ${furi('消える')}　□ ${furi('消えない')}</div><div class="obsline">${furi('結果')}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div><div class="obsfree"><span class="freelabel">${furi('気づいたこと')}：</span></div></div>
   ${footer(2)}
 </div>`;
@@ -497,17 +502,17 @@ const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="page tri
   <h2><span class="dot"></span>${furi(heading)}</h2>
   <div class="howto">${furi(lead + ' 前のページと同じように考えよう。')}</div>
   ${rows.map(triRow).join('')}
-  ${memo ? `<div class="freewrite guided triplememo" style="height:${memo}px"><div class="fwh">✏️ ${furi('よそう・きづいたこと')}</div><div class="promptlines"><span>Hではさむと X は ＿＿ になる</span><span>Hではさむと Z は ＿＿ になる</span><span>Hではさむと Y は ＿＿ になる</span><span class="freeprompt">そのほか きづいたこと：</span></div></div>` : ''}
+  ${memo ? `<div class="freewrite guided triplememo" style="height:${memo}px"><div class="fwh">✏️ ${furi('よそう・きづいたこと')}</div><div class="promptlines"><span>${inlineGate('H')}ではさむと ${inlineGate('X')} は ＿＿ になる</span><span>${inlineGate('H')}ではさむと ${inlineGate('Z')} は ＿＿ になる</span><span>${inlineGate('H')}ではさむと ${inlineGate('Y')} は ＿＿ になる</span><span class="freeprompt">そのほか きづいたこと：</span></div></div>` : ''}
   ${footer(n)}
 </div>`;
 
 const swapPage = () => `<div class="page">
   ${headTitle('⑤ はってん：SWAP（スワップ）・ p.7')}
   <h2><span class="dot"></span>${furi('はってん：SWAP は「あみだくじ」みたいな命令')}</h2>
-  <p class="lead">${furi('<b>SWAP（スワップ）</b>は、棒でつながった2つのレーンを<b>いれかえる</b>命令。あみだくじみたいに線をたどると、はなれた2つのブロックが <b>上下にそろう</b> ことがあるよ！')}</p>
+  <p class="lead">${furi('<b>SWAP（スワップ）</b>は、棒でつながった2つの道（レーン）を<b>いれかえる</b>命令。あみだくじみたいに線をたどると、はなれた2つのブロックが <b>上下にそろう</b> ことがあるよ！')}</p>
   <div class="amidarow">
-    <div class="amida">${amidakujiDemo()}<div class="amidacap">${furi('SWAP 1つ：H と H がそろって <span class="red">消える</span>')}</div></div>
-    <div class="amida">${amidakujiDemo2()}<div class="amidacap">${furi('SWAP 2つ＝2段：もっと はなれた H もそろう！')}</div></div>
+    <div class="amida">${amidakujiDemo()}<div class="amidacap">${furi(`SWAP 1つ：${inlineGate('H')} と ${inlineGate('H')} がそろって <span class="red">消える</span>`)}</div></div>
+    <div class="amida">${amidakujiDemo2()}<div class="amidacap">${furi(`SWAP 2つ＝2段：もっと はなれた ${inlineGate('H')} もそろう！`)}</div></div>
   </div>
   <div class="trythis">${furi('🎉 長い あみだくじを つくって マッチさせると、QA² では <b>高とくてん</b>！ いろんな つなぎかたを ためして、いままでの 消えるマッチを SWAP ごしに そろえてみよう。')}</div>
   <div class="freewrite guided" style="height:300px"><div class="fwh">✏️ ${furi('みつけたマッチ・きづいたこと')}</div><div class="promptlines"><span>${furi('そろったブロック')}：＿＿＿＿＿＿</span><span>${furi('使ったSWAP')}：＿＿こ</span><span class="freeprompt">${furi('気づいたこと')}：</span></div></div>
@@ -518,7 +523,6 @@ const swapPage = () => `<div class="page">
 const aboutPage = () => `<div class="page about">
   ${headTitle('おうちの方・先生へ ・ p.8')}
   <h2><span class="dot"></span>この教材の背景（おとなの方へ）</h2>
-  <div class="adultsummary"><b>3分でわかる要点</b><span>① キュービット君＝量子ビット</span><span>② ブロック＝量子ゲート</span><span>③ 図の回転＝行列計算の結果</span></div>
   <div class="sect">
     <h3>量子ビット（qubit）とキュービット君</h3>
     <div class="miniglobe">${globe({ size: 122, skin: 'bloch', state: [0.5, 0, 0.866] })}<figcaption>北極＝|0⟩ ・ 南極＝|1⟩<br>とちゅう＝重ね合わせ</figcaption></div>
@@ -562,10 +566,16 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .head .title { font-size: 27px; font-weight: 800; line-height: 1.7; } .head .title sup { font-size: 14px; }
   .head .sub { font-size: 12px; color: #64748b; }
   ruby rt { font-size: 0.5em; font-weight: 400; opacity: 0.85; }
-  h2 { font-size: 16px; margin: 14px 0 6px; display: flex; align-items: center; gap: 8px; line-height: 1.5; }
-  h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block; border-radius: 2px; }
+  h2 { font-size: 16px; margin: 14px 0 6px; line-height: 1.5; }
+  h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block; border-radius: 2px; margin-right: 8px; vertical-align: -0.22em; }
   .lead { font-size: 13px; line-height: 1.8; }
   .red { color: #dc2626; font-weight: 700; }
+  .inlinegate { display: inline-flex; align-items: center; justify-content: center; vertical-align: -0.28em; margin: 0 2px; line-height: 0; white-space: nowrap; }
+  .inlinegate svg { width: 1.25em; height: 1.25em; }
+  .inlinegates { display: inline-flex; align-items: center; gap: 2px; vertical-align: -0.28em; margin: 0 2px; line-height: 0; white-space: nowrap; }
+  .inlinegates .inlinegate { margin: 0; }
+  .statecap { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
+  .statecap wbr { display: none; }
   /* cover */
   .cover { text-align: center; }
   .cover .kicker { margin-top: 10mm; font-size: 15px; letter-spacing: 4px; color: #6366f1; font-weight: 700; }
@@ -619,7 +629,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .seq { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .col { display: flex; flex-direction: column; gap: 3px; align-items: center; }
   .boxwrap { width: 76px; box-sizing: border-box; text-align: center; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 3px 5px 4px; }
-  .pairs .boxwrap { background: transparent; border: 0; padding: 0; }
+  .pairs .boxwrap { background: #fff7ed; border: 1px solid #fed7aa; padding: 3px 5px 4px; }
   .exfill { text-align: center; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 4px; background: #fffef7; display: inline-block; }
   .exlabel { font-size: 9px; color: #dc2626; margin-top: 1px; }
   .pright { flex: 1; padding: 0 8px; box-sizing: border-box; }
@@ -671,13 +681,11 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   /* block intro */
   .grouphead { margin: 11px 0 3px; font-size: 10.5px; font-weight: 800; color: #334155; border-left: 4px solid #94a3b8; padding-left: 8px; }
   .brow { display: flex; align-items: center; gap: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 3px 12px; margin-bottom: 4px; }
-  .bg { width: 112px; text-align: center; } .bname { font-size: 12px; font-weight: 800; margin-top: 1px; }
-  .brow figure { margin: 0; text-align: center; } .brow figcaption { font-size: 10.4px; font-weight: 700; color: #334155; margin-top: -8px; }
+  .bg { width: 112px; text-align: center; transform: translateY(4px); } .bname { font-size: 12px; font-weight: 800; margin-top: 1px; }
+  .brow figure { width: 112px; margin: 0; text-align: center; } .brow figcaption { font-size: 10.4px; font-weight: 700; color: #334155; margin-top: -8px; }
   .bfact { flex: 1; font-size: 11.5px; line-height: 1.45; }
   .amida { text-align: center; margin: 8px 0; }
   /* 解説ページ（おとな向け） */
-  .adultsummary { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 8px 12px; font-size: 11.5px; margin: 4px 0 8px; }
-  .adultsummary span { border: 1px solid #cbd5e1; border-radius: 999px; padding: 3px 8px; background: #fff; }
   .about h3 { font-size: 14px; margin: 10px 0 4px; color: #1f2937; }
   .sect { margin-bottom: 5px; }
   .sect p { font-size: 12.5px; line-height: 1.85; margin: 2px 0; }
@@ -697,8 +705,8 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   ${storyPage()}
   ${introPage()}
   ${pairsPage()}
-  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', 'H ではさむと、まん中が変身する', '外がわの <b>H</b> 2つが消えて、まん中のブロックが<b>べつのブロックに変身</b>するよ。', TRIPLES_H, 5, 360)}
-  ${triplesPage('④ 3つのブロックでマッチ（その2）・ p.6', 'S・T ではさむと？', '同じように、外がわの2つではさんで観察しよう。ぜんぶ消えることもあるよ。', TRIPLES_ST, 6)}
+  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', `${inlineGate('H')}ではさむと、まん中が変身する`, `外がわの ${inlineGate('H')} 2つが消えて、まん中のブロックが<b>べつのブロックに変身</b>するよ。`, TRIPLES_H, 5, 360)}
+  ${triplesPage('④ 3つのブロックでマッチ（その2）・ p.6', `${inlineGate('S')}・${inlineGate('T')} ではさむと？`, '同じように、外がわの2つではさんで観察しよう。ぜんぶ消えることもあるよ。', TRIPLES_ST, 6)}
   ${swapPage()}
   ${aboutPage()}
 </body></html>`;
