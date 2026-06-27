@@ -149,12 +149,13 @@ function globe(opts) {
   s += `<circle cx="${cx}" cy="${cy}" r="${R}" fill="url(#${id}sph)" stroke="${ink}" stroke-width="1.6" fill-opacity="0.55"/>`;
   for (const seg of arcSegments(t => { const a = t * 2 * Math.PI; return [Math.cos(a), Math.sin(a), 0]; }, cx, cy, R))
     s += polyline(seg.pts, `stroke="${ink}" stroke-width="1" stroke-opacity="0.5" ${seg.back ? 'stroke-dasharray="3 3"' : ''}`);
-  const axisLabelPoint = (axis, scale) => {
-    const p = project(scl(norm(axis), scale), cx, cy, R), pad = 6;
-    return [Math.max(pad, Math.min(W - pad, p[0])), Math.max(pad, Math.min(H - pad, p[1]))];
+  const axisLabelPoint = (axis, gap = 9) => {
+    const p = project(norm(axis), cx, cy, R), vx = p[0] - cx, vy = p[1] - cy, d = Math.hypot(vx, vy) || 1;
+    const out = [cx + (vx / d) * (R + gap), cy + (vy / d) * (R + gap)], pad = 6;
+    return [Math.max(pad, Math.min(W - pad, out[0])), Math.max(pad, Math.min(H - pad, out[1]))];
   };
   const axisEnd = (v, lbl, color, showLabel = true) => {
-    const p0 = project(scl(v, -1), cx, cy, R), p1 = project(v, cx, cy, R), out = axisLabelPoint(v, 1.42);
+    const p0 = project(scl(v, -1), cx, cy, R), p1 = project(v, cx, cy, R), out = axisLabelPoint(v);
     return `<line x1="${fmt(p0[0])}" y1="${fmt(p0[1])}" x2="${fmt(p1[0])}" y2="${fmt(p1[1])}" stroke="${color}" stroke-width="1" stroke-opacity="0.6"/>` +
       (showLabel ? `<text x="${fmt(out[0])}" y="${fmt(out[1])}" font-size="10" fill="${color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2">${lbl}</text>` : '');
   };
@@ -164,12 +165,12 @@ function globe(opts) {
     let out = `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="5.8" stroke-opacity="0.18" stroke-linecap="round"/>`;
     out += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="2.4" stroke-linecap="round"/>`;
     if (showAxisLabel) {
-      const isDiagonal = st.name === 'ななめ', hl = axisLabelPoint(an, isDiagonal ? 1.32 : 1.52);
+      const isDiagonal = st.name === 'ななめ', hl = axisLabelPoint(an, isDiagonal ? 7 : 9);
       out += `<text x="${fmt(hl[0])}" y="${fmt(hl[1])}" font-size="${isDiagonal ? 10 : 11}" font-weight="700" fill="${st.color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2.8">${st.name}</text>`; }
     return out;
   };
   if (skin === 'bloch') { // |0⟩|1⟩ のケット記号は上級者向けなので出さない（地球の方位ばんとして見せる）
-    const showDefaultAxisLabels = !activeAxis;
+    const showDefaultAxisLabels = false;
     if (activeAxisName !== 'x') s += axisEnd([1, 0, 0], 'x', faint, showDefaultAxisLabels);
     if (activeAxisName !== 'y') s += axisEnd([0, 1, 0], 'y', faint, showDefaultAxisLabels);
     if (activeAxisName !== 'z') s += axisEnd([0, 0, 1], 'z', faint, false);
@@ -270,7 +271,7 @@ function sakuraStamp() {
 const fillBox = (px = 80, answer = null) => {
   const base = `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif"><rect x="3" y="3" width="${px-6}" height="${px-6}" rx="10" fill="#fffef7" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 5"/>`;
   if (!answer) return base + `<text x="${px/2}" y="${px/2}" font-size="13" fill="#cbd5e1" text-anchor="middle" dominant-baseline="central">？</text></svg>`;
-  if (answer === '消える') return base + `<text x="${px/2 - 13}" y="${px/2 - 12}" font-size="7" fill="#dc2626" text-anchor="middle">き</text><text x="${px/2}" y="${px/2 + 3}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
+  if (answer === '消える') return base + `<text x="${px/2 - 13}" y="${px/2 - 6}" font-size="7" fill="#dc2626" text-anchor="middle">き</text><text x="${px/2}" y="${px/2 + 3}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
   return base + `<text x="${px/2}" y="${px/2}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
 };
 const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
@@ -320,7 +321,7 @@ function pairRow(p) {
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
     <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres flowline">
-      ${stateFigure(74, s0, 'まえの向き')}
+      ${stateFigure(74, s0, 'さいしょの向き')}
       ${stepAction(p.g)}
       ${stateFigure(74, s1, '1回目のあと', s0, g.axis, g.angle)}
       ${stepAction(p.g)}
@@ -344,7 +345,7 @@ function triRow(p) {
   const gs = p.blocks.map(t => GATES[t]);
   const states = [p.start];
   for (const g of gs) states.push(rotate(states[states.length - 1], g.axis, g.angle));
-  let spheres = stateFigure(66, states[0], 'まえの向き');
+  let spheres = stateFigure(66, states[0], 'さいしょの向き');
   p.blocks.forEach((block, i) => {
     const caption = i === p.blocks.length - 1 ? 'さいごの向き' : `${i + 1}こ目のあと`;
     spheres += stepAction(block) + stateFigure(66, states[i + 1], caption, states[i], gs[i].axis, gs[i].angle);
