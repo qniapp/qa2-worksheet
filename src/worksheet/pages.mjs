@@ -33,7 +33,7 @@ const copy = PAGE_COPY;
 const markup = s => renderContentMarkup(s);
 const cfuri = s => furi(markup(s));
 
-export const headTitle = sub => `<div class="head"><div class="title">QA<sup>2</sup> ${furi('観察')}ノート</div><div class="sub">${furi(sub)}</div></div>`;
+export const headTitle = sub => `<div class="head"><div class="title">${furi(copy.headTitle)}</div><div class="sub">${furi(sub)}</div></div>`;
 export const footer = n => `<div class="foot"><span>${copy.footer}</span><span>${n} / 8</span></div>`;
 
 function pairRow(p) {
@@ -45,7 +45,7 @@ function pairRow(p) {
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
   const afterCaption = afterGateCaption([p.g]);
   const afterPairCaption = afterGateCaption([p.g, p.g]);
-  return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
+  return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}${LABELS.twoBlocksSuffix}</div></div>
     <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi(LABELS.writeHere)}</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres flowline">
       ${stateFigure(74, s0, LABELS.firstState)}
@@ -79,8 +79,8 @@ function triRow(p) {
 
 function introRow(b) {
   const g = GATES[b.g], st = axisStyle(g.axis);
-  const axisName = st.name === 'ななめ' ? 'ななめじく' : st.name + 'じく';
-  const cap = `<b style="color:${st.color}">${axisName}</b>のまわりを<b>${turnWords(g.angle)}</b>`;
+  const axisName = st.name === LABELS.diagonalAxisBase ? LABELS.diagonalAxisName : st.name + LABELS.axisSuffix;
+  const cap = `<b style="color:${st.color}">${axisName}</b>${LABELS.axisAround}<b>${turnWords(g.angle)}</b>`;
   return `<div class="brow">
     <div class="bg">${gateBlock(b.g, 44)}<div class="bname">${furi(b.name)}</div></div>
     <figure>${globe({ size: 80, skin: 'bloch', state: b.start, spin: { axis: g.axis, angle: g.angle } })}<figcaption>${furi(cap)}</figcaption></figure>
@@ -105,9 +105,9 @@ function amidakujiDemo() {
   s += `<polyline points="${ax},${yTop} ${ax},${ySwap} ${bx},${ySwap} ${bx},${yBot}" fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
   s += arrowhead([bx, yBot], [0, 1, 0], 8, '#f59e0b');
   s += `<g transform="translate(${ax-13},${ySwap-13})">${swapIcon(26)}</g><g transform="translate(${bx-13},${ySwap-13})">${swapIcon(26)}</g>`;
-  s += `<text x="${(ax+bx)/2}" y="${ySwap-9}" font-size="9" fill="#b45309" text-anchor="middle">SWAP</text>`;
+  s += `<text x="${(ax+bx)/2}" y="${ySwap-9}" font-size="9" fill="#b45309" text-anchor="middle">${copy.swap.swapLabel}</text>`;
   s += `<g transform="translate(${ax-blk/2},${yTop-blk/2})">${gateBlock('H', blk)}</g><g transform="translate(${bx-blk/2},${yBot-blk/2})">${gateBlock('H', blk)}</g>`;
-  s += `<text x="${bx + blk / 2 + 8}" y="${yBot+3}" font-size="11" fill="#dc2626" font-weight="700">そろう！</text>`;
+  s += `<text x="${bx + blk / 2 + 8}" y="${yBot+3}" font-size="11" fill="#dc2626" font-weight="700">${copy.swap.alignedLabel}</text>`;
   s += `</svg>`;
   return s;
 }
@@ -123,19 +123,19 @@ function amidakujiDemo2() {
   s += `<polyline points="${a},${yTop} ${a},${s1} ${b},${s1} ${b},${s2} ${c},${s2} ${c},${yBot}" fill="none" stroke="#f59e0b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`;
   s += arrowhead([c, yBot], [0, 1, 0], 8, '#f59e0b');
   for (const [x, y] of [[a, s1], [b, s1], [b, s2], [c, s2]]) s += `<g transform="translate(${x - 13},${y - 13})">${swapIcon(26)}</g>`;
-  s += `<text x="${(a + b) / 2}" y="${s1 - 9}" font-size="9" fill="#b45309" text-anchor="middle">SWAP</text>`;
-  s += `<text x="${(b + c) / 2}" y="${s2 - 9}" font-size="9" fill="#b45309" text-anchor="middle">SWAP</text>`;
+  s += `<text x="${(a + b) / 2}" y="${s1 - 9}" font-size="9" fill="#b45309" text-anchor="middle">${copy.swap.swapLabel}</text>`;
+  s += `<text x="${(b + c) / 2}" y="${s2 - 9}" font-size="9" fill="#b45309" text-anchor="middle">${copy.swap.swapLabel}</text>`;
   s += `<g transform="translate(${a - blk / 2},${yTop - blk / 2})">${gateBlock('H', blk)}</g>`;
   s += `<g transform="translate(${c - blk / 2},${yBot - blk / 2})">${gateBlock('H', blk)}</g>`;
-  s += `<text x="${c + blk / 2 + 8}" y="${yBot + 3}" font-size="11.5" fill="#dc2626" font-weight="700">そろう！</text>`;
+  s += `<text x="${c + blk / 2 + 8}" y="${yBot + 3}" font-size="11.5" fill="#dc2626" font-weight="700">${copy.swap.alignedLabel}</text>`;
   s += `</svg>`;
   return s;
 }
 
 export const coverPage = () => `<div class="page cover">
   <div class="kicker">${furi(copy.cover.kicker)}</div>
-  <h1>${furi(copy.cover.titleLine1)}コンピューターの<br>${furi(copy.cover.titleLine2)}を しらべよう</h1>
-  <div class="subtitle">パズルゲーム <b>QA²</b> で あそびながら ${furi('完成')}させる ${furi('観察')}ノート</div>
+  <h1>${furi(copy.cover.titleLine1)}${furi(copy.cover.titleLine1Suffix)}<br>${furi(copy.cover.titleLine2)}${furi(copy.cover.titleLine2Suffix)}</h1>
+  <div class="subtitle">${furi(copy.cover.subtitle)}</div>
   <div class="goal">${furi(copy.cover.goal)}</div>
   <div class="hero">${globe({ size: 220, skin: 'earth', state: N, face: true, poleLabels: false, camera: CAMERA_FRONT })}<div class="heroname">キュービット${furi(copy.cover.heroNameSuffix)}</div></div>
   <div class="intro">
@@ -182,7 +182,7 @@ export const storyPage = () => `<div class="page">
     <div class="stepbody"><p>${cfuri(copy.story.step5)} ${inlineGatePair('X')} ＝ <span class="red">${furi(copy.story.match)}</span></p></div>
   </div>
   <div class="trythis">${cfuri(copy.story.tryThis)}</div>
-  <div class="observebox"><b>${furi(copy.story.memoHeading)}</b><div class="obsline">${furi(copy.story.expected)}：□ ${furi('消える')}　□ ${furi('消えない')}</div><div class="obsline">${furi(copy.story.result)}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div><div class="obsfree"><span class="freelabel">${furi(copy.story.noticed)}：</span></div></div>
+  <div class="observebox"><b>${furi(copy.story.memoHeading)}</b><div class="obsline">${furi(copy.story.expected)}：${copy.story.expectedOptions.map(option => `□ ${furi(option)}`).join('　')}</div><div class="obsline">${furi(copy.story.result)}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div><div class="obsfree"><span class="freelabel">${furi(copy.story.noticed)}：</span></div></div>
   ${footer(2)}
 </div>`;
 
@@ -199,7 +199,7 @@ export const triplesPage = (sub, heading, lead, rows, n, memo) => `<div class="p
   <h2><span class="dot"></span>${cfuri(heading)}</h2>
   <div class="howto">${cfuri(lead + copy.triples.howtoSuffix)}</div>
   ${rows.map(triRow).join('')}
-  ${memo ? `<div class="freewrite guided triplememo" style="height:${memo}px"><div class="fwh">✏️ ${furi(copy.triples.memoHeading)}</div><div class="promptlines">${copy.triples.hPrompts.map(prompt => `<span>${markup(prompt)}</span>`).join('')}<span class="freeprompt">${copy.triples.freePrompt}</span></div></div>` : ''}
+  ${memo ? `<div class="freewrite guided triplememo" style="height:${memo}px"><div class="fwh">${LABELS.memoIcon} ${furi(copy.triples.memoHeading)}</div><div class="promptlines">${copy.triples.hPrompts.map(prompt => `<span>${markup(prompt)}</span>`).join('')}<span class="freeprompt">${copy.triples.freePrompt}</span></div></div>` : ''}
   ${footer(n)}
 </div>`;
 
@@ -212,8 +212,8 @@ export const swapPage = () => `<div class="page">
     <div class="amida">${amidakujiDemo2()}<div class="amidacap">${cfuri(copy.swap.cap2)}</div></div>
   </div>
   <div class="trythis">${furi(copy.swap.tryThis)}</div>
-  <div class="freewrite guided" style="height:300px"><div class="fwh">✏️ ${furi(copy.swap.memoHeading)}</div><div class="promptlines"><span>${furi(copy.swap.matchedBlocks)}：＿＿＿＿＿＿</span><span>${furi(copy.swap.usedSwap)}：＿＿こ</span><span class="freeprompt">${furi(copy.swap.noticed)}：</span></div></div>
-  <div class="finish">${sakuraStamp()}<div class="namebox2"><span>${LABELS.name}</span><div class="line"></div><span>${furi('日づけ')}</span><div class="line short"></div></div></div>
+  <div class="freewrite guided" style="height:300px"><div class="fwh">${LABELS.memoIcon} ${furi(copy.swap.memoHeading)}</div><div class="promptlines"><span>${furi(copy.swap.matchedBlocks)}：＿＿＿＿＿＿</span><span>${furi(copy.swap.usedSwap)}：＿＿こ</span><span class="freeprompt">${furi(copy.swap.noticed)}：</span></div></div>
+  <div class="finish">${sakuraStamp()}<div class="namebox2"><span>${LABELS.name}</span><div class="line"></div><span>${furi(LABELS.date)}</span><div class="line short"></div></div></div>
   ${footer(7)}
 </div>`;
 

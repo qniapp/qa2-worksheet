@@ -1,3 +1,4 @@
+import { DECORATION_COPY, LABELS } from '../../content/worksheet-content.mjs';
 import { add, cross, dot, len, norm, project, rotate, scl, withCamera } from './geometry.mjs';
 import { axisStyle, GATES, hsv, turnWords } from './gates.mjs';
 import { furi } from './ruby.mjs';
@@ -46,7 +47,7 @@ export function globe(opts) {
     let out = `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="5.8" stroke-opacity="0.18" stroke-linecap="round"/>`;
     out += `<line x1="${fmt(h0[0])}" y1="${fmt(h0[1])}" x2="${fmt(h1[0])}" y2="${fmt(h1[1])}" stroke="${st.color}" stroke-width="2.4" stroke-linecap="round"/>`;
     if (showAxisLabel) {
-      const isDiagonal = st.name === 'ななめ', hl = axisLabelPoint(an, isDiagonal ? 7 : 9);
+      const isDiagonal = st.name === LABELS.diagonalAxisBase, hl = axisLabelPoint(an, isDiagonal ? 7 : 9);
       out += `<text x="${fmt(hl[0])}" y="${fmt(hl[1])}" font-size="${isDiagonal ? 10 : 11}" font-weight="700" fill="${st.color}" text-anchor="middle" dominant-baseline="middle" paint-order="stroke" stroke="#fff" stroke-width="2.8">${st.name}</text>`; }
     return out;
   };
@@ -57,10 +58,10 @@ export function globe(opts) {
     if (activeAxisName !== 'z') s += axisEnd([0, 0, 1], 'z', faint, false);
   } else if (poleLabels) {
     const np = project([0, 0, 1.3], cx, cy, R), sp = project([0, 0, -1.34], cx, cy, R);
-    s += `<text x="${fmt(np[0])}" y="${fmt(np[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">北極</text>`;
-    s += `<text x="${fmt(np[0])}" y="${fmt(np[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">ほっきょく</text>`;
-    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">南極</text>`;
-    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">なんきょく</text>`;
+    s += `<text x="${fmt(np[0])}" y="${fmt(np[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">${LABELS.northPole}</text>`;
+    s += `<text x="${fmt(np[0])}" y="${fmt(np[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">${LABELS.northPoleRuby}</text>`;
+    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">${LABELS.southPole}</text>`;
+    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">${LABELS.southPoleRuby}</text>`;
   }
   if (axisHighlight && !spin) s += highlightAxis(axisHighlight);
   let trajectoryLayer = '';
@@ -130,7 +131,7 @@ export function gateBlock(type, px = 56) { // ガラス質: 斜めグラデ＋�
     `<text x="${px/2}" y="${px/2}" font-size="${px*0.52}" font-weight="700" fill="#ffffff" text-anchor="middle" dominant-baseline="central" paint-order="stroke" stroke="${edge}" stroke-width="${fmt(px*0.03)}">${g.label}</text></svg>`;
 }
 export const swapIcon = (px = 40) => `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}"><g stroke="${hsv(48,92,98)}" stroke-width="${px*0.13}" stroke-linecap="round"><line x1="${px*0.25}" y1="${px*0.25}" x2="${px*0.75}" y2="${px*0.75}"/><line x1="${px*0.75}" y1="${px*0.25}" x2="${px*0.25}" y2="${px*0.75}"/></g></svg>`;
-// 小学校でおなじみの 桜「よくできました」スタンプ
+// 小学校でおなじみの桜スタンプ
 export function sakuraStamp() {
   // 5枚の花びらを「1本の外周パス」で描く（重なり線を出さず、輪郭だけにする）
   const W = 140, col = '#e0386a', Rt = 60, Rv = 19;
@@ -147,12 +148,12 @@ export function sakuraStamp() {
   const t = (y, s) => `<text x="0" y="${y}" font-size="12" font-weight="800" fill="${col}" text-anchor="middle" paint-order="stroke" stroke="#fff" stroke-width="3.2" stroke-linejoin="round">${s}</text>`;
   return `<svg width="${W}" height="${W}" viewBox="${-W/2} ${-W/2} ${W} ${W}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif">` +
     `<path d="${d}" fill="${col}" fill-opacity="0.12" stroke="${col}" stroke-width="2.6" stroke-linejoin="round"/>` +
-    t(-4, 'よく') + t(14, 'できました') + `</svg>`;
+    DECORATION_COPY.sakuraStamp.map((line, i) => t(i === 0 ? -4 : 14, line)).join('') + `</svg>`;
 }
 export const fillBox = (px = 80, answer = null) => {
   const base = `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif"><rect x="3" y="3" width="${px-6}" height="${px-6}" rx="10" fill="#fffef7" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 5"/>`;
-  if (!answer) return base + `<text x="${px/2}" y="${px/2}" font-size="13" fill="#cbd5e1" text-anchor="middle" dominant-baseline="central">？</text></svg>`;
-  if (answer === '消える') return base + `<text x="${px/2 - 13}" y="${px/2 - 6}" font-size="7" fill="#dc2626" text-anchor="middle">き</text><text x="${px/2}" y="${px/2 + 3}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
+  if (!answer) return base + `<text x="${px/2}" y="${px/2}" font-size="13" fill="#cbd5e1" text-anchor="middle" dominant-baseline="central">${LABELS.questionMark}</text></svg>`;
+  if (answer === LABELS.vanish) return base + `<text x="${px/2 - 13}" y="${px/2 - 6}" font-size="7" fill="#dc2626" text-anchor="middle">${LABELS.vanishRubyHint}</text><text x="${px/2}" y="${px/2 + 3}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
   return base + `<text x="${px/2}" y="${px/2}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
 };
 export const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
@@ -160,7 +161,7 @@ export const flowArrow = () => `<svg width="34" height="10" viewBox="0 0 34 10" 
 export const inlineGate = (type, px = 18) => `<span class="inlinegate" aria-hidden="true">${gateBlock(type, px)}</span>`;
 export const inlineGateSequence = types => `<span class="inlinegates">${types.map(type => inlineGate(type)).join('')}</span>`;
 export const inlineGatePair = type => inlineGateSequence([type, type]);
-export const afterGateCaption = types => `<span class="statecap">${inlineGateSequence(types)}のあと</span>`;
+export const afterGateCaption = types => `<span class="statecap">${inlineGateSequence(types)}${LABELS.afterGateSuffix}</span>`;
 
 export function renderContentMarkup(html) {
   return html
@@ -171,7 +172,7 @@ export function renderContentMarkup(html) {
 // 状態と状態の間に置く「操作」カード。球は状態、カードはブロック操作として分けて見せる。
 export function axisKidName(axis) {
   const name = axisStyle(axis).name;
-  return name === 'ななめ' ? 'ななめじく' : `${name}じく`;
+  return name === LABELS.diagonalAxisBase ? LABELS.diagonalAxisName : `${name}${LABELS.axisSuffix}`;
 }
 export function turnKidMarkup(angle) {
   return `${furi(turnWords(angle))}<span class="actdeg">(${angle}°)</span>`;

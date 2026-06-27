@@ -83,6 +83,8 @@ test('manuscript content is separated from the build entrypoint', async () => {
   const build = await readRepo('build.mjs');
   const content = await readRepo('content/worksheet-content.mjs');
   const worksheetCss = await readRepo('src/worksheet/worksheet.css');
+  const pages = await readRepo('src/worksheet/pages.mjs');
+  const artwork = await readRepo('src/worksheet/artwork.mjs');
 
   assert.ok(build.split('\n').length < 30);
   assert.match(build, /buildWorksheetHtml/);
@@ -91,6 +93,12 @@ test('manuscript content is separated from the build entrypoint', async () => {
   assert.doesNotMatch(build, /<style>/);
   assert.match(content, /export const PAIRS/);
   assert.match(content, /<Gate name="X" \/>/);
+  assert.match(content, /subtitle: 'パズルゲーム <b>QA²<\/b> で あそびながら 完成させる 観察ノート'/);
+  assert.match(content, /sakuraStamp: \['よく', 'できました'\]/);
+  assert.doesNotMatch(pages, /パズルゲーム <b>QA²<\/b> で あそびながら/);
+  assert.doesNotMatch(pages, /そろう！/);
+  assert.doesNotMatch(artwork, /よく/);
+  assert.doesNotMatch(artwork, /できました/);
   assert.match(worksheetCss, /@page \{ size: A4 portrait; margin: 0; \}/);
 });
 

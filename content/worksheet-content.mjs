@@ -10,8 +10,27 @@ export const LABELS = {
   writeHere: 'ここに書く',
   exampleWriting: '↑ 書き方の例',
   vanish: '消える',
+  nonVanish: '消えない',
   name: 'なまえ',
+  date: '日づけ',
   materialsHeading: 'つかうもの',
+  twoBlocksSuffix: 'が2こ',
+  axisAround: 'のまわりを',
+  afterGateSuffix: 'のあと',
+  questionMark: '？',
+  vanishRubyHint: 'き',
+  memoIcon: '✏️',
+  diagonalAxisBase: 'ななめ',
+  diagonalAxisName: 'ななめじく',
+  axisSuffix: 'じく',
+  northPole: '北極',
+  northPoleRuby: 'ほっきょく',
+  southPole: '南極',
+  southPoleRuby: 'なんきょく',
+};
+
+export const DECORATION_COPY = {
+  sakuraStamp: ['よく', 'できました'],
 };
 
 // ペア（2ブロック）
@@ -54,7 +73,9 @@ export const PAGE_COPY = {
   cover: {
     kicker: '夏休み 自由研究',
     titleLine1: '量子',
+    titleLine1Suffix: 'コンピューターの',
     titleLine2: '不思議',
+    titleLine2Suffix: 'を しらべよう',
     subtitle: 'パズルゲーム <b>QA²</b> で あそびながら 完成させる 観察ノート',
     goal: '今日のゴール：ブロックをならべると「消える／変身する」を見つけよう',
     heroNameSuffix: '君',
@@ -83,6 +104,7 @@ export const PAGE_COPY = {
     tryThis: '🎮 やってみよう：QA² で <b><Gate name="X" />を2つ たてにそろえて</b>、ほんとうに消えるか たしかめてみよう！',
     memoHeading: '観察メモ',
     expected: '予想',
+    expectedOptions: ['消える', '消えない'],
     result: '結果',
     noticed: '気づいたこと',
   },
@@ -121,6 +143,8 @@ export const PAGE_COPY = {
     sub: '⑤ はってん：SWAP（スワップ）・ p.7',
     heading: 'はってん：SWAP は「あみだくじ」みたいな命令',
     lead: '<b>SWAP（スワップ）</b>は、棒でつながった2つの道（レーン）を<b>いれかえる</b>命令。あみだくじみたいに線をたどると、はなれた2つのブロックが <b>上下にそろう</b> ことがあるよ！',
+    swapLabel: 'SWAP',
+    alignedLabel: 'そろう！',
     cap1: 'SWAP 1つ：<Gate name="H" /> と <Gate name="H" /> がそろって <span class="red">消える</span>',
     cap2: 'SWAP 2つ＝2段：もっと はなれた <Gate name="H" /> もそろう！',
     tryThis: '🎉 長い あみだくじを つくって マッチさせると、QA² では <b>高とくてん</b>！ いろんな つなぎかたを ためして、いままでの 消えるマッチを SWAP ごしに そろえてみよう。',
