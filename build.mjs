@@ -319,15 +319,15 @@ function pairRow(p) {
   const exlabel = p.example ? `<div class="exlabel">${furi('↑ 書き方の例')}</div>` : '';
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
-  const finalCaption = p.result === 'vanish' ? '2回目：元どおり' : '2回目のあと';
+  const afterCaption = `${inlineGate(p.g)}のあと`;
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
     <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres flowline">
       ${stateFigure(74, s0, 'さいしょの向き')}
       ${stepAction(p.g)}
-      ${stateFigure(74, s1, '1回目のあと', s0, g.axis, g.angle)}
+      ${stateFigure(74, s1, afterCaption, s0, g.axis, g.angle)}
       ${stepAction(p.g)}
-      ${stateFigure(74, s2, finalCaption, s1, g.axis, g.angle)}
+      ${stateFigure(74, s2, afterCaption, s1, g.axis, g.angle)}
     </div>${why}</div></div>`;
 }
 
@@ -349,7 +349,7 @@ function triRow(p) {
   for (const g of gs) states.push(rotate(states[states.length - 1], g.axis, g.angle));
   let spheres = stateFigure(66, states[0], 'さいしょの向き');
   p.blocks.forEach((block, i) => {
-    const caption = i === p.blocks.length - 1 ? 'さいごの向き' : `${i + 1}こ目のあと`;
+    const caption = i === p.blocks.length - 1 ? 'さいごの向き' : `${inlineGate(block)}のあと`;
     spheres += stepAction(block) + stateFigure(66, states[i + 1], caption, states[i], gs[i].axis, gs[i].angle);
   });
   const box = p.example
@@ -535,15 +535,15 @@ const aboutPage = () => `<div class="page about">
     <h3>数学的には</h3>
     <p>${wrapJa('キュービット君の状態は「状態ベクトル」で表されます。')}</p>
     <div class="eq">|0⟩ = ${vec('1', '0')}　|1⟩ = ${vec('0', '1')}　|+⟩ = <span class="frac">1/√2</span> ${vec('1', '1')}</div>
-    <p>${wrapJa('各ゲートは「ユニタリ行列」＝あるじくを中心とする回転行列です。')}</p>
-    <div class="eq">X = ${mat('0', '1', '1', '0')}<span class="ann">xじく 180°</span> 　Z = ${mat('1', '0', '0', '-1')}<span class="ann">zじく 180°</span> 　S = ${mat('1', '0', '0', 'i')}<span class="ann">zじく 90°</span> 　H = <span class="frac">1/√2</span>${mat('1', '1', '1', '-1')}</div>
+    <p>${wrapJa('各ゲートは「ユニタリ行列」＝ある軸を中心とする回転行列です。')}</p>
+    <div class="eq">X = ${mat('0', '1', '1', '0')}<span class="ann">x軸 180°</span> 　Z = ${mat('1', '0', '0', '-1')}<span class="ann">z軸 180°</span> 　S = ${mat('1', '0', '0', 'i')}<span class="ann">z軸 90°</span> 　H = <span class="frac">1/√2</span>${mat('1', '1', '1', '-1')}</div>
     <p>${wrapJa('状態ベクトルにゲートを適用する＝行列とベクトルの掛け算です。プリントの図は、この計算の結果に対応します。')}</p>
     <div class="eq">例1：X|0⟩ = ${mat('0', '1', '1', '0')}${vec('1', '0')} = ${vec('0', '1')} = |1⟩</div>
     <div class="eqnote">${wrapJa('→ キュービット君が 北極→南極 に反転（p.2 の X）。')}</div>
     <div class="eq">例2：X·X|0⟩ = X|1⟩ = |0⟩</div>
     <div class="eqnote">${wrapJa('→ 2回で もとどおり＝マッチして消える（p.4 の X²）。')}</div>
     <div class="eq">例3：S·S = ${mat('1', '0', '0', 'i')}<span class="sup">2</span> = ${mat('1', '0', '0', '-1')} = Z</div>
-    <div class="eqnote">${wrapJa('→ S を2回で Z と同じ（p.4 の S²→Z）。T は zじく 45°（位相 e^{iπ/4}）で、2回で S になります。')}</div>
+    <div class="eqnote">${wrapJa('→ S を2回で Z と同じ（p.4 の S²→Z）。T は z軸 45°（位相 e^{iπ/4}）で、2回で S になります。')}</div>
   </div>
   <div class="sect">
     <h3>この教材のねらい</h3>
@@ -625,7 +625,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   .seq { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
   .col { display: flex; flex-direction: column; gap: 3px; align-items: center; }
   .boxwrap { width: 76px; box-sizing: border-box; text-align: center; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 3px 5px 4px; }
-  .pairs .boxwrap { background: transparent; border: 0; padding: 0; }
+  .pairs .boxwrap { background: #fff7ed; border: 1px solid #fed7aa; padding: 3px 5px 4px; }
   .exfill { text-align: center; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 4px; background: #fffef7; display: inline-block; }
   .exlabel { font-size: 9px; color: #dc2626; margin-top: 1px; }
   .pright { flex: 1; padding: 0 8px; box-sizing: border-box; }
@@ -677,8 +677,8 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   /* block intro */
   .grouphead { margin: 11px 0 3px; font-size: 10.5px; font-weight: 800; color: #334155; border-left: 4px solid #94a3b8; padding-left: 8px; }
   .brow { display: flex; align-items: center; gap: 12px; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 3px 12px; margin-bottom: 4px; }
-  .bg { width: 112px; text-align: center; } .bname { font-size: 12px; font-weight: 800; margin-top: 1px; }
-  .brow figure { margin: 0; text-align: center; } .brow figcaption { font-size: 10.4px; font-weight: 700; color: #334155; margin-top: -8px; }
+  .bg { width: 112px; text-align: center; transform: translateY(4px); } .bname { font-size: 12px; font-weight: 800; margin-top: 1px; }
+  .brow figure { width: 112px; margin: 0; text-align: center; } .brow figcaption { font-size: 10.4px; font-weight: 700; color: #334155; margin-top: -8px; }
   .bfact { flex: 1; font-size: 11.5px; line-height: 1.45; }
   .amida { text-align: center; margin: 8px 0; }
   /* 解説ページ（おとな向け） */
