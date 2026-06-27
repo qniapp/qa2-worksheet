@@ -3,6 +3,10 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 const readDist = path => readFile(new URL(`../dist/${path}`, import.meta.url), 'utf8');
+const visibleText = html => html
+  .replace(/<rt>.*?<\/rt>/gs, '')
+  .replace(/<[^>]+>/g, '')
+  .replace(/\s+/g, '');
 
 test('worksheet HTML contains the expected eight printable pages', async () => {
   const html = await readDist('qa2.html');
@@ -24,6 +28,18 @@ test('child-facing pages keep axis wording in hiragana and adult page uses kanji
   assert.match(adultPage, /軸/);
   assert.match(adultPage, /x軸/);
   assert.match(adultPage, /z軸/);
+});
+
+test('worksheet guidance and operation captions use the current wording', async () => {
+  const html = await readDist('qa2.html');
+  const text = visibleText(html);
+
+  assert.match(text, /まわるじくとまわる量のちがいを、よく観察しよう。/);
+  assert.doesNotMatch(text, /色だけでなくラベルでも見よう/);
+  assert.doesNotMatch(text, /1回目のあと/);
+  assert.doesNotMatch(text, /2回目のあと/);
+  assert.doesNotMatch(text, /1こ目のあと/);
+  assert.doesNotMatch(text, /2こ目のあと/);
 });
 
 test('landing page links to the generated worksheet PDF and HTML preview', async () => {

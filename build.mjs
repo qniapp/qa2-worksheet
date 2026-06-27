@@ -277,7 +277,8 @@ const fillBox = (px = 80, answer = null) => {
 const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
 const flowArrow = () => `<svg width="34" height="10" viewBox="0 0 34 10" aria-hidden="true"><path d="M2,5 L29,5 M29,5 L24,1.5 M29,5 L24,8.5" stroke="#64748b" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 const inlineGate = (type, px = 18) => `<span class="inlinegate" aria-hidden="true">${gateBlock(type, px)}</span>`;
-const inlineGatePair = type => `<span class="inlinegates">${inlineGate(type)}${inlineGate(type)}</span>`;
+const inlineGateSequence = types => `<span class="inlinegates">${types.map(type => inlineGate(type)).join('')}</span>`;
+const inlineGatePair = type => inlineGateSequence([type, type]);
 // 状態と状態の間に置く「操作」カード。球は状態、カードはブロック操作として分けて見せる。
 function axisKidName(axis) {
   const name = axisStyle(axis).name;
@@ -320,6 +321,7 @@ function pairRow(p) {
   const why = p.hint ? `<div class="why">${furi(p.hint)}</div>` : '';
   const tagBg = mix(g.color, '#ffffff', 0.72), tagTx = mix(g.color, '#000000', 0.38);
   const afterCaption = `${inlineGate(p.g)}のあと`;
+  const afterPairCaption = `${inlineGatePair(p.g)}のあと`;
   return `<div class="prow"><div class="pleft"><div class="tagline"><div class="tag" style="background:${tagBg};color:${tagTx}">${p.tag}</div><div class="taghint">${p.g}が2こ</div></div>
     <div class="seq"><div class="col">${gateBlock(p.g, 38)}${gateBlock(p.g, 38)}</div>${arrowR()}<div class="boxwrap"><div class="answerhint">${furi('ここに書く')}</div>${box}${exlabel}</div></div></div>
     <div class="pright"><div class="spheres flowline">
@@ -327,7 +329,7 @@ function pairRow(p) {
       ${stepAction(p.g)}
       ${stateFigure(74, s1, afterCaption, s0, g.axis, g.angle)}
       ${stepAction(p.g)}
-      ${stateFigure(74, s2, afterCaption, s1, g.axis, g.angle)}
+      ${stateFigure(74, s2, afterPairCaption, s1, g.axis, g.angle)}
     </div>${why}</div></div>`;
 }
 
@@ -349,7 +351,7 @@ function triRow(p) {
   for (const g of gs) states.push(rotate(states[states.length - 1], g.axis, g.angle));
   let spheres = stateFigure(66, states[0], 'さいしょの向き');
   p.blocks.forEach((block, i) => {
-    const caption = i === p.blocks.length - 1 ? 'さいごの向き' : `${inlineGate(block)}のあと`;
+    const caption = `${inlineGateSequence(p.blocks.slice(0, i + 1))}のあと`;
     spheres += stepAction(block) + stateFigure(66, states[i + 1], caption, states[i], gs[i].axis, gs[i].angle);
   });
   const box = p.example
@@ -390,7 +392,7 @@ function introRow(b) {
 const introPage = () => `<div class="page">
   ${headTitle('② ブロックのなかまたち ・ p.3')}
   <h2><span class="dot"></span>${furi('ブロック（量子ゲート）には、6つのなかま')}</h2>
-  <div class="howto">${furi('ブロックをキュービット君にわたすと、キュービット君の<b>やじるし</b>が<b>くるっと回転</b>するよ。<b>まわるじく</b>と<b>まわる量</b>を、色だけでなくラベルでも見よう。')}</div>
+  <div class="howto">${furi('ブロックをキュービット君にわたすと、キュービット君の<b>やじるし</b>が<b>くるっと回転</b>するよ。<b>まわるじく</b>と<b>まわる量</b>のちがいを、よく観察しよう。')}</div>
   ${INTRO_BLOCKS.map(b => `${b.group ? `<div class="grouphead">${furi(b.group)}</div>` : ''}${introRow(b)}`).join('')}
   ${footer(3)}
 </div>`;
@@ -703,7 +705,7 @@ const html = `<!doctype html><html lang="ja"><head><meta charset="utf-8">
   ${storyPage()}
   ${introPage()}
   ${pairsPage()}
-  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', `${inlineGate('H')}ではさむと、まん中が変身する`, `外がわの ${inlineGate('H')} 2つが消えて、まん中のブロックが<b>べつのブロックに変身</b>するよ。`, TRIPLES_H, 5, 360)}
+  ${triplesPage('④ 3つのブロックでマッチ（その1）・ p.5', `${inlineGate('H')}ではさむと、まんなかがへんしんする`, `外がわの ${inlineGate('H')} 2つが消えて、まんなかのブロックが<b>べつのブロックにへんしん</b>するよ。`, TRIPLES_H, 5, 360)}
   ${triplesPage('④ 3つのブロックでマッチ（その2）・ p.6', `${inlineGate('S')}・${inlineGate('T')} ではさむと？`, '同じように、外がわの2つではさんで観察しよう。ぜんぶ消えることもあるよ。', TRIPLES_ST, 6)}
   ${swapPage()}
   ${aboutPage()}
