@@ -41,10 +41,22 @@ HTML だけ生成したいときは `npm run html`。
 ## 検証
 
 ```sh
-npm run audit  # npm audit で moderate 以上の脆弱性がないことを確認
-npm run lint   # ESLint で build.mjs / tests / 設定ファイルを確認
-npm test       # HTML を再生成し、Node.js 標準 test runner で smoke test
+npm run audit        # npm audit で moderate 以上の脆弱性がないことを確認
+npm run lint         # ESLint で build.mjs / scripts / tests / 設定ファイルを確認
+npm test             # HTML を再生成し、Node.js 標準 test runner で smoke test
+npm run test:visual  # dist/qa2-worksheet.pdf を基準画像と比較
 ```
+
+`npm run test:visual` は `pdftoppm`（poppler-utils）と ImageMagick の `compare` / `magick compare` を使い、`dist/qa2-worksheet.pdf` を `tests/visual/baseline/page-*.png` とピクセル単位で比較します。差分が出た場合は、現在画像と差分画像の一時ディレクトリを表示します。
+
+基準画像は、意図的に PDF の見た目を変え、全ページ画像確認と人間レビューが済んだ場合だけ更新します。
+
+```sh
+npm run build
+npm run update:visual-baseline
+```
+
+PDF / HTML の見た目に関係する PR では、通常の検証に加えて `npm run test:visual` を実行し、必要に応じて `REVIEW_DIR=docs/review/issue-<番号> npm run render:review-pages` で PR 用のページ画像を再生成します。
 
 pull request と `master` への push では、GitHub Actions の CI が `npm ci` → `npm run audit` → `npm run lint` → `npm run build` → `npm test` を実行します。配布用の GitHub Pages workflow は従来どおり `dist/` を公開します。
 
@@ -60,7 +72,9 @@ pull request と `master` への push では、GitHub Actions の CI が `npm ci
 ## 構成
 
 ```
-build.mjs   生成スクリプト（データ＋SVG部品＋ページ合成）
-build.sh    HTML生成→Chromeで印刷PDF化
-dist/       出力（qa2-worksheet.pdf を配布。qa2.html は中間生成物）
+build.mjs              生成スクリプト（データ＋SVG部品＋ページ合成）
+build.sh               HTML生成→Chromeで印刷PDF化
+scripts/               PDF ページ画像化・視覚回帰確認の補助スクリプト
+tests/                 生成 HTML の smoke test と視覚回帰の基準画像
+dist/                  出力（qa2-worksheet.pdf を配布。qa2.html は中間生成物）
 ```

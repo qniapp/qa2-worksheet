@@ -7,6 +7,9 @@
   "scripts": {
     "html": "node build.mjs",
     "build": "bash build.sh",
+    "render:review-pages": "node scripts/render-pdf-pages.mjs dist/qa2-worksheet.pdf ${REVIEW_DIR:-docs/review/issue-1}",
+    "test:visual": "node scripts/check-visual-regression.mjs",
+    "update:visual-baseline": "node scripts/check-visual-regression.mjs --update",
     "lint": "eslint .",
     "pretest": "npm run html",
     "test": "node --test",
