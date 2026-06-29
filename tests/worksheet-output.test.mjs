@@ -53,8 +53,8 @@ test('worksheet guidance and operation captions use the current wording', async 
   assert.doesNotMatch(html, /<ruby>高<rt>たか<\/rt><\/ruby>とくてん/);
   assert.match(html, /からね。 <span class="inlinegates">[\s\S]*?＝ <span class="red">/);
   assert.doesNotMatch(html, /からね。 ＝ <span class="red">/);
-  assert.match(text, /名前はアダマールさんから。/);
-  assert.doesNotMatch(text, /フランスの数学者アダマール/);
+  assert.match(text, /xじくとzじくのまん中のななめじくで半周。/);
+  assert.doesNotMatch(text, /アダマール/);
   assert.match(text, /2つの道（レーン）をいれかえる命令/);
   assert.match(html, /class="statecap"/);
 });

@@ -62,7 +62,7 @@ export const INTRO_BLOCKS = [
   { group: 'まずは半周のブロック', g: 'X', name: 'X ブロック', start: N, fact: '<Gate name="X" />は <b>＋マーク</b>。xじくで半周するよ。' },
   { g: 'Y', name: 'Y ブロック', start: N, fact: 'yじくで半周。<Gate name="X" />と、まわる向きがちがうんだ。' },
   { g: 'Z', name: 'Z ブロック', start: FRONT_Y, fact: 'たての zじくで半周。北極・南極は動かないよ。' },
-  { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'ななめじくで半周。名前はアダマールさんから。' },
+  { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'xじくとzじくのまん中のななめじくで半周。' },
   { group: '小さい回転', g: 'S', name: 'S ブロック', start: FRONT_Y, fact: 'zじくを4分の1周。2つあつまると <Gate name="Z" />に変身！' },
   { g: 'T', name: 'T ブロック', start: FRONT_Y, fact: 'zじくを8分の1周。2つで <Gate name="S" />に変身！' },
 ];
