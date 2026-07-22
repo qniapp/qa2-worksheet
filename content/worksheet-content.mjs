@@ -3,6 +3,12 @@
 
 export const N = [0, 0, 1];
 export const EQ = [1, 0, 0];
+// ④2本目の出発点。北半球のななめを向いた状態＝ヘルシンキ（北緯60.2度）のあたり。
+// この緯度は図の都合でもあり、(1) xじくの上を外して X でちゃんと向きが変わり、
+// (2) 赤いやじるしが顔の目（中心から約28度）を横切らず、(3) 回転の軌跡が赤いやじるしと重ならない。
+// 東京（北緯35.7度）だと (2)(3) がどちらも成り立たないので、緯度が図と合う都市名を選んでいる。
+const HELSINKI_LAT = Math.PI * 60 / 180, HELSINKI_LON = Math.PI * 25 / 180;
+export const HELSINKI = [Math.cos(HELSINKI_LAT) * Math.cos(HELSINKI_LON), Math.cos(HELSINKI_LAT) * Math.sin(HELSINKI_LON), Math.sin(HELSINKI_LAT)];
 export const FRONT_Y = [0, -1, 0]; // |0>北極 / |+>赤道(東京) / 手前のYじく側
 
 export const LABELS = {
@@ -104,15 +110,24 @@ export const PAGE_COPY = {
     heading: 'キュービット君と、ブロックのひみつ',
     step1: 'キュービット君は、ゲーム <b>QA²</b> には出てこないけれど <b>かげの主役</b>。量子コンピューターの中の「<b>データ</b>」＝計算のたんい として、とても大切なやくわりをしているよ。',
     figureQubit: 'キュービット君',
-    step2: 'キュービット君は、いつも <b>地球の一点</b> を指しているよ。東京を指したり、北極を指したり、南極を指したり……いろいろ！',
+    step2: 'キュービット君の <b>赤いやじるし</b> は、いつも <b>地球上の一点</b> を指しているよ。東京を指したり、北極を指したり、南極を指したり……いろいろ！',
     step3: 'ここで <b>ブロック</b> のとうじょう！ ブロックをキュービット君にわたすと、指す <b>向きが変わる</b> よ。ブロックは量子コンピューターの「<b>命令</b>」。キュービット君といっしょに計算をすすめていくんだ。',
-    step4: '北極のキュービット君に <Gate name="X" /> をわたすと…… <b style="color:#f59e0b">xじく</b>を中心に くるっと回転！（→ 南極） もう一回 <Gate name="X" /> をわたすと…… また <b style="color:#f59e0b">xじく</b>で回って <b>元に戻った！</b>',
-    northLabel: '① 北極',
-    northCaption: '北極を指している',
-    southLabel: '② X後：南極',
-    southCaption: '南極へ',
-    returnLabel: '③ 2回目：北極',
-    returnCaption: '元に戻った！',
+    figureXBlock: 'Xブロック',
+    step4: '<Gate name="X" /> は、やじるしが <b>どこを向いていても</b> <b style="color:#f59e0b">xじく</b>を中心に <b>半周</b> まわすブロック。まずは <b>北極</b> のキュービット君で見てみよう。',
+    step4b: 'つぎは <b>ヘルシンキ（フィンランド）</b> を指しているキュービット君。出発点がちがっても、同じ <b style="color:#f59e0b">xじく</b>のまわりを 半周。<b>2回わたすと 半周＋半周＝1周</b>で、やじるしは <b>元に戻った！</b>',
+    // 出発点をかえても「Xを2回で元に戻る」が同じように成り立つことを見せる2本のストリップ
+    flips: [
+      { start: N, frames: [
+        { label: '① 北極', caption: '北極を指している' },
+        { label: '② X後：南極', caption: '南極へ' },
+        { label: '③ 2回目：北極', caption: '元に戻った！' },
+      ] },
+      { start: HELSINKI, frames: [
+        { label: '① ヘルシンキ', caption: 'ヘルシンキを指している' },
+        { label: '② X後：南半球', caption: '南半球へ' },
+        { label: '③ 2回目：ヘルシンキ', caption: '元に戻った！' },
+      ] },
+    ],
     step5: '元に戻った＝ <b><Gate name="X" />を2回わたす意味がない</b>。だから <b><GatePair name="X" /></b> のならびがあったら <b>消してもいい</b>！ キュービット君には なんの えいきょうもないからね。',
     match: 'マッチして消える！',
     tryThis: '🎮 やってみよう：QA² で <b><Gate name="X" />を2つ たてにそろえて</b>、ほんとうに消えるか たしかめてみよう！',
