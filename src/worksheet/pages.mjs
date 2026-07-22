@@ -134,34 +134,40 @@ function amidakujiDemo2() {
   return s;
 }
 
-// 表紙のアプリ入手案内。QR は URL からビルド時に生成する。
-function getAppBox() {
-  return `<div class="getapp">
-    <div class="gahead">📱 ${furi(copy.cover.downloadHeading)}</div>
-    <div class="galead">${furi(copy.cover.downloadLead)}</div>
-    <div class="gacards">${APP_LINKS.map(link => `<div class="gacard">
-      <div class="gaplatform">${link.platform}</div>
-      <div class="gaqr">${qrCode(link.url, 88)}</div>
-      <div class="gastore">${link.store}</div>
-    </div>`).join('')}</div>
-    <div class="ganote">${furi(copy.cover.downloadNote)}</div>
-  </div>`;
+// 表紙の各まとまり。塗りの箱ではなく、見出しと余白で区切る。
+const coverSection = (icon, heading, body) =>
+  `<section class="csect"><h3>${icon} ${furi(heading)}</h3>${body}</section>`;
+
+// 表紙のアプリ入手案内。説明を左、QR を右に置いて紙面の幅を使い切る。
+function getAppSection() {
+  const cards = APP_LINKS.map(link => `<div class="gacard">
+    <div class="gaplatform">${link.platform}</div>
+    <div class="gaqr">${qrCode(link.url, 84)}</div>
+    <div class="gastore">${link.store}</div>
+  </div>`).join('');
+  return `<section class="csect getapp">
+    <div class="gatext">
+      <h3>${LABELS.coverAppIcon} ${furi(copy.cover.downloadHeading)}</h3>
+      <div class="galead">${furi(copy.cover.downloadLead)}</div>
+      <div class="ganote">${furi(copy.cover.downloadNote)}</div>
+    </div>
+    <div class="gacards">${cards}</div>
+  </section>`;
 }
 
 export const coverPage = () => `<div class="page cover">
   <div class="kicker">${furi(copy.cover.kicker)}</div>
   <h1>${furi(copy.cover.titleLine1)}${furi(copy.cover.titleLine1Suffix)}<br>${furi(copy.cover.titleLine2)}${furi(copy.cover.titleLine2Suffix)}</h1>
   <div class="subtitle">${furi(copy.cover.subtitle)}</div>
-  <div class="goal">${furi(copy.cover.goal)}</div>
+  <div class="goal"><span class="goallabel">${furi(copy.cover.goalLabel)}</span>${furi(copy.cover.goal)}</div>
   <div class="hero">${globe({ size: 220, skin: 'earth', state: N, face: true, poleLabels: false, camera: CAMERA_FRONT })}<div class="heroname">${copy.cover.heroName}${furi(copy.cover.heroNameSuffix)}</div></div>
-  <div class="intro">
-    <h3>📚 ${furi(copy.cover.introHeading)}</h3>
-    <ul>
-      ${copy.cover.introItems.map(item => `<li>${furi(item)}</li>`).join('')}
-    </ul>
+  <div class="csects">
+    ${coverSection(LABELS.coverDoIcon, copy.cover.introHeading,
+      `<ol class="cdo">${copy.cover.introItems.map(item => `<li>${furi(item)}</li>`).join('')}</ol>`)}
+    ${coverSection(LABELS.coverMaterialsIcon, LABELS.materialsHeading,
+      `<div class="mats">${copy.cover.materials.map(item => `<span>${item}</span>`).join('')}</div>`)}
+    ${getAppSection()}
   </div>
-  <div class="materials"><b>${LABELS.materialsHeading}</b>${copy.cover.materials.map(item => `<span>${item}</span>`).join('')}</div>
-  ${getAppBox()}
   <div class="namebox">
     <div class="nbrow"><span>${LABELS.name}</span><div class="line"></div></div>
     <div class="nbrow"><span>${furi(copy.cover.gradeLabel)}・${furi(copy.cover.classLabel)}</span><div class="line"></div></div>
