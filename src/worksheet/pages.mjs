@@ -1,10 +1,12 @@
 import {
   APP_LINKS,
+  EQ,
   INTRO_BLOCKS,
   LABELS,
   N,
   PAGE_COPY,
   PAIRS,
+  SOUTH,
   TRIPLES_H,
   TRIPLES_ST,
 } from '../../content/worksheet-content.mjs';
@@ -18,6 +20,7 @@ import {
   fillBox,
   gateBlock,
   globe,
+  inlineBloch,
   inlineGatePair,
   mat,
   mix,
@@ -248,6 +251,8 @@ export const swapPage = () => `<div class="page">
   ${footer(7)}
 </div>`;
 
+const axisNote = gate => `<span class="ann">${copy.about.axisNotes[gate]}</span>`;
+
 export const aboutPage = () => `<div class="page about">
   ${headTitle(copy.about.sub)}
   <h2><span class="dot"></span>${copy.about.heading}</h2>
@@ -264,15 +269,24 @@ export const aboutPage = () => `<div class="page about">
   <div class="sect">
     <h3>${copy.about.mathTitle}</h3>
     <p>${wrapJa(copy.about.stateVectorText)}</p>
-    <div class="eq">|0⟩ = ${vec('1', '0')}　|1⟩ = ${vec('0', '1')}　|+⟩ = <span class="frac">1/√2</span> ${vec('1', '1')}</div>
+    <div class="eq kets">
+      <span class="ket">|0⟩ = ${vec('1', '0')}${inlineBloch(N)}</span>
+      <span class="ket">|1⟩ = ${vec('0', '1')}${inlineBloch(SOUTH)}</span>
+      <span class="ket">|+⟩ = <span class="frac">1/√2</span> ${vec('1', '1')}${inlineBloch(EQ)}</span>
+    </div>
     <p>${wrapJa(copy.about.unitaryText)}</p>
-    <div class="eq">X = ${mat('0', '1', '1', '0')}<span class="ann">x軸 180°</span> 　Z = ${mat('1', '0', '0', '-1')}<span class="ann">z軸 180°</span> 　S = ${mat('1', '0', '0', 'i')}<span class="ann">z軸 90°</span> 　H = <span class="frac">1/√2</span>${mat('1', '1', '1', '-1')}</div>
+    <div class="eq gateeqs">
+      <span class="gateeq">X = ${mat('0', '1', '1', '0')}${axisNote('X')}</span>
+      <span class="gateeq">Z = ${mat('1', '0', '0', '-1')}${axisNote('Z')}</span>
+      <span class="gateeq">S = ${mat('1', '0', '0', 'i')}${axisNote('S')}</span>
+      <span class="gateeq">H = <span class="frac">1/√2</span>${mat('1', '1', '1', '-1')}${axisNote('H')}</span>
+    </div>
     <p>${wrapJa(copy.about.applyText)}</p>
     <div class="eq">例1：X|0⟩ = ${mat('0', '1', '1', '0')}${vec('1', '0')} = ${vec('0', '1')} = |1⟩</div>
     <div class="eqnote">${wrapJa(copy.about.eqNote1)}</div>
-    <div class="eq">例2：X·X|0⟩ = X|1⟩ = |0⟩</div>
+    <div class="eq">例2：X·X|0⟩ = X|1⟩ = |0⟩, X·X|1⟩ = X|0⟩ = |1⟩, ${copy.about.eqWords.soThen} X·X = ${mat('0', '1', '1', '0')}${mat('0', '1', '1', '0')} = ${mat('1', '0', '0', '1')} = I<span class="ann">${copy.about.eqWords.identity}</span></div>
     <div class="eqnote">${wrapJa(copy.about.eqNote2)}</div>
-    <div class="eq">例3：S·S = ${mat('1', '0', '0', 'i')}<span class="sup">2</span> = ${mat('1', '0', '0', '-1')} = Z</div>
+    <div class="eq">例3：S·S = ${mat('1', '0', '0', 'i')}${mat('1', '0', '0', 'i')} = ${mat('1', '0', '0', '-1')} = Z</div>
     <div class="eqnote">${wrapJa(copy.about.eqNote3)}</div>
   </div>
   <div class="sect">

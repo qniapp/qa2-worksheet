@@ -216,3 +216,5 @@ export const stateFigure = (size, state, caption, ghostState = null, axisHighlig
 // 解説ページ用の 2×2 行列 / 2×1 ベクトル（列優先で並べる）
 export const mat = (a, b, c, d) => `<span class="mat"><span>${a}</span><span>${c}</span><span>${b}</span><span>${d}</span></span>`;
 export const vec = (a, b) => `<span class="mat vec"><span>${a}</span><span>${b}</span></span>`;
+// ケット記号の右にそえる小さなブロッホ球。ページ右上の球と同じ描き方にして見え方をそろえる。
+export const inlineBloch = (state, px = 56) => `<span class="ketglobe">${globe({ size: px, skin: 'bloch', state })}</span>`;
