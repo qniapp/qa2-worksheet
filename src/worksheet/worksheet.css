@@ -28,6 +28,15 @@ h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block;
 .intro h3 { font-size: 15px; margin: 0 0 4px; } .intro ul { margin: 0; padding-left: 1.2em; display: grid; gap: 2px; } .intro li { font-size: 13px; line-height: 1.7; }
 .materials { margin: 8px 24px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; align-items: center; font-size: 12px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 8px 10px; }
 .materials span { border: 1px solid #cbd5e1; border-radius: 999px; padding: 3px 8px; background: #fff; }
+.getapp { margin: 7px 24px 0; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 8px 14px 8px; }
+.getapp .gahead { font-size: 14px; font-weight: 800; color: #1e3a8a; }
+.getapp .galead { font-size: 11.5px; color: #475569; margin-top: 2px; }
+.gacards { display: flex; justify-content: center; gap: 26px; margin-top: 6px; }
+.gacard { background: #fff; border: 1px solid #dbeafe; border-radius: 10px; padding: 5px 12px 4px; }
+.gaqr { line-height: 0; }
+.gaplatform { font-size: 11px; font-weight: 800; color: #1f2937; margin-bottom: 3px; }
+.gastore { font-size: 9.5px; color: #64748b; margin-top: 2px; }
+.getapp .ganote { font-size: 10.5px; color: #1d4ed8; margin-top: 4px; }
 .namebox { margin: 10px 24px 0; }
 .nbrow { display: flex; align-items: flex-end; gap: 12px; font-size: 15px; margin-top: 10px; }
 .nbrow .line { flex: 1; border-bottom: 2px solid #94a3b8; height: 30px; }

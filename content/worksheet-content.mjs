@@ -33,6 +33,12 @@ export const DECORATION_COPY = {
   sakuraStamp: ['よく', 'できました'],
 };
 
+// 表紙に載せる QA² アプリのダウンロード先。URL から QR コードを生成する。
+export const APP_LINKS = [
+  { platform: 'iPhone・iPad', store: 'App Store', url: 'https://apps.apple.com/jp/app/qa/id6747648497' },
+  { platform: 'Android', store: 'Google Play', url: 'https://play.google.com/store/apps/details?id=com.TIS.QA2' },
+];
+
 // ペア（2ブロック）
 export const PAIRS = [
   { tag: 'X²', g: 'X', start: N,  result: 'vanish', example: true, hint: 'やじるしが もとどおり だから 消える' },
@@ -83,6 +89,9 @@ export const PAGE_COPY = {
     introHeading: 'この自由研究でやること',
     introItems: ['<b>QA²であそぶ</b>', '<b>ブロック＝命令</b> の動きを観察する', '気づいた法則をこのプリントに書く'],
     materials: ['□ QA²', '□ このプリント', '□ えんぴつ', '□ いろえんぴつ'],
+    downloadHeading: 'QA² を ダウンロードしよう',
+    downloadLead: 'おうちの人と いっしょに QRコードを よみとってね',
+    downloadNote: 'むりょうで あそべるよ',
     gradeLabel: '学年',
     classLabel: '組',
   },

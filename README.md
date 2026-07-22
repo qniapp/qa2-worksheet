@@ -12,7 +12,7 @@
 
 ### ページ構成
 
-1. 表紙＋「この自由研究でやること」＋キュービット君しょうかい
+1. 表紙＋「この自由研究でやること」＋キュービット君しょうかい＋QA² のダウンロード用QRコード（App Store / Google Play）
 2. 物語：キュービット君は地球の一点を指す（X² で 北極→南極→北極＝消える）
 3. ブロックのなかまたち（X〜T の6種：名前・回転軸・回転量。H は xじくとzじくのまん中のななめじく）
 4. 2つのブロックでマッチ（H² X² Y² Z² S²→Z T²→S）
@@ -24,7 +24,7 @@
 ## ビルド
 
 ```sh
-npm install      # 初回のみ（実行時依存は budoux、開発用に ESLint など）
+npm install      # 初回のみ（実行時依存は budoux と qrcode-generator、開発用に ESLint など）
 npm run build    # dist/qa2-worksheet.pdf を生成
 ```
 

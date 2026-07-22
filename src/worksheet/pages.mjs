@@ -1,4 +1,5 @@
 import {
+  APP_LINKS,
   INTRO_BLOCKS,
   LABELS,
   N,
@@ -20,6 +21,7 @@ import {
   inlineGatePair,
   mat,
   mix,
+  qrCode,
   renderContentMarkup,
   sakuraStamp,
   stateFigure,
@@ -132,6 +134,20 @@ function amidakujiDemo2() {
   return s;
 }
 
+// 表紙のアプリ入手案内。QR は URL からビルド時に生成する。
+function getAppBox() {
+  return `<div class="getapp">
+    <div class="gahead">📱 ${furi(copy.cover.downloadHeading)}</div>
+    <div class="galead">${furi(copy.cover.downloadLead)}</div>
+    <div class="gacards">${APP_LINKS.map(link => `<div class="gacard">
+      <div class="gaplatform">${link.platform}</div>
+      <div class="gaqr">${qrCode(link.url, 88)}</div>
+      <div class="gastore">${link.store}</div>
+    </div>`).join('')}</div>
+    <div class="ganote">${furi(copy.cover.downloadNote)}</div>
+  </div>`;
+}
+
 export const coverPage = () => `<div class="page cover">
   <div class="kicker">${furi(copy.cover.kicker)}</div>
   <h1>${furi(copy.cover.titleLine1)}${furi(copy.cover.titleLine1Suffix)}<br>${furi(copy.cover.titleLine2)}${furi(copy.cover.titleLine2Suffix)}</h1>
@@ -145,6 +161,7 @@ export const coverPage = () => `<div class="page cover">
     </ul>
   </div>
   <div class="materials"><b>${LABELS.materialsHeading}</b>${copy.cover.materials.map(item => `<span>${item}</span>`).join('')}</div>
+  ${getAppBox()}
   <div class="namebox">
     <div class="nbrow"><span>${LABELS.name}</span><div class="line"></div></div>
     <div class="nbrow"><span>${furi(copy.cover.gradeLabel)}・${furi(copy.cover.classLabel)}</span><div class="line"></div></div>

@@ -1,3 +1,4 @@
+import qrcode from 'qrcode-generator';
 import { DECORATION_COPY, LABELS } from '../../content/worksheet-content.mjs';
 import { add, cross, dot, len, norm, project, rotate, scl, withCamera } from './geometry.mjs';
 import { axisStyle, GATES, hsv, turnWords } from './gates.mjs';
@@ -162,6 +163,25 @@ export const fillBox = (px = 80, answer = null) => {
   if (answer === LABELS.vanish) return base + `<text x="${px/2 - 13}" y="${px/2 - 6}" font-size="7" fill="#dc2626" text-anchor="middle">${LABELS.vanishRubyHint}</text><text x="${px/2}" y="${px/2 + 3}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
   return base + `<text x="${px/2}" y="${px/2}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
 };
+// URL から QR コードを SVG で描く。印刷しても輪郭が鈍らないようベクターのまま埋め込む。
+export function qrCode(text, px = 96) {
+  const qr = qrcode(0, 'M'); // 型番は自動、誤り訂正レベルは M（印刷物の汚れやしわに耐える）
+  qr.addData(text);
+  qr.make();
+  const n = qr.getModuleCount(), quiet = 4, span = n + quiet * 2; // クワイエットゾーンは規格どおり4モジュール
+  let d = '';
+  for (let row = 0; row < n; row++) {
+    for (let col = 0; col < n; col++) {
+      if (!qr.isDark(row, col)) continue;
+      let run = 1; // 横に続く黒モジュールは1つの矩形にまとめ、パスを短くする
+      while (col + run < n && qr.isDark(row, col + run)) run++;
+      d += `M${col + quiet},${row + quiet}h${run}v1h-${run}z`;
+      col += run - 1;
+    }
+  }
+  return `<svg width="${px}" height="${px}" viewBox="0 0 ${span} ${span}" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">` +
+    `<rect width="${span}" height="${span}" fill="#ffffff"/><path d="${d}" fill="#1f2937"/></svg>`;
+}
 export const arrowR = () => `<svg width="30" height="36" viewBox="0 0 30 36"><path d="M3,18 L22,18 M22,18 L15,11 M22,18 L15,25" stroke="#64748b" stroke-width="2.6" fill="none" stroke-linecap="round"/></svg>`;
 export const flowArrow = () => `<svg width="34" height="10" viewBox="0 0 34 10" aria-hidden="true"><path d="M2,5 L29,5 M29,5 L24,1.5 M29,5 L24,8.5" stroke="#64748b" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 export const inlineGate = (type, px = 18) => `<span class="inlinegate" aria-hidden="true">${gateBlock(type, px)}</span>`;
