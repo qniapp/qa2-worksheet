@@ -16,7 +16,8 @@
     "audit": "npm audit --audit-level=moderate"
   },
   "dependencies": {
-    "budoux": "^0.8.4"
+    "budoux": "^0.8.4",
+    "qrcode-generator": "^2.0.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
