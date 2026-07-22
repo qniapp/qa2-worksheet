@@ -74,7 +74,8 @@ export const TRIPLES_ST = [
 
 // ブロック紹介（名前・回転じく・回転量）
 export const INTRO_BLOCKS = [
-  { group: 'まずは半周のブロック', g: 'X', name: 'X ブロック', start: N, fact: '<Gate name="X" />は <b>＋マーク</b>。xじくで半周するよ。' },
+  // 他のブロックと同じく「じく・回転量」を先に言う。＋マークの話はそのあと（名前は X なのに絵は ＋）。
+  { group: 'まずは半周のブロック', g: 'X', name: 'X ブロック', start: N, fact: 'xじくで半周。マークは X じゃなくて <b>＋</b>を使うよ。' },
   { g: 'Y', name: 'Y ブロック', start: N, fact: 'yじくで半周。<Gate name="X" />と、まわる向きがちがうんだ。' },
   { g: 'Z', name: 'Z ブロック', start: FRONT_Y, fact: 'たての zじくで半周。北極・南極は動かないよ。' },
   { group: 'ななめに半周', g: 'H', name: 'H ブロック', start: N, fact: 'xじくとzじくのまん中のななめじくで半周。' },
