@@ -48,8 +48,10 @@ h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block;
 .nbrow { display: flex; align-items: flex-end; gap: 12px; font-size: 15px; margin-top: 14px; }
 .nbrow .line { flex: 1; border-bottom: 2px solid #94a3b8; height: 34px; }
 /* story */
-.strip { display: flex; align-items: flex-start; justify-content: center; gap: 2px; margin: 8px 0; }
-.strip figure { margin: 0; text-align: center; } .strip figcaption { font-size: 11px; color: #475569; margin-top: -8px; }
+.strip { display: flex; align-items: flex-start; justify-content: center; gap: 2px; margin: 6px 0; }
+/* 幅を固定する。ラベルやキャプションの長さで figure 幅が変わると、2本のストリップで球と
+   ブロックの列位置がずれてしまうため */
+.strip figure { margin: 0; text-align: center; width: 145px; } .strip figcaption { font-size: 11px; color: #475569; margin-top: -8px; }
 .figlabel { display: inline-block; font-size: 12px; font-weight: 800; background: #eef2ff; color: #3730a3; border-radius: 999px; padding: 2px 9px; margin-bottom: -4px; }
 .storyop { width: 74px; height: 132px; position: relative; flex: 0 0 74px; }
 .storyop .actturn { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); font-size: 9px; line-height: 1; font-weight: 800; white-space: nowrap; }
@@ -58,14 +60,22 @@ h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block;
 .storyop .actgive { position: absolute; left: 50%; top: 24px; transform: translateX(-50%); }
 .storyop .actarrow { position: absolute; left: 50%; top: 66px; transform: translateX(-50%); width: 44px; height: 12px; line-height: 0; }
 .storyop .actarrow svg { width: 44px; height: 12px; }
-.step { display: flex; gap: 12px; align-items: flex-start; margin: 8px 0; }
+.step { display: flex; gap: 12px; align-items: flex-start; margin: 6px 0; }
 .num { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: #1f2937; color: #fff; font-weight: 800; text-align: center; line-height: 26px; font-size: 15px; }
 .stepbody { flex: 1; } .stepbody p { font-size: 13px; line-height: 1.85; margin: 0; }
+/* 2本目のストリップの導入文。上のストリップと詰まって見えないよう間を空ける */
+.stepbody p.steplead { margin-top: 8px; }
 .stepfig { margin: 0; text-align: center; flex: 0 0 auto; } .stepfig figcaption { font-size: 10px; color: #475569; margin-top: -6px; }
+/* ブロック図には球のような下余白がないので、キャプションを負マージンで詰めない */
+.stepfig.gatefig figcaption { margin-top: 4px; }
+/* ①のキュービット君は見出しの高さまで引き上げ、本文2行の下にできる空白を減らす */
+.stepfig.herofig { margin-top: -36px; }
 .punch { text-align: center; font-size: 15px; margin: 6px 0; line-height: 1.6; }
 .bridge { background: #ecfeff; border: 1px solid #a5f3fc; border-radius: 10px; padding: 10px 14px; font-size: 12.5px; line-height: 1.7; margin-top: 10px; }
 .trythis { background: #ecfdf5; border: 1px solid #6ee7b7; border-radius: 10px; padding: 13px 16px; font-size: 14px; line-height: 1.7; margin-top: 14px; text-align: center; }
-.observebox { margin-top: 10px; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 12px 14px; min-height: 280px; display: grid; grid-template-columns: auto 1fr 1fr; grid-template-rows: auto 1fr; gap: 12px 16px; font-size: 12.5px; line-height: 1.9; align-items: start; }
+/* p.2 は④が2段になって縦が厳しいので、このページの分だけ余白を詰める */
+.trythis.tight { padding: 11px 16px; margin-top: 10px; }
+.observebox { margin-top: 10px; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 12px 14px; min-height: 165px; display: grid; grid-template-columns: auto 1fr 1fr; grid-template-rows: auto 1fr; gap: 12px 16px; font-size: 12.5px; line-height: 1.9; align-items: start; }
 .observebox b { color: #1f2937; font-size: 13px; }
 .observebox .obsfree { grid-column: 1 / 4; align-self: stretch; }
 .observebox .freelabel { display: block; }

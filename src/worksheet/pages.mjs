@@ -175,36 +175,44 @@ export const coverPage = () => `<div class="page cover">
   ${footer(1)}
 </div>`;
 
+// ④のストリップ。出発点 → X → 半周先 → X → 出発点 の3コマを、出発点だけ差し替えて組む。
+function storyFlipStrip({ start, frames }) {
+  const flipped = rotate(start, GATES.X.axis, 180);
+  const orbit = { axisHighlight: GATES.X.axis, pathAxis: GATES.X.axis, pathAngle: 180 };
+  const shots = [[start, null], [flipped, start], [start, flipped]];
+  return `<div class="strip">${frames.map((f, i) => {
+    const [state, ghostState] = shots[i];
+    const sphere = globe({ size: 98, skin: 'earth', state, face: true, poleLabels: false, ...(ghostState ? { ghostState, ...orbit } : {}) });
+    return `<figure><div class="figlabel">${furi(f.label)}</div>${sphere}<figcaption>${furi(f.caption)}</figcaption></figure>`;
+  }).join(storyAction('X'))}</div>`;
+}
+
 export const storyPage = () => `<div class="page">
   ${headTitle(copy.story.sub)}
   <h2><span class="dot"></span>${furi(copy.story.heading)}</h2>
   <div class="step"><div class="num">1</div>
     <div class="stepbody"><p>${furi(copy.story.step1)}</p></div>
-    <figure class="stepfig">${globe({ size: 100, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi(copy.story.figureQubit)}</figcaption></figure>
+    <figure class="stepfig herofig">${globe({ size: 100, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi(copy.story.figureQubit)}</figcaption></figure>
   </div>
   <div class="step"><div class="num">2</div>
     <div class="stepbody"><p>${furi(copy.story.step2)}</p></div>
   </div>
   <div class="step"><div class="num">3</div>
     <div class="stepbody"><p>${furi(copy.story.step3)}</p></div>
-    <figure class="stepfig">${gateBlock('X', 48)}</figure>
+    <figure class="stepfig gatefig">${gateBlock('X', 48)}<figcaption>${furi(copy.story.figureXBlock)}</figcaption></figure>
   </div>
   <div class="step"><div class="num">4</div>
     <div class="stepbody">
       <p>${cfuri(copy.story.step4)}</p>
-      <div class="strip">
-        <figure><div class="figlabel">${furi(copy.story.northLabel)}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false })}<figcaption>${furi(copy.story.northCaption)}</figcaption></figure>
-        ${storyAction('X')}
-        <figure><div class="figlabel">${furi(copy.story.southLabel)}</div>${globe({ size: 124, skin: 'earth', state: [0,0,-1], face: true, poleLabels: false, ghostState: N, axisHighlight: GATES.X.axis, pathAxis: GATES.X.axis, pathAngle: 180 })}<figcaption>${furi(copy.story.southCaption)}</figcaption></figure>
-        ${storyAction('X')}
-        <figure><div class="figlabel">${furi(copy.story.returnLabel)}</div>${globe({ size: 124, skin: 'earth', state: N, face: true, poleLabels: false, ghostState: [0,0,-1], axisHighlight: GATES.X.axis, pathAxis: GATES.X.axis, pathAngle: 180 })}<figcaption>${furi(copy.story.returnCaption)}</figcaption></figure>
-      </div>
+      ${storyFlipStrip(copy.story.flips[0])}
+      <p class="steplead">${cfuri(copy.story.step4b)}</p>
+      ${storyFlipStrip(copy.story.flips[1])}
     </div>
   </div>
   <div class="step"><div class="num">5</div>
     <div class="stepbody"><p>${cfuri(copy.story.step5)} ${inlineGatePair('X')} ＝ <span class="red">${furi(copy.story.match)}</span></p></div>
   </div>
-  <div class="trythis">${cfuri(copy.story.tryThis)}</div>
+  <div class="trythis tight">${cfuri(copy.story.tryThis)}</div>
   <div class="observebox"><b>${furi(copy.story.memoHeading)}</b><div class="obsline">${furi(copy.story.expected)}：${copy.story.expectedOptions.map(option => `□ ${furi(option)}`).join('　')}</div><div class="obsline">${furi(copy.story.result)}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div><div class="obsfree"><span class="freelabel">${furi(copy.story.noticed)}：</span></div></div>
   ${footer(2)}
 </div>`;
