@@ -37,7 +37,7 @@ test('worksheet guidance and operation captions use the current wording', async 
   const html = await readDist('qa2.html');
   const text = visibleText(html);
 
-  assert.match(text, /まわるじくとまわる量のちがいを、よく観察しよう。/);
+  assert.match(text, /まわるじくとまわる量のちがいを、よく見くらべよう。/);
   assert.doesNotMatch(text, /色だけでなくラベルでも見よう/);
   assert.doesNotMatch(text, /1回目のあと/);
   assert.doesNotMatch(text, /2回目のあと/);
@@ -51,8 +51,8 @@ test('worksheet guidance and operation captions use the current wording', async 
   assert.doesNotMatch(html, /<ruby>同じ<rt>おなじ<\/rt><\/ruby>/);
   assert.match(html, /<ruby>高<rt>こう<\/rt><\/ruby>とくてん/);
   assert.doesNotMatch(html, /<ruby>高<rt>たか<\/rt><\/ruby>とくてん/);
-  assert.match(html, /からね。 <span class="inlinegates">[\s\S]*?＝ <span class="red">/);
-  assert.doesNotMatch(html, /からね。 ＝ <span class="red">/);
+  assert.match(html, /いい<\/b>！ <span class="inlinegates">[\s\S]*?＝ <span class="red">/);
+  assert.doesNotMatch(html, /いい<\/b>！ ＝ <span class="red">/);
   assert.match(text, /xじくとzじくのまん中のななめじくで半周。/);
   assert.doesNotMatch(text, /アダマール/);
   assert.match(text, /2つの道（レーン）をいれかえる命令/);

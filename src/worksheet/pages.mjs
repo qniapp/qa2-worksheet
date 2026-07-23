@@ -210,13 +210,13 @@ export const storyPage = () => `<div class="page">
       ${storyFlipStrip(copy.story.flips[0])}
       <p class="steplead">${cfuri(copy.story.step4b)}</p>
       ${storyFlipStrip(copy.story.flips[1])}
+      <p class="steplead">${cfuri(copy.story.step4bResult)}</p>
     </div>
   </div>
   <div class="step"><div class="num">5</div>
     <div class="stepbody"><p>${cfuri(copy.story.step5)} ${inlineGatePair('X')} ＝ <span class="red">${furi(copy.story.match)}</span></p></div>
   </div>
   <div class="trythis tight">${cfuri(copy.story.tryThis)}</div>
-  <div class="observebox"><b>${furi(copy.story.memoHeading)}</b><div class="obsline">${furi(copy.story.expected)}：${copy.story.expectedOptions.map(option => `□ ${furi(option)}`).join('　')}</div><div class="obsline">${furi(copy.story.result)}：＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿＿</div><div class="obsfree"><span class="freelabel">${furi(copy.story.noticed)}：</span></div></div>
   ${footer(2)}
 </div>`;
 
