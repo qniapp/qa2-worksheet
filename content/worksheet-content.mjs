@@ -216,8 +216,7 @@ export const LANDING_COPY = {
   description: 'パズルゲーム QA² であそびながら量子コンピューターの不思議をしらべる、小学生向けA4・全8ページの印刷用PDFです。',
   kicker: 'QA² 夏休み自由研究',
   heading: '量子コンピューターの<br>不思議をしらべよう',
-  body: 'パズルゲーム <b>QA²</b> であそびながら完成させる、小学生向けの観察ノートです。A4・全8ページの印刷用PDFをダウンロードできます。',
+  body: '<a class="gamelink" href="https://qniapp.github.io/qa2-website/">パズルゲーム <b>QA²</b></a> であそびながら完成させる、小学生向けの観察ノートです。A4・全8ページの印刷用PDFをダウンロードできます。',
   pdfButton: 'PDFをダウンロード',
   htmlButton: 'HTML版を見る',
-  note: '外部サイトから直接リンクする場合は <code>https://qniapp.github.io/qa2-worksheet/qa2-worksheet.pdf</code> を使えます。',
 };

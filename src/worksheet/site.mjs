@@ -36,7 +36,6 @@ ${landingCss}</style></head><body><main>
       <a class="button primary" href="./qa2-worksheet.pdf" download>${copy.pdfButton}</a>
       <a class="button secondary" href="./qa2.html">${copy.htmlButton}</a>
     </div>
-    <div class="note">${copy.note}</div>
   </section>
 </main></body></html>`;
 }
