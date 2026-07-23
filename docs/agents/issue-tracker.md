@@ -8,7 +8,7 @@
 - 主要 label: `ready-for-agent`
 - GitHub 上のコメント、PR本文、レビュー、検証メモは原則 **日本語** で書き、不要な英単語を日本語文に混ぜる「ルー語」を避ける
 - issue 本文が実装 spec の正本になる。特に Acceptance criteria は本文のチェックボックスを更新して管理する
-- `/to-issues` 由来で `ready-for-agent` が付いた issue は、原則として追加の `/triage` を挟まず、fresh session の `/implement` で着手する
+- `/to-tickets` 由来で `ready-for-agent` が付いた issue は、原則として追加の `/triage` を挟まず、fresh session の `/implement` で着手する
 
 ## labels
 
@@ -113,7 +113,7 @@ gh pr merge <number> \
 
 - issue / PR の実装報告は日本語で要約する。subagent の英語出力をそのまま貼らない。
 - `ready-for-agent` は、エージェントが実装に着手できる粒度・情報量になった issue に付ける。
-- Orca worker の進捗・blocker・PR化準備完了は、terminal 返信だけにせず GitHub issue / PR コメントへ残す。司令塔は GitHub コメントを安定ログとして読む。
+- 実装の進捗・blocker・PR化準備完了は、GitHub issue / PR コメントに日本語で残し、安定ログとして扱う。
 - PDF デザイン変更では、`AGENTS.md` の PDF デザイン変更時のルールを完了条件として扱う。
 - 仕様変更やファイル責務の変更があれば、同じ変更で `README.md`、`AGENTS.md`、必要な `docs/agents/` も更新する。
 - リサーチ結果の一次保存先は GBrain とし、`docs/research/` は新設しない。
