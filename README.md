@@ -5,10 +5,12 @@
 
 ## 成果物
 
-- `dist/qa2-worksheet.pdf` … 配布・印刷用の最終PDF（全8ページ）
+- `dist/qa2-worksheet.pdf` … 日本語版の配布・印刷用PDF（全8ページ）
+- `dist/qa2-worksheet-en.pdf` … 英語版（STEM club / science fair 向け。夏休み自由研究の直訳ではない）
 - GitHub Pages 公開URL
-  - ダウンロードページ: <https://qniapp.github.io/qa2-worksheet/>
-  - PDF直リンク: <https://qniapp.github.io/qa2-worksheet/qa2-worksheet.pdf>
+  - 日本語: <https://qniapp.github.io/qa2-worksheet/>
+  - 英語: <https://qniapp.github.io/qa2-worksheet/index-en.html>
+  - PDF直リンク: <https://qniapp.github.io/qa2-worksheet/qa2-worksheet.pdf> / <https://qniapp.github.io/qa2-worksheet/qa2-worksheet-en.pdf>
 
 ### ページ構成
 
@@ -25,7 +27,8 @@
 
 ```sh
 npm install      # 初回のみ（実行時依存は budoux と qrcode-generator、開発用に ESLint など）
-npm run build    # dist/qa2-worksheet.pdf を生成
+npm run build    # 日本語 PDF / HTML を生成
+npm run build:en # 英語 PDF / HTML を生成
 ```
 
 `npm run build` は `build.sh` を実行し、`node build.mjs` で `dist/qa2.html` を生成したのち、

@@ -1,3 +1,4 @@
+import { LABELS } from '../../content/active.mjs';
 import { norm } from './geometry.mjs';
 
 /* 色（BlockColors.cs の HSV を再現） */
@@ -26,13 +27,13 @@ export function axisStyle(axis) { // 回転の中心じくの強調色
   if (Math.abs(n[0]) > 0.99) return { name: 'x', color: '#f59e0b' };
   if (Math.abs(n[1]) > 0.99) return { name: 'y', color: '#16a34a' };
   if (Math.abs(n[2]) > 0.99) return { name: 'z', color: '#9333ea' };
-  return { name: 'ななめ', color: '#0891b2' };
+  return { name: LABELS.diagonalAxisBase, color: '#0891b2' };
 }
 
 export function turnWords(angle) { // 角度→地球の周回量
-  if (angle === 45) return '8分の1周';
-  if (angle === 90) return '4分の1周';
-  if (angle === 180) return '半周';
-  if (angle === 360) return 'ひとまわり';
+  if (angle === 45) return LABELS.turnEighth;
+  if (angle === 90) return LABELS.turnQuarter;
+  if (angle === 180) return LABELS.turnHalf;
+  if (angle === 360) return LABELS.turnFull;
   return `${angle}°`;
 }

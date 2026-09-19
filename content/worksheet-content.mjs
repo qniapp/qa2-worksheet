@@ -37,6 +37,10 @@ export const LABELS = {
   northPoleRuby: 'ほっきょく',
   southPole: '南極',
   southPoleRuby: 'なんきょく',
+  turnHalf: '半周',
+  turnQuarter: '4分の1周',
+  turnEighth: '8分の1周',
+  turnFull: 'ひとまわり',
 };
 
 export const DECORATION_COPY = {
@@ -106,6 +110,7 @@ export const PAGE_COPY = {
     downloadNote: 'むりょうで あそべるよ',
     gradeLabel: '学年',
     classLabel: '組',
+    identityFields: null,
   },
   story: {
     sub: '① キュービット君って？ ・ p.2',
@@ -180,6 +185,9 @@ export const PAGE_COPY = {
     matchedBlocks: 'そろったブロック',
     usedSwap: '使ったSWAP',
     noticed: '気づいたこと',
+    matchedBlocksPrompt: 'そろったブロック：＿＿＿＿＿＿',
+    usedSwapPrompt: '使ったSWAP：＿＿こ',
+    noticedPrompt: '気づいたこと：',
   },
   about: {
     sub: 'おうちの方・先生へ ・ p.8',
@@ -216,4 +224,8 @@ export const LANDING_COPY = {
   body: '<a class="gamelink" href="https://qniapp.github.io/qa2-website/">パズルゲーム <b>QA²</b></a> であそびながら完成させる、小学生向けの観察ノートです。A4・全8ページの印刷用PDFをダウンロードできます。',
   pdfButton: 'PDFをダウンロード',
   htmlButton: 'HTML版を見る',
+  pdfHref: './qa2-worksheet.pdf',
+  htmlHref: './qa2.html',
+  altLangHref: './index-en.html',
+  altLangLabel: 'English edition',
 };

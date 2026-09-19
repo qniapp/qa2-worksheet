@@ -44,5 +44,10 @@ jobs:
         env:
           CHROME: google-chrome
 
+      - name: Build English PDF and static site
+        run: npm run build:en
+        env:
+          CHROME: google-chrome
+
       - name: Test generated output
         run: npm test

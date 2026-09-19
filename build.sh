@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
-# dist/qa2.html を生成し、ヘッドレス Chrome で印刷用 PDF を書き出す。
+# Generate worksheet HTML, then print to PDF with headless Chrome.
+# QA2_LOCALE=en → dist/qa2-en.html + dist/qa2-worksheet-en.pdf
+# default (ja)  → dist/qa2.html + dist/qa2-worksheet.pdf
 set -euo pipefail
 cd "$(dirname "$0")"
+
+LOCALE="${QA2_LOCALE:-ja}"
+export QA2_LOCALE="$LOCALE"
 
 node build.mjs
 
@@ -15,13 +20,21 @@ if [[ -z "$CHROME" ]]; then
   done
 fi
 if [[ -z "$CHROME" ]]; then
-  echo "Chrome/Chromium が見つかりません。CHROME=/path/to/chrome を指定してください。" >&2
+  echo "Chrome/Chromium not found. Set CHROME=/path/to/chrome" >&2
   exit 1
 fi
 
-OUT="dist/qa2-worksheet.pdf"
-"$CHROME" --headless=new --disable-gpu --no-sandbox --no-pdf-header-footer \
-  --print-to-pdf="$OUT" --virtual-time-budget=4000 \
-  "file://$(pwd)/dist/qa2.html"
+if [[ "$LOCALE" == "en" ]]; then
+  HTML="dist/qa2-en.html"
+  OUT="dist/qa2-worksheet-en.pdf"
+else
+  HTML="dist/qa2.html"
+  OUT="dist/qa2-worksheet.pdf"
+fi
+
+"$CHROME" --headless=new --disable-gpu --no-sandbox --disable-dev-shm-usage \
+  --no-pdf-header-footer --disable-extensions --disable-background-networking \
+  --print-to-pdf="$OUT" --virtual-time-budget=8000 \
+  "file://$(pwd)/$HTML"
 
 echo "built $OUT"

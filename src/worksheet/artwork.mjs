@@ -1,5 +1,5 @@
 import qrcode from 'qrcode-generator';
-import { DECORATION_COPY, LABELS } from '../../content/worksheet-content.mjs';
+import { DECORATION_COPY, LABELS } from '../../content/active.mjs';
 import { add, cross, dot, len, norm, project, rotate, scl, withCamera } from './geometry.mjs';
 import { axisStyle, GATES, hsv, turnWords } from './gates.mjs';
 import { furi } from './ruby.mjs';
@@ -66,10 +66,10 @@ export function globe(opts) {
     if (activeAxisName !== 'z') s += axisEnd([0, 0, 1], 'z', faint, false);
   } else if (poleLabels) {
     const np = project([0, 0, 1.3], cx, cy, R), sp = project([0, 0, -1.34], cx, cy, R);
-    s += `<text x="${fmt(np[0])}" y="${fmt(np[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">${LABELS.northPole}</text>`;
-    s += `<text x="${fmt(np[0])}" y="${fmt(np[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">${LABELS.northPoleRuby}</text>`;
-    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] - 3)}" font-size="9.5" fill="#0369a1" text-anchor="middle">${LABELS.southPole}</text>`;
-    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">${LABELS.southPoleRuby}</text>`;
+    s += `<text x="${fmt(np[0])}" y="${fmt(np[1] - (LABELS.northPoleRuby ? 3 : 0))}" font-size="9.5" fill="#0369a1" text-anchor="middle">${LABELS.northPole}</text>`;
+    if (LABELS.northPoleRuby) s += `<text x="${fmt(np[0])}" y="${fmt(np[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">${LABELS.northPoleRuby}</text>`;
+    s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] - (LABELS.southPoleRuby ? 3 : 0))}" font-size="9.5" fill="#0369a1" text-anchor="middle">${LABELS.southPole}</text>`;
+    if (LABELS.southPoleRuby) s += `<text x="${fmt(sp[0])}" y="${fmt(sp[1] + 6)}" font-size="6.5" fill="#0369a1" text-anchor="middle">${LABELS.southPoleRuby}</text>`;
   }
   if (axisHighlight && !spin) s += highlightAxis(axisHighlight);
   let trajectoryLayer = '';
@@ -160,7 +160,14 @@ export function sakuraStamp() {
 export const fillBox = (px = 80, answer = null) => {
   const base = `<svg width="${px}" height="${px}" viewBox="0 0 ${px} ${px}" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK JP',sans-serif"><rect x="3" y="3" width="${px-6}" height="${px-6}" rx="10" fill="#fffef7" stroke="#cbd5e1" stroke-width="2" stroke-dasharray="6 5"/>`;
   if (!answer) return base + `<text x="${px/2}" y="${px/2}" font-size="13" fill="#cbd5e1" text-anchor="middle" dominant-baseline="central">${LABELS.questionMark}</text></svg>`;
-  if (answer === LABELS.vanish) return base + `<text x="${px/2 - 13}" y="${px/2 - 6}" font-size="7" fill="#dc2626" text-anchor="middle">${LABELS.vanishRubyHint}</text><text x="${px/2}" y="${px/2 + 3}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
+  if (answer === LABELS.vanish) {
+    const fs = answer.length > 4 ? 11 : 14;
+    const hint = LABELS.vanishRubyHint
+      ? `<text x="${px/2 - 13}" y="${px/2 - 6}" font-size="7" fill="#dc2626" text-anchor="middle">${LABELS.vanishRubyHint}</text>`
+      : '';
+    const y = LABELS.vanishRubyHint ? px/2 + 3 : px/2;
+    return base + `${hint}<text x="${px/2}" y="${y}" font-size="${fs}" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
+  }
   return base + `<text x="${px/2}" y="${px/2}" font-size="14" font-weight="700" fill="#dc2626" text-anchor="middle" dominant-baseline="central">${answer}</text></svg>`;
 };
 // URL から QR コードを SVG で描く。印刷しても輪郭が鈍らないようベクターのまま埋め込む。

@@ -168,3 +168,21 @@ h2 .dot { width: 10px; height: 18px; background: #1f2937; display: inline-block;
 .ann { font-size: 10px; color: #64748b; margin-left: 3px; } .frac { font-family: Georgia, serif; }
 .miniglobe { float: right; text-align: center; margin: -4px 0 4px 14px; } .miniglobe figcaption { font-size: 10px; color: #475569; margin-top: -4px; line-height: 1.4; }
 .gaterow { display: flex; gap: 8px; justify-content: center; margin: 4px 0 8px; }
+
+/* English locale: longer Latin strings need slightly tighter type */
+html.locale-en .cover .kicker { letter-spacing: 1.5px; font-size: 13px; }
+html.locale-en .cover h1 { font-size: 30px; line-height: 1.35; }
+html.locale-en .cover .subtitle { font-size: 13px; }
+html.locale-en .goal { font-size: 14px; }
+html.locale-en .head .title { font-size: 22px; }
+html.locale-en .head .sub { font-size: 11px; }
+html.locale-en .nbrow { font-size: 13px; }
+html.locale-en .actturn { font-size: 8px; }
+html.locale-en .taghint { font-size: 9px; }
+html.locale-en .answerhint { font-size: 9px; }
+html.locale-en .storyop .actturn { font-size: 8px; }
+html.locale-en .figlabel { font-size: 10px; }
+html.locale-en .stepbody p { font-size: 12.5px; line-height: 1.7; }
+html.locale-en .howto { font-size: 11.5px; }
+html.locale-en .bfact { font-size: 12px; }
+html.locale-en .about p { font-size: 11.5px; }
