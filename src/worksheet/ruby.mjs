@@ -1,4 +1,5 @@
 import { loadDefaultJapaneseParser } from 'budoux';
+import { isEnglish } from '../../content/locale.mjs';
 
 /* ふりがな（本文 prose にのみ適用。SVG には当てない） */
 export const FURI = [
@@ -28,5 +29,8 @@ export const addRuby = s => s.replace(FURI_RE, m => (FURI_MAP[m].startsWith('<')
 
 // BudouX: 日本語を自然な文節で改行。タグはそのまま、テキストノードだけ分割して <wbr> を挿入。
 const bparser = loadDefaultJapaneseParser();
-export const wrapJa = html => html.replace(/[^<]+|<[^>]+>/g, m => (m[0] === '<' ? m : bparser.parse(m).join('<wbr>')));
-export const furi = s => wrapJa(addRuby(s));
+export const wrapJa = html => {
+  if (isEnglish()) return html;
+  return html.replace(/[^<]+|<[^>]+>/g, m => (m[0] === '<' ? m : bparser.parse(m).join('<wbr>')));
+};
+export const furi = s => (isEnglish() ? s : wrapJa(addRuby(s)));

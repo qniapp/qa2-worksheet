@@ -5,3 +5,6 @@ dist/index.html
 dist/.nojekyll
 # セッションのハンドオフ用ローカル状態
 .remember/
+
+dist/qa2-en.html
+dist/index-en.html

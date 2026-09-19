@@ -9,7 +9,7 @@ import {
   SOUTH,
   TRIPLES_H,
   TRIPLES_ST,
-} from '../../content/worksheet-content.mjs';
+} from '../../content/active.mjs';
 import { CAMERA_FRONT, rotate } from './geometry.mjs';
 import { axisStyle, GATES, hsv, turnWords } from './gates.mjs';
 import { furi, wrapJa } from './ruby.mjs';
@@ -172,8 +172,8 @@ export const coverPage = () => `<div class="page cover">
     ${getAppSection()}
   </div>
   <div class="namebox">
-    <div class="nbrow"><span>${LABELS.name}</span><div class="line"></div></div>
-    <div class="nbrow"><span>${furi(copy.cover.gradeLabel)}・${furi(copy.cover.classLabel)}</span><div class="line"></div></div>
+    ${(copy.cover.identityFields || [LABELS.name, `${copy.cover.gradeLabel}・${copy.cover.classLabel}`])
+      .map(label => `<div class="nbrow"><span>${furi(label)}</span><div class="line"></div></div>`).join('')}
   </div>
   ${footer(1)}
 </div>`;
@@ -246,7 +246,7 @@ export const swapPage = () => `<div class="page">
     <div class="amida">${amidakujiDemo2()}<div class="amidacap">${cfuri(copy.swap.cap2)}</div></div>
   </div>
   <div class="trythis">${furi(copy.swap.tryThis)}</div>
-  <div class="freewrite guided" style="height:300px"><div class="fwh">${LABELS.memoIcon} ${furi(copy.swap.memoHeading)}</div><div class="promptlines"><span>${furi(copy.swap.matchedBlocks)}：＿＿＿＿＿＿</span><span>${furi(copy.swap.usedSwap)}：＿＿こ</span><span class="freeprompt">${furi(copy.swap.noticed)}：</span></div></div>
+  <div class="freewrite guided" style="height:300px"><div class="fwh">${LABELS.memoIcon} ${furi(copy.swap.memoHeading)}</div><div class="promptlines"><span>${furi(copy.swap.matchedBlocksPrompt)}</span><span>${furi(copy.swap.usedSwapPrompt)}</span><span class="freeprompt">${furi(copy.swap.noticedPrompt)}</span></div></div>
   <div class="finish">${sakuraStamp()}<div class="namebox2"><span>${LABELS.name}</span><div class="line"></div><span>${furi(LABELS.date)}</span><div class="line short"></div></div></div>
   ${footer(7)}
 </div>`;

@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { LANDING_COPY } from '../../content/worksheet-content.mjs';
+import { getLocale } from '../../content/locale.mjs';
+import { LANDING_COPY } from '../../content/active.mjs';
 import { resetArtworkIds } from './artwork.mjs';
 import { worksheetPages } from './pages.mjs';
 
@@ -11,8 +12,10 @@ const landingCss = readFileSync(join(HERE, 'landing.css'), 'utf8');
 
 export function buildWorksheetHtml() {
   resetArtworkIds();
+  const lang = getLocale() === 'en' ? 'en' : 'ja';
+  const localeClass = lang === 'en' ? ' locale-en' : '';
 
-  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+  return `<!doctype html><html lang="${lang}" class="${localeClass.trim()}"><head><meta charset="utf-8">
 <style>
 ${worksheetCss}</style></head>
 <body>
@@ -22,7 +25,10 @@ ${worksheetCss}</style></head>
 
 export function buildLandingHtml() {
   const copy = LANDING_COPY;
-  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+  const lang = getLocale() === 'en' ? 'en' : 'ja';
+  const pdfHref = copy.pdfHref || './qa2-worksheet.pdf';
+  const htmlHref = copy.htmlHref || './qa2.html';
+  return `<!doctype html><html lang="${lang}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${copy.title}</title>
 <meta name="description" content="${copy.description}">
@@ -33,8 +39,9 @@ ${landingCss}</style></head><body><main>
     <h1>${copy.heading}</h1>
     <p>${copy.body}</p>
     <div class="actions">
-      <a class="button primary" href="./qa2-worksheet.pdf" download>${copy.pdfButton}</a>
-      <a class="button secondary" href="./qa2.html">${copy.htmlButton}</a>
+      <a class="button primary" href="${pdfHref}" download>${copy.pdfButton}</a>
+      <a class="button secondary" href="${htmlHref}">${copy.htmlButton}</a>
+      ${copy.altLangHref ? `<a class="button secondary" href="${copy.altLangHref}">${copy.altLangLabel}</a>` : ''}
     </div>
   </section>
 </main></body></html>`;
